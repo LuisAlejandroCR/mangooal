@@ -46,3 +46,5 @@ Thumbs.db
 # VS Code local settings
 .vscode/*
 !.vscode/extensions.json
+.vercel
+.env*
