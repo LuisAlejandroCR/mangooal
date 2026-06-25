@@ -1,0 +1,408 @@
+:root {
+  --yellow: #FFC83D;
+  --yellow-hover: #F4B400;
+  --green: #2E9E57;
+  --green-dark: #176B3A;
+  --bg: #FFF9EC;
+  --card: #FFFFFF;
+  --text: #1F2937;
+  --text-muted: #6B7280;
+  --border: #E9E5DC;
+  --success: #22A06B;
+  --lime: #B8D94A;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+body { background: #f0ece0; }
+
+/* Scrollable main area above fixed bottom nav */
+.screen {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.screen-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 100px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-logo {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+.topbar-logo span { color: var(--yellow-hover); }
+
+/* Cards */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 13px 20px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  width: 100%;
+}
+
+.btn-primary {
+  background: var(--yellow);
+  color: var(--text);
+}
+.btn-primary:hover { background: var(--yellow-hover); }
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--green);
+  border: 2px solid var(--green);
+}
+
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 13px;
+  width: auto;
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-celo {
+  background: #E8F5E9;
+  color: var(--green-dark);
+}
+
+.badge-yellow {
+  background: #FFF3CD;
+  color: #7A5F00;
+}
+
+.badge-muted {
+  background: var(--border);
+  color: var(--text-muted);
+}
+
+/* Section headers */
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 20px 0 10px;
+}
+
+/* Score input */
+.score-input-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.score-input {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  font-size: 28px;
+  font-weight: 800;
+  text-align: center;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.score-input:focus { border-color: var(--yellow); }
+
+.score-vs {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* Bottom nav */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding: 8px 0 env(safe-area-inset-bottom, 8px);
+  z-index: 20;
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  transition: color 0.15s;
+}
+
+.nav-item.active { color: var(--yellow-hover); }
+.nav-item svg { width: 22px; height: 22px; }
+
+/* Match card */
+.match-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.1s;
+}
+.match-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+.match-card:active { transform: scale(0.99); }
+
+.match-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0 6px;
+}
+
+.team-name {
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  flex: 1;
+}
+
+.match-time {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+
+/* Celo wallet status bar */
+.wallet-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #E8F5E9;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green-dark);
+}
+
+/* Ranking row */
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.rank-pos {
+  width: 28px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.rank-pos.top3 { color: var(--yellow-hover); }
+
+.rank-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.rank-info { flex: 1; }
+.rank-name { font-size: 14px; font-weight: 700; }
+.rank-detail { font-size: 12px; color: var(--text-muted); }
+.rank-pts { font-size: 17px; font-weight: 800; color: var(--green); }
+
+/* Coach insight card */
+.coach-card {
+  background: linear-gradient(135deg, #176B3A 0%, #2E9E57 100%);
+  border-radius: var(--radius);
+  padding: 18px;
+  color: white;
+  margin-bottom: 14px;
+}
+
+.coach-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 6px;
+}
+
+.coach-score {
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin: 8px 0 4px;
+}
+
+.coach-disclaimer {
+  font-size: 11px;
+  opacity: 0.65;
+  margin-top: 8px;
+}
+
+/* Stablecoin pill selector */
+.token-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.token-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 50px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text);
+}
+.token-pill.selected {
+  border-color: var(--yellow);
+  background: #FFF3CD;
+  color: var(--text);
+}
+
+/* Pass option card */
+.pass-card {
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.pass-card:hover { border-color: var(--yellow); background: #FFFDF5; }
+.pass-card.selected { border-color: var(--yellow); background: #FFF9EC; }
+
+.pass-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pass-type { font-size: 15px; font-weight: 700; }
+.pass-price { font-size: 18px; font-weight: 800; color: var(--green); }
+
+.pass-perks {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* On-chain audit */
+.audit-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.audit-label { color: var(--text-muted); font-weight: 600; flex-shrink: 0; margin-right: 12px; }
+.audit-value { font-weight: 700; text-align: right; word-break: break-all; }
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+.dot-green { background: var(--success); }
+.dot-yellow { background: var(--yellow-hover); }
+.dot-muted { background: #D1D5DB; }
