@@ -1,43 +1,55 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { keccak256, toHex } from "viem";
 import { useAccount } from "wagmi";
 import { CeloBadge } from "../components/CeloBadge";
 import { useCommitPrediction } from "../hooks/useMangoalLedger";
+import { getMatchById, matchStatus } from "../config/matches";
 
-// Demo campaign ID — replace with backend-provided value after MangooalLedger deployment
-const DEMO_CAMPAIGN_ID = keccak256(toHex("copa-america-2026"));
+function isInsufficientFunds(err: Error | null): boolean {
+  if (!err) return false;
+  const msg = err.message.toLowerCase();
+  return msg.includes("insufficient") || msg.includes("not enough") || msg.includes("balance");
+}
 
 export function PredictionDetail() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isConnected } = useAccount();
   const [home, setHome] = useState("");
   const [away, setAway] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const { commit, txHash, isPending, error } = useCommitPrediction();
-  const { isConnected } = useAccount();
 
-  // Derive bytes32 matchId from URL param — real matchId comes from backend in production
-  const matchId = keccak256(toHex(id ?? "match-demo"));
+  const match = getMatchById(id ?? "");
+  const status = match ? matchStatus(match) : null;
+  const isOpen = status === "open";
 
-  const match = {
-    home: "Colombia",
-    away: "Brazil",
-    homeFlag: "🇨🇴",
-    awayFlag: "🇧🇷",
-    competition: "Copa América 2026",
-    kickoff: new Date(Date.now() + 3 * 3600000),
-    id,
-  };
+  if (!match) {
+    return (
+      <div className="screen">
+        <div className="topbar">
+          <button onClick={() => navigate(-1)} style={{ background: "none", border: "none", cursor: "pointer", padding: 6 }} aria-label="Back">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <CeloBadge variant="network" />
+        </div>
+        <div className="screen-body" style={{ paddingTop: 40, textAlign: "center", color: "var(--text-muted)" }}>
+          Match not found
+        </div>
+      </div>
+    );
+  }
 
   async function handleSubmit() {
-    if (!home || !away) return;
+    if (!home || !away || !match) return;
     try {
       await commit({
-        campaignId: DEMO_CAMPAIGN_ID,
-        matchId,
-        homeScore: Number(home),
-        awayScore: Number(away),
+        campaignId: match.campaignId,
+        matchId:    match.matchId,
+        homeScore:  Number(home),
+        awayScore:  Number(away),
       });
       setSubmitted(true);
     } catch {
@@ -68,14 +80,14 @@ export function PredictionDetail() {
             home={Number(home)}
             away={Number(away)}
             txHash={txHash}
-            onAudit={() => navigate(`/audit/${id}`)}
+            onAudit={() => navigate(`/audit/${match.id}`)}
           />
         ) : (
           <>
             {/* Teams */}
             <div className="card" style={{ textAlign: "center", marginBottom: 16 }}>
               <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, marginBottom: 12 }}>
-                {match.competition} · {match.kickoff.toLocaleDateString("en", { weekday: "long", hour: "2-digit", minute: "2-digit" })}
+                {match.competition} · {new Date(match.kickoffAt).toLocaleString("en", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
               </div>
               <div className="match-teams">
                 <div className="team-name">
@@ -88,15 +100,22 @@ export function PredictionDetail() {
                   {match.away}
                 </div>
               </div>
+
+              {/* Locked banner */}
+              {!isOpen && (
+                <div style={{ marginTop: 14, padding: "8px 12px", background: "#F1F5F9", borderRadius: "var(--radius-sm)", fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>
+                  🔒 Predictions are closed · {status === "live" ? "Match in progress" : status === "finished" ? "Match finished" : "Window locked"}
+                </div>
+              )}
             </div>
 
             {/* Coach Insight teaser */}
             <div
               className="coach-card"
               style={{ cursor: "pointer" }}
-              onClick={() => navigate(`/coach/${id}`)}
+              onClick={() => navigate(`/coach/${match.id}`)}
             >
-              <div className="coach-label">🏅 Mangoal Coach insight</div>
+              <div className="coach-label">🏅 Mangooal Coach insight</div>
               <div style={{ fontSize: 16, fontWeight: 700, marginTop: 6 }}>
                 Data-based pick · Recent-form analysis
               </div>
@@ -109,81 +128,85 @@ export function PredictionDetail() {
             </div>
 
             {/* Score input */}
-            <div className="section-title">Your forecast</div>
-            <div className="card">
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
-                <span style={{ fontSize: 20 }}>{match.homeFlag}</span>
-                <span style={{ fontSize: 15, fontWeight: 700 }}>{match.home}</span>
-              </div>
+            {isOpen && (
+              <>
+                <div className="section-title">Your forecast</div>
+                <div className="card">
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
+                    <span style={{ fontSize: 20 }}>{match.homeFlag}</span>
+                    <span style={{ fontSize: 15, fontWeight: 700 }}>{match.home}</span>
+                  </div>
 
-              <div className="score-input-row">
-                <input
-                  type="number"
-                  min={0}
-                  max={20}
-                  className="score-input"
-                  value={home}
-                  onChange={(e) => setHome(e.target.value)}
-                  placeholder="0"
-                />
-                <span className="score-vs">–</span>
-                <input
-                  type="number"
-                  min={0}
-                  max={20}
-                  className="score-input"
-                  value={away}
-                  onChange={(e) => setAway(e.target.value)}
-                  placeholder="0"
-                />
-              </div>
+                  <div className="score-input-row">
+                    <input
+                      type="number"
+                      min={0}
+                      max={20}
+                      className="score-input"
+                      value={home}
+                      onChange={(e) => setHome(e.target.value)}
+                      placeholder="0"
+                    />
+                    <span className="score-vs">–</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={20}
+                      className="score-input"
+                      value={away}
+                      onChange={(e) => setAway(e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
 
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 20 }}>
-                <span style={{ fontSize: 20 }}>{match.awayFlag}</span>
-                <span style={{ fontSize: 15, fontWeight: 700 }}>{match.away}</span>
-              </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 20 }}>
+                    <span style={{ fontSize: 20 }}>{match.awayFlag}</span>
+                    <span style={{ fontSize: 15, fontWeight: 700 }}>{match.away}</span>
+                  </div>
 
-              {/* Error banner */}
-              {error && (
-                <div
-                  style={{
-                    background: "#FFF0F0",
-                    border: "1px solid #FCA5A5",
-                    borderRadius: 8,
-                    padding: "10px 12px",
-                    fontSize: 12,
-                    color: "#B91C1C",
-                    marginBottom: 12,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {error.message || "Transaction failed. Please try again."}
+                  {error && (
+                    <div style={{ background: "#FFF0F0", border: "1px solid #FCA5A5", borderRadius: 8, padding: "10px 12px", fontSize: 12, color: "#B91C1C", marginBottom: 12, lineHeight: 1.5 }}>
+                      {error.message || "Transaction failed. Please try again."}
+                      {isInsufficientFunds(error) && (
+                        <div style={{ marginTop: 6 }}>
+                          <a
+                            href="https://link.minipay.xyz/add_cash?tokens=USDm,USDC,USDT"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: "#B91C1C", fontWeight: 700, textDecoration: "underline" }}
+                          >
+                            Add funds in MiniPay ↗
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSubmit}
+                    disabled={!home || !away || isPending || !isConnected}
+                  >
+                    {!isConnected
+                      ? "Connect wallet to submit"
+                      : isPending
+                      ? "Waiting for confirmation..."
+                      : "Submit prediction · Free"}
+                  </button>
+
+                  {!isConnected && (
+                    <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-muted)", marginTop: 8 }}>
+                      Open in MiniPay or connect a Celo wallet
+                    </div>
+                  )}
                 </div>
-              )}
 
-              <button
-                className="btn btn-primary"
-                onClick={handleSubmit}
-                disabled={!home || !away || isPending || !isConnected}
-              >
-                {!isConnected
-                  ? "Connect wallet to submit"
-                  : isPending
-                  ? "Waiting for confirmation..."
-                  : "Submit prediction · Free"}
-              </button>
-
-              {!isConnected && (
-                <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-muted)", marginTop: 8 }}>
-                  Open in MiniPay or connect a Celo wallet
+                <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-muted)", marginTop: 12, lineHeight: 1.6 }}>
+                  Your prediction will be recorded on Celo Mainnet for audit transparency.
+                  <br />It is not a bet. No entry fee. No prize pool.
                 </div>
-              )}
-            </div>
-
-            <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-muted)", marginTop: 12, lineHeight: 1.6 }}>
-              Your prediction will be recorded on Celo Mainnet for audit transparency.
-              <br />It is not a bet. No entry fee. No prize pool.
-            </div>
+              </>
+            )}
           </>
         )}
       </div>
@@ -194,7 +217,7 @@ export function PredictionDetail() {
 function SubmittedView({
   match, home, away, txHash, onAudit,
 }: {
-  match: { home: string; away: string; homeFlag: string; awayFlag: string };
+  match: { home: string; away: string; homeFlag: string; awayFlag: string; id: string };
   home: number;
   away: number;
   txHash?: `0x${string}`;

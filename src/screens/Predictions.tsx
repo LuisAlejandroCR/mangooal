@@ -1,60 +1,42 @@
 import { CeloBadge } from "../components/CeloBadge";
 import { MatchCard, type MatchData } from "../components/MatchCard";
 import { useMiniPay } from "../hooks/useMiniPay";
+import { COPA_MATCHES, matchStatus } from "../config/matches";
 
-const MOCK_MATCHES: MatchData[] = [
-  {
-    id: "m1",
-    campaignId: "copa-2026",
-    home: "Colombia",
-    away: "Brazil",
-    homeFlag: "🇨🇴",
-    awayFlag: "🇧🇷",
-    competition: "Copa América 2026",
-    kickoff: new Date(Date.now() + 3 * 3600000),
-    lockedAt: new Date(Date.now() + 2.5 * 3600000),
-    status: "open",
-  },
-  {
-    id: "m2",
-    campaignId: "copa-2026",
-    home: "Argentina",
-    away: "Mexico",
-    homeFlag: "🇦🇷",
-    awayFlag: "🇲🇽",
-    competition: "Copa América 2026",
-    kickoff: new Date(Date.now() + 7 * 3600000),
-    lockedAt: new Date(Date.now() + 6.5 * 3600000),
-    status: "open",
-  },
-  {
-    id: "m3",
-    campaignId: "copa-2026",
-    home: "Spain",
-    away: "England",
-    homeFlag: "🇪🇸",
-    awayFlag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
-    competition: "UEFA Nations League",
-    kickoff: new Date(Date.now() - 1 * 3600000),
-    lockedAt: new Date(Date.now() - 2 * 3600000),
-    userPick: { home: 2, away: 1 },
-    status: "live",
-  },
-];
+// Convert MatchConfig[] to MatchData[] for MatchCard on each render
+// so that `matchStatus()` always reflects the current time.
+function buildMatchData(): MatchData[] {
+  return COPA_MATCHES.map((m) => ({
+    id:          m.id,
+    campaignId:  m.campaignId,
+    home:        m.home,
+    away:        m.away,
+    homeFlag:    m.homeFlag,
+    awayFlag:    m.awayFlag,
+    competition: m.competition,
+    kickoff:     new Date(m.kickoffAt),
+    lockedAt:    new Date(m.lockedAt),
+    status:      matchStatus(m),
+  }));
+}
 
 export function Predictions() {
-  const { isMiniPay, address, isConnected } = useMiniPay();
+  const { isMiniPay, isConnected, address } = useMiniPay();
+  const allMatches = buildMatchData();
+  const openMatches = allMatches.filter((m) => m.status === "open");
+  const lockedOrLive = allMatches.filter(
+    (m) => m.status === "locked" || m.status === "live"
+  );
 
   return (
     <div className="screen">
-      {/* Top bar */}
       <div className="topbar">
         <span className="topbar-logo">⚽ <span>Mangoo</span>al</span>
         <CeloBadge variant={isConnected ? "connected" : "network"} />
       </div>
 
       <div className="screen-body">
-        {/* Wallet status bar (MiniPay auto-shows connected state) */}
+        {/* Wallet status bar */}
         {isConnected && (
           <div className="wallet-bar" style={{ marginTop: 12 }}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -85,11 +67,11 @@ export function Predictions() {
           </div>
           <div style={{ fontSize: 20, fontWeight: 800 }}>Copa América 2026 🏆</div>
           <div style={{ fontSize: 13, opacity: 0.75, marginTop: 4 }}>
-            3 matches · Predictions are free for everyone
+            {COPA_MATCHES.length} matches · Predictions are free for everyone
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <span style={{ background: "rgba(255,255,255,0.15)", borderRadius: 50, padding: "4px 12px", fontSize: 12, fontWeight: 700 }}>
-              7 days left
+              {openMatches.length} open
             </span>
             <span style={{ background: "rgba(255,200,61,0.25)", borderRadius: 50, padding: "4px 12px", fontSize: 12, fontWeight: 700, color: "#FFC83D" }}>
               Promotional rewards available
@@ -97,16 +79,28 @@ export function Predictions() {
           </div>
         </div>
 
-        {/* Matches */}
-        <div className="section-title">Open predictions</div>
-        {MOCK_MATCHES.filter((m) => m.status === "open").map((m) => (
-          <MatchCard key={m.id} match={m} />
-        ))}
+        {/* Open predictions */}
+        {openMatches.length > 0 && (
+          <>
+            <div className="section-title">Open predictions</div>
+            {openMatches.map((m) => <MatchCard key={m.id} match={m} />)}
+          </>
+        )}
 
-        <div className="section-title">Your active picks</div>
-        {MOCK_MATCHES.filter((m) => m.userPick).map((m) => (
-          <MatchCard key={m.id} match={m} />
-        ))}
+        {/* Live / locked */}
+        {lockedOrLive.length > 0 && (
+          <>
+            <div className="section-title">In progress</div>
+            {lockedOrLive.map((m) => <MatchCard key={m.id} match={m} />)}
+          </>
+        )}
+
+        {/* All finished */}
+        {openMatches.length === 0 && lockedOrLive.length === 0 && (
+          <div className="card" style={{ textAlign: "center", padding: "24px 16px", color: "var(--text-muted)", fontSize: 14 }}>
+            No open matches right now. Check back soon — new rounds coming! ⚽
+          </div>
+        )}
 
         {/* Compliance notice */}
         <div

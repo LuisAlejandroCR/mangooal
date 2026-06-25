@@ -1,55 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
-import { keccak256, toHex } from "viem";
 import { CeloBadge } from "../components/CeloBadge";
 import { useRevealPrediction } from "../hooks/useMangoalLedger";
+import { useMyPicks, type PickEntry, type PickStatus } from "../hooks/useMyPicks";
+import type { MatchConfig } from "../config/matches";
 
-const MOCK_PICKS = [
-  {
-    id: "m3",
-    home: "Spain",
-    away: "England",
-    homeFlag: "🇪🇸",
-    awayFlag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
-    pick: { home: 2, away: 1 },
-    result: { home: 2, away: 1 },
-    points: 10,
-    status: "scored" as const,
-  },
-  {
-    id: "m1",
-    home: "Colombia",
-    away: "Brazil",
-    homeFlag: "🇨🇴",
-    awayFlag: "🇧🇷",
-    pick: { home: 2, away: 0 },
-    result: null,
-    points: null,
-    status: "committed" as const,
-  },
-  {
-    id: "m2",
-    home: "Argentina",
-    away: "Mexico",
-    homeFlag: "🇦🇷",
-    awayFlag: "🇲🇽",
-    pick: { home: 3, away: 1 },
-    result: null,
-    points: null,
-    status: "committed" as const,
-  },
-];
-
-const STATUS_LABELS = {
-  committed: { text: "Waiting for result", color: "var(--text-muted)" },
-  revealed:  { text: "Revealed · Awaiting score", color: "var(--green)" },
-  scored:    { text: "Scored", color: "var(--success)" },
+const STATUS_LABELS: Record<PickStatus, { text: string; color: string }> = {
+  none:      { text: "Not submitted",          color: "var(--text-muted)" },
+  committed: { text: "Waiting for result",     color: "var(--text-muted)" },
+  revealed:  { text: "Revealed · Scoring soon", color: "var(--green)" },
+  scored:    { text: "Scored",                 color: "var(--success)" },
 };
 
-const DEMO_CAMPAIGN_ID = keccak256(toHex("copa-america-2026"));
-
-// Sub-component: per-pick reveal button with its own hook instance
-function RevealButton({ matchId }: { matchId: string }) {
+function RevealButton({ match }: { match: MatchConfig }) {
   const { isConnected } = useAccount();
   const { reveal, txHash, isPending, error } = useRevealPrediction();
 
@@ -68,12 +31,9 @@ function RevealButton({ matchId }: { matchId: string }) {
         disabled={isPending || !isConnected}
         onClick={async () => {
           try {
-            await reveal({
-              campaignId: DEMO_CAMPAIGN_ID,
-              matchId: keccak256(toHex(matchId)),
-            });
+            await reveal({ campaignId: match.campaignId, matchId: match.matchId });
           } catch {
-            // error surfaces below
+            // error surfaces in the error state below
           }
         }}
       >
@@ -88,9 +48,77 @@ function RevealButton({ matchId }: { matchId: string }) {
   );
 }
 
-export function MyPicks() {
+function PickCard({ entry }: { entry: PickEntry }) {
   const navigate = useNavigate();
-  const totalPoints = MOCK_PICKS.reduce((s, p) => s + (p.points ?? 0), 0);
+  const { match, status, homeScore, awayScore, points, canReveal, hasSalt } = entry;
+  const statusMeta = STATUS_LABELS[status];
+  const isExact =
+    status === "scored" &&
+    homeScore !== null &&
+    awayScore !== null;
+
+  return (
+    <div className="card" style={{ marginBottom: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <span style={{ fontSize: 12, color: statusMeta.color, fontWeight: 700 }}>
+          {statusMeta.text}
+        </span>
+        {points !== null && points > 0 && (
+          <span style={{ fontWeight: 800, color: isExact ? "var(--success)" : "var(--text)", fontSize: 15 }}>
+            {isExact ? "🎯 " : ""}{points} pts
+          </span>
+        )}
+      </div>
+
+      <div
+        className="match-teams"
+        style={{ cursor: "pointer" }}
+        onClick={() => navigate(`/audit/${match.id}`)}
+      >
+        <div className="team-name" style={{ fontSize: 13 }}>
+          <div style={{ fontSize: 22, marginBottom: 2 }}>{match.homeFlag}</div>
+          {match.home}
+        </div>
+        <div style={{ textAlign: "center" }}>
+          {homeScore !== null ? (
+            <div style={{ fontWeight: 800, fontSize: 18, color: "var(--green)" }}>
+              {homeScore} – {awayScore}
+            </div>
+          ) : (
+            <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text-muted)" }}>
+              Committed
+            </div>
+          )}
+        </div>
+        <div className="team-name" style={{ fontSize: 13 }}>
+          <div style={{ fontSize: 22, marginBottom: 2 }}>{match.awayFlag}</div>
+          {match.away}
+        </div>
+      </div>
+
+      <div
+        style={{ marginTop: 8, fontSize: 11, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}
+        onClick={() => navigate(`/audit/${match.id}`)}
+      >
+        <CeloBadge variant="network" />
+        <span>Tap to view on-chain audit</span>
+      </div>
+
+      {/* Reveal: only show when past lockedAt and not yet revealed */}
+      {canReveal && hasSalt && <RevealButton match={match} />}
+      {canReveal && !hasSalt && (
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 8 }}>
+          Reveal data not found on this device. Open on the device where you submitted the prediction.
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function MyPicks() {
+  const { picks, isLoading } = useMyPicks();
+  const activePicks = picks.filter((p) => p.status !== "none");
+  const totalPoints = activePicks.reduce((s, p) => s + (p.points ?? 0), 0);
 
   return (
     <div className="screen">
@@ -101,79 +129,38 @@ export function MyPicks() {
 
       <div className="screen-body" style={{ paddingTop: 16 }}>
         {/* Summary card */}
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>Total points</div>
-              <div style={{ fontSize: 32, fontWeight: 900, color: "var(--green)" }}>{totalPoints}</div>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>Picks</div>
-              <div style={{ fontSize: 24, fontWeight: 800 }}>{MOCK_PICKS.length}</div>
+        {activePicks.length > 0 && (
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>Total points</div>
+                <div style={{ fontSize: 32, fontWeight: 900, color: "var(--green)" }}>{totalPoints}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>Picks</div>
+                <div style={{ fontSize: 24, fontWeight: 800 }}>{activePicks.length}</div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="section-title">My predictions</div>
-        {MOCK_PICKS.map((pick) => {
-          const exact = pick.result &&
-            pick.result.home === pick.pick.home &&
-            pick.result.away === pick.pick.away;
-          const statusKey = pick.status as keyof typeof STATUS_LABELS;
 
-          return (
-            <div
-              key={pick.id}
-              className="card"
-              style={{ marginBottom: 10 }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontSize: 12, color: STATUS_LABELS[statusKey].color, fontWeight: 700 }}>
-                  {STATUS_LABELS[statusKey].text}
-                </span>
-                {pick.points !== null && (
-                  <span style={{ fontWeight: 800, color: exact ? "var(--success)" : "var(--text)", fontSize: 15 }}>
-                    {exact ? "🎯 " : ""}{pick.points} pts
-                  </span>
-                )}
-              </div>
-
-              <div className="match-teams" style={{ cursor: "pointer" }} onClick={() => navigate(`/audit/${pick.id}`)}>
-                <div className="team-name" style={{ fontSize: 13 }}>
-                  <div style={{ fontSize: 22, marginBottom: 2 }}>{pick.homeFlag}</div>
-                  {pick.home}
-                </div>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontWeight: 800, fontSize: 18, color: "var(--green)" }}>
-                    {pick.pick.home} – {pick.pick.away}
-                  </div>
-                  {pick.result && (
-                    <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
-                      Result: {pick.result.home} – {pick.result.away}
-                    </div>
-                  )}
-                </div>
-                <div className="team-name" style={{ fontSize: 13 }}>
-                  <div style={{ fontSize: 22, marginBottom: 2 }}>{pick.awayFlag}</div>
-                  {pick.away}
-                </div>
-              </div>
-
-              <div
-                style={{ marginTop: 8, fontSize: 11, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}
-                onClick={() => navigate(`/audit/${pick.id}`)}
-              >
-                <CeloBadge variant="network" />
-                <span>Tap to view on-chain audit</span>
-              </div>
-
-              {/* Reveal button shown for committed picks (after match kicks off) */}
-              {pick.status === "committed" && (
-                <RevealButton matchId={pick.id} />
-              )}
+        {isLoading ? (
+          <div className="card" style={{ textAlign: "center", color: "var(--text-muted)", padding: "24px 16px" }}>
+            Loading…
+          </div>
+        ) : activePicks.length === 0 ? (
+          <div className="card" style={{ textAlign: "center", padding: "24px 16px" }}>
+            <div style={{ fontSize: 32, marginBottom: 10 }}>⚽</div>
+            <div style={{ fontWeight: 700, marginBottom: 6 }}>No picks yet</div>
+            <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6 }}>
+              Head to the Predictions tab and submit your first pick — it's free!
             </div>
-          );
-        })}
+          </div>
+        ) : (
+          activePicks.map((entry) => <PickCard key={entry.match.id} entry={entry} />)
+        )}
       </div>
     </div>
   );

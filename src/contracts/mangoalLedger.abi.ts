@@ -217,6 +217,17 @@ export const MANGOAL_LEDGER_ABI = [
   },
   {
     type: "function",
+    name: "points",
+    stateMutability: "view",
+    inputs: [
+      { name: "wallet", type: "address" },
+      { name: "campaignId", type: "bytes32" },
+      { name: "matchId", type: "bytes32" },
+    ],
+    outputs: [{ type: "uint32" }],
+  },
+  {
+    type: "function",
     name: "treasury",
     stateMutability: "view",
     inputs: [],
