@@ -8,27 +8,43 @@ import "../contracts/MangooalLedger.sol";
 /**
  * Deploy MangooalLedger to Celo Mainnet.
  *
- * Setup (one-time):
+ * ── One-time Foundry setup ────────────────────────────────────────────────
  *   forge install foundry-rs/forge-std --no-commit
  *   forge install OpenZeppelin/openzeppelin-contracts --no-commit
  *
- * Deploy to Celo Mainnet:
- *   ADMIN_ADDRESS=0x...   \
- *   TREASURY_ADDRESS=0x...  \
- *   CELOSCAN_API_KEY=...     \
+ * ── Deploy ────────────────────────────────────────────────────────────────
+ *   ADMIN_ADDRESS=0x...          \
+ *   TREASURY_ADDRESS=0x...       \
+ *   ETHERSCAN_API_KEY=...        \
  *   forge script script/Deploy.s.sol \
- *     --rpc-url celo \
- *     --broadcast \
- *     --verify \
+ *     --rpc-url celo             \
+ *     --broadcast                \
+ *     --verify                   \
  *     --legacy
  *
- * The --legacy flag is required on Celo (no EIP-1559 on the OP L2 sequencer).
+ *   Flags:
+ *     --legacy   Required on Celo — OP L2 sequencer only accepts legacy txs.
+ *     --verify   Verifies source on Celoscan. Needs ETHERSCAN_API_KEY
+ *                (Celoscan uses the Etherscan V2 unified API; get a free key
+ *                 at https://etherscan.io/register).
  *
- * After deployment:
- *   1. Copy the deployed address into src/hooks/useMangoalLedger.ts → MANGOAL_LEDGER_ADDRESS
- *   2. Grant OPERATOR_ROLE to the backend oracle wallet
- *   3. Grant ORACLE_ROLE to the result-submission wallet
- *   4. Call setPassPrice() for each pass type × token combination
+ * ── After deployment ──────────────────────────────────────────────────────
+ *   1. Checksum the deployed address (viem enforces strict EIP-55):
+ *        cast to-checksum-address <deployed-address>
+ *
+ *   2. Paste into src/hooks/useMangoalLedger.ts → MANGOAL_LEDGER_ADDRESS
+ *
+ *   3. Get the deploy block number (for VITE_DEPLOY_BLOCK env var):
+ *        cast receipt --rpc-url https://forno.celo.org <tx-hash> | grep blockNumber
+ *
+ *   4. Run post-deploy setup (pass prices + Copa América campaign + ORACLE_ROLE):
+ *        LEDGER_ADDRESS=<checksummed>   \
+ *        ORACLE_ADDRESS=<oracle-wallet>  \
+ *        ETHERSCAN_API_KEY=...           \
+ *        forge script script/SetupAfterDeploy.s.sol \
+ *          --rpc-url celo --broadcast --legacy
+ *
+ *   5. Set VITE_DEPLOY_BLOCK=<block-number> in Vercel env vars, then redeploy.
  */
 contract DeployMangooalLedger is Script {
     function run() external {

@@ -11,8 +11,7 @@ remappings = [
 
 [rpc_endpoints]
 celo        = "https://forno.celo.org"
-celo_testnet = "https://alfajores-forno.celo-testnet.org"
 
 [etherscan]
-celo        = { key = "${CELOSCAN_API_KEY}", url = "https://api.celoscan.io/api",          chain = 42220 }
-celo_testnet = { key = "${CELOSCAN_API_KEY}", url = "https://api-alfajores.celoscan.io/api", chain = 44787 }
+celo        = { key = "${ETHERSCAN_API_KEY}", url = "https://api.celoscan.io/api", chain = 42220 }
+
