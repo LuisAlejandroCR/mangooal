@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CeloBadge } from "../components/CeloBadge";
-import { FEATURED_TOKENS, MINIPAY_TX_TOKENS, type StablecoinInfo } from "../config/stablecoins";
+import { FEATURED_TOKENS, type StablecoinInfo } from "../config/stablecoins";
 
 type PassOption = {
   id: string;

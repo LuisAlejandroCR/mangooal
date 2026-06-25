@@ -2,7 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { CeloBadge } from "../components/CeloBadge";
 
 export function CoachInsight() {
-  const { id } = useParams();
+  useParams();
   const navigate = useNavigate();
 
   // Mock insight data — replace with real sports API response
