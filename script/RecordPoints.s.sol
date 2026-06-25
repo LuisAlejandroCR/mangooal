@@ -50,12 +50,25 @@ contract RecordPoints is Script {
         console.log("Match:", slug);
 
         vm.startBroadcast();
+        uint256 recorded = 0;
+        uint256 skipped  = 0;
         for (uint256 i = 0; i < wallets.length; i++) {
-            ledger.recordPoints(campaignId, matchId, wallets[i], uint32(ptsList[i]));
+            try ledger.recordPoints(campaignId, matchId, wallets[i], uint32(ptsList[i])) {
+                recorded++;
+            } catch Error(string memory reason) {
+                if (keccak256(bytes(reason)) == keccak256(bytes("already recorded"))) {
+                    skipped++;
+                } else {
+                    revert(string.concat("recordPoints reverted: ", reason));
+                }
+            } catch (bytes memory) {
+                revert("recordPoints: unexpected low-level revert");
+            }
         }
         vm.stopBroadcast();
 
-        console.log("Done. PointsRecorded events now appear on Celoscan.");
+        console.log("Done. Recorded:", recorded, "  Skipped (already recorded):", skipped);
+        console.log("PointsRecorded events now appear on Celoscan.");
         console.log("Ranking leaderboard updates within 2 minutes.");
     }
 }

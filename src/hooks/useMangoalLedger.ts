@@ -237,8 +237,9 @@ export function useRevealPrediction() {
 }
 
 // ── claimPromotionalReward ──────────────────────────────────────────────────
-// Operator-signed claim. The signature is generated off-chain by the operator
-// and delivered to eligible users via the backend / deep link.
+// Operator-signed claim (EIP-712). The signature + nonce are generated off-chain
+// by the operator and delivered to eligible users via the deep link:
+//   /claim?cid=0x...&token=0x...&amount=...&nonce=0&sig=0x...&label=...
 export function useClaimReward() {
   const { writeContractAsync, isPending, error } = useWriteContract();
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
@@ -247,18 +248,20 @@ export function useClaimReward() {
     campaignId,
     token,
     amount,
+    nonce,
     operatorSignature,
   }: {
     campaignId: `0x${string}`;
     token: `0x${string}`;
     amount: bigint;
+    nonce: bigint;
     operatorSignature: `0x${string}`;
   }) {
     const hash = await writeContractAsync({
       address: MANGOAL_LEDGER_ADDRESS,
       abi: MANGOAL_LEDGER_ABI,
       functionName: "claimPromotionalReward",
-      args: [campaignId, token, amount, operatorSignature],
+      args: [campaignId, token, amount, nonce, operatorSignature],
       type: "legacy",
     });
 

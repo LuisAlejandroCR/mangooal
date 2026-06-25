@@ -6,10 +6,11 @@ import { STABLECOINS } from "../config/stablecoins";
 
 /**
  * Reward deep-link format (operator sends via notification):
- *   /claim?cid=<bytes32-campaignId>&token=<tokenAddress>&amount=<rawBigInt>&sig=<operatorSig>&label=Copa+Am%C3%A9rica+2026
+ *   /claim?cid=<bytes32-campaignId>&token=<tokenAddress>&amount=<rawBigInt>&nonce=<uint256>&sig=<operatorSig>&label=Copa+Am%C3%A9rica+2026
  *
- * Operator signature message (EIP-191 prefixed hash):
- *   keccak256(abi.encodePacked(wallet, campaignId, token, amount))
+ * Operator signature: EIP-712 digest over
+ *   Claim(address wallet, bytes32 campaignId, address token, uint256 amount, uint256 nonce)
+ * bound to MangooalLedger's DOMAIN_SEPARATOR (chainId=42220, address(this)).
  */
 export function RewardClaim() {
   const navigate = useNavigate();
@@ -19,10 +20,12 @@ export function RewardClaim() {
   const cid       = searchParams.get("cid") as `0x${string}` | null;
   const tokenAddr = searchParams.get("token") as `0x${string}` | null;
   const rawAmount = searchParams.get("amount");
+  const rawNonce  = searchParams.get("nonce");
   const sig       = searchParams.get("sig") as `0x${string}` | null;
   const label     = searchParams.get("label") ?? "Copa América 2026";
 
   const amount = rawAmount ? BigInt(rawAmount) : null;
+  const nonce  = rawNonce != null ? BigInt(rawNonce) : null;
   const tokenInfo = tokenAddr
     ? Object.values(STABLECOINS).find(
         (s) => s.address.toLowerCase() === tokenAddr.toLowerCase()
@@ -33,7 +36,7 @@ export function RewardClaim() {
       ? `${formatUnits(amount, tokenInfo.decimals)} ${tokenInfo.symbol}`
       : null;
 
-  const isValid = !!cid && !!tokenAddr && !!amount && !!sig;
+  const isValid = !!cid && !!tokenAddr && !!amount && nonce != null && !!sig;
 
   async function handleClaim() {
     if (!isValid) return;
@@ -42,6 +45,7 @@ export function RewardClaim() {
         campaignId: cid!,
         token: tokenAddr!,
         amount: amount!,
+        nonce: nonce!,
         operatorSignature: sig!,
       });
     } catch {

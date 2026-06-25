@@ -76,9 +76,15 @@ contract RegisterMatches is Script {
         try ledger.registerMatch(campaignId, matchId, metadataHash, kickoffAt, lockedAt) {
             console.log("Registered:");
             console.logBytes32(matchId);
-        } catch {
-            console.log("Already registered (skipped):");
-            console.logBytes32(matchId);
+        } catch Error(string memory reason) {
+            if (keccak256(bytes(reason)) == keccak256(bytes("match exists"))) {
+                console.log("Already registered (skipped):");
+                console.logBytes32(matchId);
+            } else {
+                revert(string.concat("registerMatch reverted: ", reason));
+            }
+        } catch (bytes memory) {
+            revert("registerMatch: unexpected low-level revert");
         }
     }
 }

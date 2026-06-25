@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /**
  * MangooalLedger — single on-chain contract for Mangooal sports prediction Mini App.
@@ -53,6 +54,7 @@ contract MangooalLedger is AccessControl, Pausable, ReentrancyGuard {
     uint8 public constant PASS_WEEKLY   = 2;
     uint8 public constant PASS_CAMPAIGN = 3;
     uint8 public constant PASS_SEASON   = 4;
+    uint32 public constant MAX_POINTS   = 5; // exact-score maximum
 
     // ─── Structs ──────────────────────────────────────────────────────────────
 
@@ -115,6 +117,13 @@ contract MangooalLedger is AccessControl, Pausable, ReentrancyGuard {
 
     address public treasury;
 
+    // EIP-712 reward claim domain
+    bytes32 public immutable DOMAIN_SEPARATOR;
+    bytes32 private constant CLAIM_TYPEHASH = keccak256(
+        "Claim(address wallet,bytes32 campaignId,address token,uint256 amount,uint256 nonce)"
+    );
+    mapping(address => uint256) public rewardNonces;
+
     // ─── Events ───────────────────────────────────────────────────────────────
 
     event CampaignCreated(
@@ -172,16 +181,28 @@ contract MangooalLedger is AccessControl, Pausable, ReentrancyGuard {
     );
     event TokenAllowlistUpdated(address indexed token, bool allowed);
     event TreasuryUpdated(address indexed treasury);
+    event PassPriceUpdated(uint8 indexed passType, address indexed token, uint256 amount);
+    event RewardPoolFunded(address indexed token, uint256 amount, address indexed funder);
+    event ERC20Rescued(address indexed token, address indexed to, uint256 amount);
 
     // ─── Constructor ──────────────────────────────────────────────────────────
 
     constructor(address admin, address _treasury) {
         require(admin != address(0), "zero admin");
         require(_treasury != address(0), "zero treasury");
+        require(_treasury != address(this), "treasury is self");
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(OPERATOR_ROLE, admin);
         treasury = _treasury;
+
+        DOMAIN_SEPARATOR = keccak256(abi.encode(
+            keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+            keccak256("MangooalLedger"),
+            keccak256("1"),
+            block.chainid,
+            address(this)
+        ));
 
         // Seed allowlist — Celo Mainnet verified addresses (celopedia-skill 2026-04-15)
         _allow(0x765DE816845861e75A25fCA122bb6898B8B1282a); // USDm  (18 dec)
@@ -207,6 +228,7 @@ contract MangooalLedger is AccessControl, Pausable, ReentrancyGuard {
 
     function setTreasury(address _treasury) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_treasury != address(0), "zero address");
+        require(_treasury != address(this), "treasury is self");
         treasury = _treasury;
         emit TreasuryUpdated(_treasury);
     }
@@ -220,10 +242,31 @@ contract MangooalLedger is AccessControl, Pausable, ReentrancyGuard {
         require(_validPassType(passType), "invalid pass type");
         require(allowedTokens[token], "token not allowed");
         passPrices[passType][token] = amount;
+        emit PassPriceUpdated(passType, token, amount);
     }
 
     function pause()   external onlyRole(DEFAULT_ADMIN_ROLE) { _pause(); }
     function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) { _unpause(); }
+
+    function fundRewardPool(address token, uint256 amount) external {
+        require(allowedTokens[token], "token not allowed");
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+        emit RewardPoolFunded(token, amount, msg.sender);
+    }
+
+    function rewardPoolBalance(address token) external view returns (uint256) {
+        return IERC20(token).balanceOf(address(this));
+    }
+
+    function rescueERC20(
+        address token,
+        address to,
+        uint256 amount
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(to != address(0), "zero address");
+        IERC20(token).safeTransfer(to, amount);
+        emit ERC20Rescued(token, to, amount);
+    }
 
     // ─── Campaign management ──────────────────────────────────────────────────
 
@@ -233,7 +276,7 @@ contract MangooalLedger is AccessControl, Pausable, ReentrancyGuard {
         uint64  startsAt,
         uint64  endsAt
     ) external onlyRole(OPERATOR_ROLE) whenNotPaused {
-        require(campaigns[campaignId].startsAt == 0, "campaign exists");
+        require(campaigns[campaignId].metadataHash == bytes32(0), "campaign exists");
         require(endsAt > startsAt, "invalid window");
         campaigns[campaignId] = Campaign({
             metadataHash: metadataHash,
@@ -253,7 +296,7 @@ contract MangooalLedger is AccessControl, Pausable, ReentrancyGuard {
     ) external onlyRole(OPERATOR_ROLE) whenNotPaused {
         require(campaigns[campaignId].active, "unknown campaign");
         require(lockedAt <= kickoffAt, "lock must precede kickoff");
-        require(matches[matchId].kickoffAt == 0, "match exists");
+        require(matches[matchId].metadataHash == bytes32(0), "match exists");
         matches[matchId] = Match({
             campaignId:      campaignId,
             metadataHash:    metadataHash,
@@ -306,7 +349,9 @@ contract MangooalLedger is AccessControl, Pausable, ReentrancyGuard {
     ) external whenNotPaused {
         Match storage m = matches[matchId];
         require(m.kickoffAt > 0, "unknown match");
+        require(m.campaignId == campaignId, "match/campaign mismatch");
         require(block.timestamp >= m.lockedAt, "reveal window not open");
+        require(!m.resultSubmitted, "result already submitted");
 
         PredictionCommit storage p = predictions[msg.sender][campaignId][matchId];
         require(p.committedAt > 0, "no commit found");
@@ -354,7 +399,12 @@ contract MangooalLedger is AccessControl, Pausable, ReentrancyGuard {
         address wallet,
         uint32  pts
     ) external onlyRole(ORACLE_ROLE) whenNotPaused {
-        require(matches[matchId].resultSubmitted, "result not submitted");
+        Match storage m = matches[matchId];
+        require(m.resultSubmitted, "result not submitted");
+        require(m.campaignId == campaignId, "mismatch");
+        require(pts <= MAX_POINTS, "pts exceeds maximum");
+        require(predictions[wallet][campaignId][matchId].revealed, "prediction not revealed");
+        require(points[wallet][campaignId][matchId] == 0, "already recorded");
         points[wallet][campaignId][matchId] = pts;
         emit PointsRecorded(wallet, campaignId, matchId, pts);
     }
@@ -410,23 +460,28 @@ contract MangooalLedger is AccessControl, Pausable, ReentrancyGuard {
     // ─── Promotional reward claim ─────────────────────────────────────────────
 
     /**
-     * Operator-signed promotional reward claim.
+     * Operator-signed promotional reward claim (EIP-712).
      * Rewards are operator-funded (not user-funded). Not a betting payout.
-     * signature = ECDSA(keccak256(wallet, campaignId, token, amount)) by OPERATOR_ROLE signer.
+     * digest = EIP-712 Claim(wallet, campaignId, token, amount, nonce) signed by OPERATOR_ROLE.
+     * nonce increments per wallet on each claim, preventing cross-chain / cross-deployment replay.
      */
     function claimPromotionalReward(
-        bytes32      campaignId,
-        address      token,
-        uint256      amount,
+        bytes32        campaignId,
+        address        token,
+        uint256        amount,
+        uint256        nonce,
         bytes calldata operatorSignature
     ) external nonReentrant whenNotPaused {
         require(!rewardClaimed[msg.sender][campaignId], "already claimed");
         require(allowedTokens[token], "token not allowed");
+        require(amount > 0, "zero amount");
+        require(nonce == rewardNonces[msg.sender], "invalid nonce");
         require(
-            _verifyOperatorClaim(msg.sender, campaignId, token, amount, operatorSignature),
+            _verifyOperatorClaim(msg.sender, campaignId, token, amount, nonce, operatorSignature),
             "invalid operator signature"
         );
 
+        rewardNonces[msg.sender]++;
         rewardClaimed[msg.sender][campaignId] = true;
         IERC20(token).safeTransfer(msg.sender, amount);
 
@@ -473,28 +528,19 @@ contract MangooalLedger is AccessControl, Pausable, ReentrancyGuard {
         bytes32        campaignId,
         address        token,
         uint256        amount,
+        uint256        nonce,
         bytes calldata signature
     ) internal view returns (bool) {
-        bytes32 msgHash     = keccak256(abi.encodePacked(wallet, campaignId, token, amount));
-        bytes32 ethHash     = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
-        address signer      = _recoverSigner(ethHash, signature);
+        bytes32 structHash = keccak256(abi.encode(
+            CLAIM_TYPEHASH,
+            wallet,
+            campaignId,
+            token,
+            amount,
+            nonce
+        ));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
+        address signer = ECDSA.recover(digest, signature);
         return hasRole(OPERATOR_ROLE, signer);
-    }
-
-    function _recoverSigner(bytes32 hash, bytes calldata sig) internal pure returns (address) {
-        require(sig.length == 65, "invalid sig length");
-        bytes32 r;
-        bytes32 s;
-        uint8   v;
-        assembly {
-            r := calldataload(sig.offset)
-            s := calldataload(add(sig.offset, 32))
-            v := byte(0, calldataload(add(sig.offset, 64)))
-        }
-        if (v < 27) v += 27;
-        require(v == 27 || v == 28, "invalid v");
-        address recovered = ecrecover(hash, v, r, s);
-        require(recovered != address(0), "ecrecover failed");
-        return recovered;
     }
 }
