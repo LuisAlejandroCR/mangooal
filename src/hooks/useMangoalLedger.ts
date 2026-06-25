@@ -4,12 +4,19 @@ import { keccak256, encodePacked, toHex, parseUnits } from "viem";
 import { MANGOAL_LEDGER_ABI } from "../contracts/mangoalLedger.abi";
 import { ERC20_ABI } from "../contracts/erc20.abi";
 import type { StablecoinInfo } from "../config/stablecoins";
+import { analytics } from "../lib/analytics";
 
 // TODO: replace with deployed contract address after deploying MangooalLedger on Celo Mainnet
 export const MANGOAL_LEDGER_ADDRESS =
   "0x0000000000000000000000000000000000000000" as `0x${string}`;
 
-const CONTRACT_LIVE = MANGOAL_LEDGER_ADDRESS !== "0x0000000000000000000000000000000000000000";
+export const CONTRACT_LIVE = MANGOAL_LEDGER_ADDRESS !== "0x0000000000000000000000000000000000000000";
+
+// Set VITE_DEPLOY_BLOCK in Vercel env after deploying MangooalLedger.
+// Used by useOnChainStats to scope getLogs to the contract's lifetime.
+export const MANGOAL_DEPLOY_BLOCK = BigInt(
+  (import.meta.env.VITE_DEPLOY_BLOCK as string | undefined) ?? "0"
+);
 
 // Pass type constants (mirror MangoalLedger.sol)
 export const PASS_TYPE = {
@@ -88,6 +95,7 @@ export function useCommitPrediction() {
     localStorage.setItem(scoresKey(matchId, address), JSON.stringify({ homeScore, awayScore }));
 
     setTxHash(hash);
+    analytics.predictionCommitted(campaignId, matchId);
     return { hash, predictionHash };
   }
 
@@ -153,6 +161,7 @@ export function usePurchaseCoachPass() {
 
       setTxHash(purchaseTx);
       setStep("done");
+      analytics.coachPassPurchased(passType, token.symbol);
       return { txHash: purchaseTx };
     } catch (err) {
       const e = err instanceof Error ? err : new Error("Transaction failed");
@@ -209,6 +218,7 @@ export function useRevealPrediction() {
     });
 
     setTxHash(hash);
+    analytics.predictionRevealed(campaignId, matchId);
     return { hash };
   }
 
@@ -242,6 +252,7 @@ export function useClaimReward() {
     });
 
     setTxHash(hash);
+    analytics.rewardClaimed(campaignId, token);
     return { hash };
   }
 

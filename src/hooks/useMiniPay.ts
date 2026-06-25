@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useConnect, useAccount } from "wagmi";
 import { injected } from "wagmi/connectors";
+import { analytics } from "../lib/analytics";
 
 /**
  * Detects MiniPay environment and auto-connects on mount.
@@ -29,8 +30,14 @@ export function useMiniPay() {
 
     if (detected && !isConnected) {
       connect({ connector: injected({ target: "metaMask" }) });
+      analytics.walletConnected("minipay");
     }
   }, [connect, isConnected]);
+
+  // Identify wallet address when connected so PostHog ties events to the wallet
+  useEffect(() => {
+    if (address) analytics.identify(address as `0x${string}`);
+  }, [address]);
 
   return { isMiniPay, address, isConnected };
 }

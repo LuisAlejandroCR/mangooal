@@ -11,6 +11,18 @@
     <title>Mangooal</title>
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="manifest" href="/manifest.json" />
+    <!--
+      PostHog analytics — set VITE_POSTHOG_KEY in Vercel env vars.
+      Get your project API key (phc_…) at https://us.posthog.com
+      Script only initializes when the key is present.
+    -->
+    <script>
+      var _phk='%VITE_POSTHOG_KEY%';
+      if(_phk&&_phk!=='%VITE_POSTHOG_KEY%'){
+        !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a=e.init,g(u,"capture"),g(u,"identify"),g(u,"alias"),g(u,"set"),g(u,"set_once"),g(u,"unset"),g(u,"register"),g(u,"register_once"),g(u,"unregister"),g(u,"opt_in_capturing"),g(u,"opt_out_capturing"),g(u,"has_opted_in_capturing"),g(u,"has_opted_out_capturing"),g(u,"reset"),g(u,"getFeatureFlag"),g(u,"isFeatureEnabled"),g(u,"reloadFeatureFlags"),g(u,"addEarlyAccessFeatureEnrollment"),g(u,"getEarlyAccessFeatures"),g(u,"getActiveMatchingSurveys"),g(u,"getSurveys"),g(u,"getNextSurveyStep"),g(u,"onFeatureFlags"),g(u,"onSessionId"),g(u,"setPersonPropertiesForFlags"],e._i.push([i,s,a])),e.__SV=1)}(document,window.posthog||[]);
+        posthog.init(_phk,{api_host:'https://us.i.posthog.com',autocapture:true,capture_pageview:true,loaded:function(ph){if(location.hostname==='localhost')ph.opt_out_capturing();}});
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

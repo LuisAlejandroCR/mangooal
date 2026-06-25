@@ -1,11 +1,13 @@
 import { useConnect, useDisconnect } from "wagmi";
 import { injected } from "wagmi/connectors";
+import { useNavigate } from "react-router-dom";
 import { useMiniPay } from "../hooks/useMiniPay";
 import { useTokenBalances } from "../hooks/useTokenBalances";
 import { CeloBadge } from "../components/CeloBadge";
 import { FEATURED_TOKENS } from "../config/stablecoins";
 
 export function WalletStatus() {
+  const navigate = useNavigate();
   const { isMiniPay, isConnected, address } = useMiniPay();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
@@ -138,6 +140,12 @@ export function WalletStatus() {
                 >
                   Support on Telegram ↗
                 </a>
+                <button
+                  onClick={() => navigate("/stats")}
+                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", fontSize: 13, color: "var(--green)", fontWeight: 600 }}
+                >
+                  App stats & on-chain data →
+                </button>
               </div>
             </div>
           </>
