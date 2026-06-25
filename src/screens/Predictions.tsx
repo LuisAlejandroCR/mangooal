@@ -49,7 +49,7 @@ export function Predictions() {
     <div className="screen">
       {/* Top bar */}
       <div className="topbar">
-        <span className="topbar-logo">⚽ <span>Mango</span>al</span>
+        <span className="topbar-logo">⚽ <span>Mangoo</span>al</span>
         <CeloBadge variant={isConnected ? "connected" : "network"} />
       </div>
 
@@ -118,7 +118,7 @@ export function Predictions() {
             lineHeight: 1.6,
           }}
         >
-          Mangoal is a free-to-play sports prediction game. Not betting. Not gambling.
+          Mangooal is a free-to-play sports prediction game. Not betting. Not gambling.
           <br />
           No entry fees · No user-funded prize pools · No odds
         </div>

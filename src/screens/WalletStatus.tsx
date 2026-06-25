@@ -1,26 +1,20 @@
 import { useConnect, useDisconnect } from "wagmi";
-import { useMiniPay } from "../hooks/useMiniPay";
 import { injected } from "wagmi/connectors";
+import { useMiniPay } from "../hooks/useMiniPay";
+import { useTokenBalances } from "../hooks/useTokenBalances";
 import { CeloBadge } from "../components/CeloBadge";
 import { FEATURED_TOKENS } from "../config/stablecoins";
-
-// Mock balances — replace with useReadContracts balanceOf calls
-const MOCK_BALANCES: Record<string, string> = {
-  COPm: "12,500 COPm",
-  USDC: "8.40 USDC",
-  USDT: "3.20 USDT",
-  USDm: "5.00 USDm",
-};
 
 export function WalletStatus() {
   const { isMiniPay, isConnected, address } = useMiniPay();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
+  const { balances, isLoading } = useTokenBalances(address as `0x${string}` | undefined);
 
   return (
     <div className="screen">
       <div className="topbar">
-        <span className="topbar-logo">⚽ <span>Mango</span>al</span>
+        <span className="topbar-logo">⚽ <span>Mangoo</span>al</span>
         <CeloBadge variant="network" />
       </div>
 
@@ -97,7 +91,9 @@ export function WalletStatus() {
                     </div>
                   </div>
                   <div style={{ fontWeight: 800, fontSize: 15 }}>
-                    {MOCK_BALANCES[token.symbol] ?? "—"}
+                    {isLoading
+                      ? "..."
+                      : `${balances[token.symbol] ?? "—"} ${token.symbol}`}
                   </div>
                 </div>
               ))}

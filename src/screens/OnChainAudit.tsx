@@ -22,7 +22,7 @@ function StatusBadge({ status }: { status: AuditStatus }) {
 export function OnChainAudit() {
   const { id } = useParams();
 
-  // Mock audit data — replace with on-chain read via MangoalLedger.getPrediction()
+  // Mock audit data — replace with on-chain read via MangooalLedger.getPrediction()
   const audit = {
     status: "committed" as AuditStatus,
     txHash: "0xabc123...def456",

@@ -1,0 +1,18 @@
+[profile.default]
+src = "contracts"
+out = "out"
+libs = ["lib"]
+solc = "0.8.24"
+optimizer = true
+optimizer_runs = 200
+remappings = [
+  "@openzeppelin/=lib/openzeppelin-contracts/"
+]
+
+[rpc_endpoints]
+celo        = "https://forno.celo.org"
+celo_testnet = "https://alfajores-forno.celo-testnet.org"
+
+[etherscan]
+celo        = { key = "${CELOSCAN_API_KEY}", url = "https://api.celoscan.io/api",          chain = 42220 }
+celo_testnet = { key = "${CELOSCAN_API_KEY}", url = "https://api-alfajores.celoscan.io/api", chain = 44787 }

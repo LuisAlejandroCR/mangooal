@@ -150,7 +150,7 @@ export const MINIPAY_TX_TOKENS = Object.values(STABLECOINS).filter(
 /** Tokens valid for Coach Pass payment on Celo Mainnet (broader list) */
 export const COACH_PASS_TOKENS = Object.values(STABLECOINS);
 
-/** COPm first-class tokens for Mangoal display (used in selector, balance view, rewards) */
+/** COPm first-class tokens for Mangooal display (used in selector, balance view, rewards) */
 export const FEATURED_TOKENS: StablecoinInfo[] = [
   STABLECOINS.COPm,
   STABLECOINS.USDC,

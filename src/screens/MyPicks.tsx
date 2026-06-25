@@ -1,5 +1,8 @@
 import { useNavigate } from "react-router-dom";
+import { useAccount } from "wagmi";
+import { keccak256, toHex } from "viem";
 import { CeloBadge } from "../components/CeloBadge";
+import { useRevealPrediction } from "../hooks/useMangoalLedger";
 
 const MOCK_PICKS = [
   {
@@ -39,8 +42,51 @@ const MOCK_PICKS = [
 
 const STATUS_LABELS = {
   committed: { text: "Waiting for result", color: "var(--text-muted)" },
-  scored: { text: "Scored", color: "var(--success)" },
+  revealed:  { text: "Revealed · Awaiting score", color: "var(--green)" },
+  scored:    { text: "Scored", color: "var(--success)" },
 };
+
+const DEMO_CAMPAIGN_ID = keccak256(toHex("copa-america-2026"));
+
+// Sub-component: per-pick reveal button with its own hook instance
+function RevealButton({ matchId }: { matchId: string }) {
+  const { isConnected } = useAccount();
+  const { reveal, txHash, isPending, error } = useRevealPrediction();
+
+  if (txHash) {
+    return (
+      <div style={{ fontSize: 11, color: "var(--success)", marginTop: 8, fontWeight: 700 }}>
+        ✓ Revealed on Celo Mainnet
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      <button
+        className="btn btn-secondary btn-sm"
+        disabled={isPending || !isConnected}
+        onClick={async () => {
+          try {
+            await reveal({
+              campaignId: DEMO_CAMPAIGN_ID,
+              matchId: keccak256(toHex(matchId)),
+            });
+          } catch {
+            // error surfaces below
+          }
+        }}
+      >
+        {isPending ? "Revealing..." : "Reveal prediction"}
+      </button>
+      {error && (
+        <div style={{ fontSize: 11, color: "#B91C1C", marginTop: 4 }}>
+          {error.message}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function MyPicks() {
   const navigate = useNavigate();
@@ -49,7 +95,7 @@ export function MyPicks() {
   return (
     <div className="screen">
       <div className="topbar">
-        <span className="topbar-logo">⚽ <span>Mango</span>al</span>
+        <span className="topbar-logo">⚽ <span>Mangoo</span>al</span>
         <CeloBadge variant="network" />
       </div>
 
@@ -73,17 +119,17 @@ export function MyPicks() {
           const exact = pick.result &&
             pick.result.home === pick.pick.home &&
             pick.result.away === pick.pick.away;
+          const statusKey = pick.status as keyof typeof STATUS_LABELS;
 
           return (
             <div
               key={pick.id}
               className="card"
-              style={{ marginBottom: 10, cursor: "pointer" }}
-              onClick={() => navigate(`/audit/${pick.id}`)}
+              style={{ marginBottom: 10 }}
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontSize: 12, color: STATUS_LABELS[pick.status].color, fontWeight: 700 }}>
-                  {STATUS_LABELS[pick.status].text}
+                <span style={{ fontSize: 12, color: STATUS_LABELS[statusKey].color, fontWeight: 700 }}>
+                  {STATUS_LABELS[statusKey].text}
                 </span>
                 {pick.points !== null && (
                   <span style={{ fontWeight: 800, color: exact ? "var(--success)" : "var(--text)", fontSize: 15 }}>
@@ -92,7 +138,7 @@ export function MyPicks() {
                 )}
               </div>
 
-              <div className="match-teams">
+              <div className="match-teams" style={{ cursor: "pointer" }} onClick={() => navigate(`/audit/${pick.id}`)}>
                 <div className="team-name" style={{ fontSize: 13 }}>
                   <div style={{ fontSize: 22, marginBottom: 2 }}>{pick.homeFlag}</div>
                   {pick.home}
@@ -113,10 +159,18 @@ export function MyPicks() {
                 </div>
               </div>
 
-              <div style={{ marginTop: 8, fontSize: 11, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 6 }}>
+              <div
+                style={{ marginTop: 8, fontSize: 11, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}
+                onClick={() => navigate(`/audit/${pick.id}`)}
+              >
                 <CeloBadge variant="network" />
                 <span>Tap to view on-chain audit</span>
               </div>
+
+              {/* Reveal button shown for committed picks (after match kicks off) */}
+              {pick.status === "committed" && (
+                <RevealButton matchId={pick.id} />
+              )}
             </div>
           );
         })}

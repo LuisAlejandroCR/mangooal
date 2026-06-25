@@ -11,6 +11,7 @@ import { Ranking } from "./screens/Ranking";
 import { MyPicks } from "./screens/MyPicks";
 import { WalletStatus } from "./screens/WalletStatus";
 import { OnChainAudit } from "./screens/OnChainAudit";
+import { RewardClaim } from "./screens/RewardClaim";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ function AppShell() {
         <Route path="/my-picks" element={<MyPicks />} />
         <Route path="/wallet" element={<WalletStatus />} />
         <Route path="/audit/:id" element={<OnChainAudit />} />
+        <Route path="/claim" element={<RewardClaim />} />
       </Routes>
       <BottomNav />
     </>

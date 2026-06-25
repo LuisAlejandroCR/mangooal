@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useAccount } from "wagmi";
 import { CeloBadge } from "../components/CeloBadge";
 import { FEATURED_TOKENS, type StablecoinInfo } from "../config/stablecoins";
+import { usePurchaseCoachPass } from "../hooks/useMangoalLedger";
 
 type PassOption = {
   id: string;
@@ -55,17 +57,25 @@ const PERKS = [
 export function CoachPass() {
   const [selectedPass, setSelectedPass] = useState<string>("weekly");
   const [selectedToken, setSelectedToken] = useState<StablecoinInfo>(FEATURED_TOKENS[0]); // COPm first
+  const { isConnected } = useAccount();
+  const { purchase, step, txHash, isPending, error, reset } = usePurchaseCoachPass();
 
   const currentPass = PASS_OPTIONS.find((p) => p.id === selectedPass)!;
 
-  // In MiniPay we restrict to core tokens for the actual tx
-  const paymentTokens = FEATURED_TOKENS;
+  async function handleUnlock() {
+    if (!isConnected) {
+      alert("Please open Mangoal inside MiniPay or connect a Celo wallet.");
+      return;
+    }
+    try {
+      await purchase({ passType: currentPass.type, token: selectedToken });
+    } catch {
+      // error captured in usePurchaseCoachPass
+    }
+  }
 
-  function handleUnlock() {
-    // TODO: useWriteContract → MangoalLedger.purchaseCoachPass(passType, token, amount)
-    // Use selectedToken.address for the token parameter
-    // For feeCurrency: selectedToken.feeCurrencyAddress (adapter for USDC/USDT, same for USDm/COPm)
-    alert(`Unlocking ${currentPass.label} with ${selectedToken.symbol} on Celo Mainnet`);
+  if (step === "done" && txHash) {
+    return <PassSuccessView txHash={txHash} onClose={reset} />;
   }
 
   return (
@@ -87,7 +97,7 @@ export function CoachPass() {
         >
           <div style={{ fontSize: 28, marginBottom: 6 }}>🥭🏅</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: "#1F2937" }}>
-            Mangoal Coach Pass
+            Mangooal Coach Pass
           </div>
           <div style={{ fontSize: 13, color: "#4B5563", marginTop: 4, lineHeight: 1.6 }}>
             Unlock deeper match insights. Predictions stay free for everyone.
@@ -138,7 +148,7 @@ export function CoachPass() {
           <div
             key={pass.id}
             className={`pass-card${selectedPass === pass.id ? " selected" : ""}`}
-            onClick={() => setSelectedPass(pass.id)}
+            onClick={() => { setSelectedPass(pass.id); reset(); }}
           >
             <div className="pass-card-header">
               <div>
@@ -153,11 +163,11 @@ export function CoachPass() {
         {/* Token selector */}
         <div className="section-title">Pay with</div>
         <div className="token-pills">
-          {paymentTokens.map((token) => (
+          {FEATURED_TOKENS.map((token) => (
             <button
               key={token.symbol}
               className={`token-pill${selectedToken.symbol === token.symbol ? " selected" : ""}`}
-              onClick={() => setSelectedToken(token)}
+              onClick={() => { setSelectedToken(token); reset(); }}
             >
               <span>{token.flagEmoji}</span>
               {token.symbol}
@@ -184,6 +194,24 @@ export function CoachPass() {
           </div>
         )}
 
+        {/* Error banner */}
+        {step === "error" && error && (
+          <div
+            style={{
+              background: "#FFF0F0",
+              border: "1px solid #FCA5A5",
+              borderRadius: "var(--radius-sm)",
+              padding: "10px 14px",
+              fontSize: 12,
+              color: "#B91C1C",
+              marginTop: 12,
+              lineHeight: 1.5,
+            }}
+          >
+            {error.message || "Transaction failed. Please try again."}
+          </div>
+        )}
+
         {/* CTA */}
         <div style={{ marginTop: 20, marginBottom: 8 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -200,8 +228,16 @@ export function CoachPass() {
             </span>
           </div>
 
-          <button className="btn btn-primary" onClick={handleUnlock}>
-            Unlock Coach Pass · {currentPass.price[selectedToken.symbol]}
+          <button
+            className="btn btn-primary"
+            onClick={handleUnlock}
+            disabled={isPending}
+          >
+            {step === "approving"
+              ? "Approving spend..."
+              : step === "purchasing"
+              ? "Processing Coach Pass..."
+              : `Unlock Coach Pass · ${currentPass.price[selectedToken.symbol]}`}
           </button>
         </div>
 
@@ -209,6 +245,41 @@ export function CoachPass() {
           Coach Pass gives you deeper match context. It does not affect points, rankings, or rewards.
           <br />Predictions remain free for everyone.
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PassSuccessView({ txHash, onClose }: { txHash: `0x${string}`; onClose: () => void }) {
+  return (
+    <div className="screen">
+      <div className="screen-body" style={{ paddingTop: 48, textAlign: "center" }}>
+        <div style={{ fontSize: 56, marginBottom: 12 }}>🥭🏅</div>
+        <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Coach Pass active!</h2>
+        <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: 1.6, marginBottom: 20 }}>
+          Your Coach Pass is now live on Celo Mainnet.
+          Deeper match insights are now unlocked.
+        </p>
+
+        <div className="card" style={{ marginBottom: 16, textAlign: "left" }}>
+          <div className="wallet-bar" style={{ marginBottom: 0 }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="7" fill="#35D07F" />
+              <circle cx="7" cy="7" r="3.5" fill="white" />
+            </svg>
+            Recorded on Celo Mainnet
+          </div>
+          <div style={{ marginTop: 8, fontSize: 11, fontFamily: "monospace", color: "var(--text-muted)", wordBreak: "break-all" }}>
+            {txHash}
+          </div>
+          <div style={{ marginTop: 10, fontSize: 12, color: "var(--text-muted)" }}>
+            Coach Pass does not affect your points, ranking, or promotional reward eligibility.
+          </div>
+        </div>
+
+        <button className="btn btn-secondary" onClick={onClose}>
+          Done
+        </button>
       </div>
     </div>
   );

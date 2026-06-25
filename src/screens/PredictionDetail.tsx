@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { keccak256, toHex } from "viem";
+import { useAccount } from "wagmi";
 import { CeloBadge } from "../components/CeloBadge";
+import { useCommitPrediction } from "../hooks/useMangoalLedger";
+
+// Demo campaign ID — replace with backend-provided value after MangooalLedger deployment
+const DEMO_CAMPAIGN_ID = keccak256(toHex("copa-america-2026"));
 
 export function PredictionDetail() {
   const { id } = useParams();
@@ -8,8 +14,12 @@ export function PredictionDetail() {
   const [home, setHome] = useState("");
   const [away, setAway] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const { commit, txHash, isPending, error } = useCommitPrediction();
+  const { isConnected } = useAccount();
 
-  // Mock match data — replace with real fetch by id
+  // Derive bytes32 matchId from URL param — real matchId comes from backend in production
+  const matchId = keccak256(toHex(id ?? "match-demo"));
+
   const match = {
     home: "Colombia",
     away: "Brazil",
@@ -20,10 +30,19 @@ export function PredictionDetail() {
     id,
   };
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!home || !away) return;
-    // TODO: call MangoalLedger.commitPrediction() via Wagmi writeContract
-    setSubmitted(true);
+    try {
+      await commit({
+        campaignId: DEMO_CAMPAIGN_ID,
+        matchId,
+        homeScore: Number(home),
+        awayScore: Number(away),
+      });
+      setSubmitted(true);
+    } catch {
+      // error surfaces through the `error` state from useCommitPrediction
+    }
   }
 
   return (
@@ -44,7 +63,13 @@ export function PredictionDetail() {
 
       <div className="screen-body" style={{ paddingTop: 20 }}>
         {submitted ? (
-          <SubmittedView match={match} home={Number(home)} away={Number(away)} onAudit={() => navigate(`/audit/${id}`)} />
+          <SubmittedView
+            match={match}
+            home={Number(home)}
+            away={Number(away)}
+            txHash={txHash}
+            onAudit={() => navigate(`/audit/${id}`)}
+          />
         ) : (
           <>
             {/* Teams */}
@@ -118,13 +143,41 @@ export function PredictionDetail() {
                 <span style={{ fontSize: 15, fontWeight: 700 }}>{match.away}</span>
               </div>
 
+              {/* Error banner */}
+              {error && (
+                <div
+                  style={{
+                    background: "#FFF0F0",
+                    border: "1px solid #FCA5A5",
+                    borderRadius: 8,
+                    padding: "10px 12px",
+                    fontSize: 12,
+                    color: "#B91C1C",
+                    marginBottom: 12,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {error.message || "Transaction failed. Please try again."}
+                </div>
+              )}
+
               <button
                 className="btn btn-primary"
                 onClick={handleSubmit}
-                disabled={!home || !away}
+                disabled={!home || !away || isPending || !isConnected}
               >
-                Submit prediction · Free
+                {!isConnected
+                  ? "Connect wallet to submit"
+                  : isPending
+                  ? "Waiting for confirmation..."
+                  : "Submit prediction · Free"}
               </button>
+
+              {!isConnected && (
+                <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-muted)", marginTop: 8 }}>
+                  Open in MiniPay or connect a Celo wallet
+                </div>
+              )}
             </div>
 
             <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-muted)", marginTop: 12, lineHeight: 1.6 }}>
@@ -139,11 +192,12 @@ export function PredictionDetail() {
 }
 
 function SubmittedView({
-  match, home, away, onAudit,
+  match, home, away, txHash, onAudit,
 }: {
   match: { home: string; away: string; homeFlag: string; awayFlag: string };
   home: number;
   away: number;
+  txHash?: `0x${string}`;
   onAudit: () => void;
 }) {
   return (
@@ -162,6 +216,11 @@ function SubmittedView({
           </svg>
           Recorded on Celo Mainnet
         </div>
+        {txHash && (
+          <div style={{ marginTop: 10, fontSize: 11, fontFamily: "monospace", color: "var(--text-muted)", wordBreak: "break-all" }}>
+            {txHash}
+          </div>
+        )}
         <div style={{ marginTop: 10, fontSize: 12, color: "var(--text-muted)" }}>
           Your pick is committed on-chain. It cannot be edited after the prediction window closes.
         </div>

@@ -1,9 +1,12 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useAccount } from "wagmi";
 import { CeloBadge } from "../components/CeloBadge";
+import { useHasActiveCoachPass } from "../hooks/useMangoalLedger";
 
 export function CoachInsight() {
-  useParams();
   const navigate = useNavigate();
+  const { address } = useAccount();
+  const { hasPass } = useHasActiveCoachPass(address);
 
   // Mock insight data — replace with real sports API response
   const insight = {
@@ -17,7 +20,7 @@ export function CoachInsight() {
       formAway: "W W W D W",
       recentTrend: "Colombia have scored in each of the last 5 home fixtures. Brazil are unbeaten in the last 8 qualifiers.",
     },
-    premiumLocked: true, // true = user has no Coach Pass
+    premiumLocked: !hasPass,
   };
 
   return (
@@ -32,7 +35,7 @@ export function CoachInsight() {
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
-        <span style={{ fontWeight: 800, fontSize: 16 }}>🏅 Mangoal Coach</span>
+        <span style={{ fontWeight: 800, fontSize: 16 }}>🏅 Mangooal Coach</span>
         <CeloBadge variant="built" />
       </div>
 
@@ -49,7 +52,7 @@ export function CoachInsight() {
 
         {/* Suggested score */}
         <div className="coach-card">
-          <div className="coach-label">🏅 Mangoal Coach · Suggested score</div>
+          <div className="coach-label">🏅 Mangooal Coach · Suggested score</div>
           <div className="coach-score">{insight.suggestedScore}</div>
           <div style={{ fontSize: 13, opacity: 0.85, fontWeight: 600 }}>
             Data-based pick · Recent-form analysis
@@ -100,7 +103,7 @@ export function CoachInsight() {
           </div>
         </div>
 
-        {/* Coach Pass upsell — premium locked */}
+        {/* Coach Pass upsell — shown when no active pass */}
         {insight.premiumLocked && (
           <div
             className="card"
@@ -127,13 +130,13 @@ export function CoachInsight() {
               onClick={() => navigate("/coach-pass")}
               style={{ width: "100%" }}
             >
-              Unlock Mangoal Coach insights →
+              Unlock Mangooal Coach insights →
             </button>
           </div>
         )}
 
         <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>
-          Mangoal Coach uses public sports data to generate match context.
+          Mangooal Coach uses public sports data to generate match context.
           <br />No betting advice. No odds. No guaranteed result.
         </div>
       </div>

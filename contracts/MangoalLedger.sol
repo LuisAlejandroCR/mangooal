@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * MangoalLedger — single on-chain contract for Mangoal sports prediction Mini App.
+ * MangooalLedger — single on-chain contract for Mangooal sports prediction Mini App.
  * Celo Mainnet (Chain ID 42220).
  *
  * Responsibilities:
@@ -41,7 +41,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
  *   PHPm  0x105d4A9306D2E55a71d2Eb95B81553AE1dC20d7B (18 dec)
  *   ZARm  0x4c35853A3B4e647fD266f4de678dCc8fEC410BF6 (18 dec)
  */
-contract MangoalLedger is AccessControl, Pausable, ReentrancyGuard {
+contract MangooalLedger is AccessControl, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     // ─── Roles ───────────────────────────────────────────────────────────────
