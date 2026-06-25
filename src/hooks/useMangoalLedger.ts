@@ -41,6 +41,14 @@ function saltKey(matchId: string, addr: string) {
 function scoresKey(matchId: string, addr: string) {
   return `mangoal:scores:${matchId}:${addr.toLowerCase()}`;
 }
+function txHashKey(matchId: string, addr: string) {
+  return `mangoal:txhash:${matchId}:${addr.toLowerCase()}`;
+}
+
+// Retrieve commit tx hash stored at prediction time (for on-chain audit display)
+export function getCommitTxHash(matchId: string, address: string): `0x${string}` | null {
+  return localStorage.getItem(txHashKey(matchId, address)) as `0x${string}` | null;
+}
 
 // Retrieve locally stored reveal data (called by reveal flow)
 export function getSaltForReveal(matchId: string, address: string) {
@@ -93,6 +101,9 @@ export function useCommitPrediction() {
     // Persist salt + scores locally so the reveal phase can reconstruct the hash
     localStorage.setItem(saltKey(matchId, address), salt);
     localStorage.setItem(scoresKey(matchId, address), JSON.stringify({ homeScore, awayScore }));
+
+    // Persist tx hash locally so OnChainAudit can link to Celoscan from this device
+    localStorage.setItem(txHashKey(matchId, address), hash);
 
     setTxHash(hash);
     analytics.predictionCommitted(campaignId, matchId);

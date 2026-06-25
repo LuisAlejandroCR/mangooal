@@ -1,45 +1,112 @@
-import { useNavigate } from "react-router-dom";
-import { parseUnits } from "viem";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { formatUnits } from "viem";
 import { CeloBadge } from "../components/CeloBadge";
 import { useClaimReward } from "../hooks/useMangoalLedger";
 import { STABLECOINS } from "../config/stablecoins";
 
-// Demo reward data — replace with backend-fetched reward voucher after deployment
-const DEMO_REWARD = {
-  campaignLabel: "Copa América 2026",
-  campaignId: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
-  token: STABLECOINS.COPm,
-  amount: parseUnits("500", 18), // 500 COPm
-  displayAmount: "500 COPm",
-  // Operator provides this signature to eligible users via push notification / deep link
-  operatorSignature: "0x" as `0x${string}`,
-};
-
+/**
+ * Reward deep-link format (operator sends via notification):
+ *   /claim?cid=<bytes32-campaignId>&token=<tokenAddress>&amount=<rawBigInt>&sig=<operatorSig>&label=Copa+Am%C3%A9rica+2026
+ *
+ * Operator signature message (EIP-191 prefixed hash):
+ *   keccak256(abi.encodePacked(wallet, campaignId, token, amount))
+ */
 export function RewardClaim() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { claim, txHash, isPending, error } = useClaimReward();
 
+  const cid       = searchParams.get("cid") as `0x${string}` | null;
+  const tokenAddr = searchParams.get("token") as `0x${string}` | null;
+  const rawAmount = searchParams.get("amount");
+  const sig       = searchParams.get("sig") as `0x${string}` | null;
+  const label     = searchParams.get("label") ?? "Copa América 2026";
+
+  const amount = rawAmount ? BigInt(rawAmount) : null;
+  const tokenInfo = tokenAddr
+    ? Object.values(STABLECOINS).find(
+        (s) => s.address.toLowerCase() === tokenAddr.toLowerCase()
+      )
+    : null;
+  const displayAmount =
+    amount && tokenInfo
+      ? `${formatUnits(amount, tokenInfo.decimals)} ${tokenInfo.symbol}`
+      : null;
+
+  const isValid = !!cid && !!tokenAddr && !!amount && !!sig;
+
   async function handleClaim() {
+    if (!isValid) return;
     try {
       await claim({
-        campaignId: DEMO_REWARD.campaignId,
-        token: DEMO_REWARD.token.address,
-        amount: DEMO_REWARD.amount,
-        operatorSignature: DEMO_REWARD.operatorSignature,
+        campaignId: cid!,
+        token: tokenAddr!,
+        amount: amount!,
+        operatorSignature: sig!,
       });
     } catch {
       // error surfaces through `error` state
     }
   }
 
+  // Invalid / incomplete deep link
+  if (!isValid) {
+    return (
+      <div className="screen">
+        <div className="topbar">
+          <button
+            onClick={() => navigate(-1)}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 6 }}
+            aria-label="Back"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span style={{ fontWeight: 800, fontSize: 16 }}>🎁 Promotional reward</span>
+          <CeloBadge variant="network" />
+        </div>
+        <div className="screen-body" style={{ paddingTop: 48, textAlign: "center" }}>
+          <div style={{ fontSize: 40, marginBottom: 14 }}>⚠️</div>
+          <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 10 }}>
+            Invalid reward link
+          </div>
+          <div
+            style={{
+              fontSize: 13,
+              color: "var(--text-muted)",
+              lineHeight: 1.7,
+              maxWidth: 280,
+              margin: "0 auto 24px",
+            }}
+          >
+            This link is incomplete or has expired. Reward links are sent by Mangooal
+            via notification to eligible users only.
+          </div>
+          <button className="btn btn-secondary" onClick={() => navigate("/")}>
+            Back to picks
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Success state
   if (txHash) {
     return (
       <div className="screen">
         <div className="screen-body" style={{ paddingTop: 48, textAlign: "center" }}>
           <div style={{ fontSize: 56, marginBottom: 12 }}>🥭🎉</div>
           <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Reward claimed!</h2>
-          <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: 1.6, marginBottom: 20 }}>
-            {DEMO_REWARD.displayAmount} sent to your wallet on Celo Mainnet.
+          <p
+            style={{
+              fontSize: 14,
+              color: "var(--text-muted)",
+              lineHeight: 1.6,
+              marginBottom: 20,
+            }}
+          >
+            {displayAmount ?? "Reward"} sent to your wallet on Celo Mainnet.
           </p>
           <div className="card" style={{ marginBottom: 16, textAlign: "left" }}>
             <div className="wallet-bar" style={{ marginBottom: 0 }}>
@@ -49,7 +116,15 @@ export function RewardClaim() {
               </svg>
               Confirmed on Celo Mainnet
             </div>
-            <div style={{ marginTop: 8, fontSize: 11, fontFamily: "monospace", color: "var(--text-muted)", wordBreak: "break-all" }}>
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 11,
+                fontFamily: "monospace",
+                color: "var(--text-muted)",
+                wordBreak: "break-all",
+              }}
+            >
               {txHash}
             </div>
           </div>
@@ -61,6 +136,7 @@ export function RewardClaim() {
     );
   }
 
+  // Claim form
   return (
     <div className="screen">
       <div className="topbar">
@@ -90,11 +166,20 @@ export function RewardClaim() {
           }}
         >
           <div style={{ fontSize: 40, marginBottom: 8 }}>🥭</div>
-          <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.7, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>
-            {DEMO_REWARD.campaignLabel}
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              opacity: 0.7,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              marginBottom: 6,
+            }}
+          >
+            {label}
           </div>
           <div style={{ fontSize: 36, fontWeight: 900, marginBottom: 4 }}>
-            {DEMO_REWARD.displayAmount}
+            {displayAmount ?? "Reward"}
           </div>
           <div style={{ fontSize: 12, opacity: 0.75 }}>
             Promotional reward — operator-funded, not a prize pool
@@ -124,15 +209,21 @@ export function RewardClaim() {
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="audit-row">
             <span className="audit-label">Amount</span>
-            <span className="audit-value" style={{ fontWeight: 800 }}>{DEMO_REWARD.displayAmount}</span>
+            <span className="audit-value" style={{ fontWeight: 800 }}>
+              {displayAmount ?? "—"}
+            </span>
           </div>
           <div className="audit-row">
             <span className="audit-label">Token</span>
-            <span className="audit-value">{DEMO_REWARD.token.flagEmoji} {DEMO_REWARD.token.name}</span>
+            <span className="audit-value">
+              {tokenInfo
+                ? `${tokenInfo.flagEmoji} ${tokenInfo.name}`
+                : tokenAddr?.slice(0, 10) + "…"}
+            </span>
           </div>
           <div className="audit-row">
             <span className="audit-label">Campaign</span>
-            <span className="audit-value">{DEMO_REWARD.campaignLabel}</span>
+            <span className="audit-value">{label}</span>
           </div>
           <div className="audit-row" style={{ borderBottom: "none" }}>
             <span className="audit-label">Network</span>
@@ -166,12 +257,20 @@ export function RewardClaim() {
           disabled={isPending}
           style={{ marginBottom: 8 }}
         >
-          {isPending ? "Claiming..." : `Claim ${DEMO_REWARD.displayAmount}`}
+          {isPending ? "Claiming…" : `Claim ${displayAmount ?? "reward"}`}
         </button>
 
-        <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>
+        <div
+          style={{
+            textAlign: "center",
+            fontSize: 11,
+            color: "var(--text-muted)",
+            lineHeight: 1.6,
+          }}
+        >
           Promotional rewards are distributed by Mangooal.
-          <br />Not betting. No user-funded prize pools.
+          <br />
+          Not betting. No user-funded prize pools.
         </div>
       </div>
     </div>

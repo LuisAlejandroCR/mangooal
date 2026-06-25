@@ -1,13 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePublicClient } from "wagmi";
-import { parseAbi } from "viem";
+import { parseAbiItem } from "viem";
 import { MANGOAL_LEDGER_ADDRESS, CONTRACT_LIVE, MANGOAL_DEPLOY_BLOCK } from "./useMangoalLedger";
 
-const STATS_ABI = parseAbi([
-  "event PredictionCommitted(address indexed wallet, bytes32 indexed campaignId, bytes32 indexed matchId, bytes32 predictionHash, uint64 committedAt)",
-  "event CoachPassPurchased(address indexed wallet, uint8 passType, address token, uint256 amount, uint64 expiresAt)",
-  "event RewardClaimed(address indexed wallet, bytes32 indexed campaignId, uint256 amount, address token)",
-]);
+// viem getLogs requires a single typed `event:` ABI item, not abi+eventName
+const COMMITTED_EVENT = parseAbiItem(
+  "event PredictionCommitted(address indexed wallet, bytes32 indexed campaignId, bytes32 indexed matchId, bytes32 predictionHash, uint64 committedAt)"
+);
+const PASS_EVENT = parseAbiItem(
+  "event CoachPassPurchased(address indexed wallet, uint8 passType, address token, uint256 amount, uint64 expiresAt)"
+);
+const REWARD_EVENT = parseAbiItem(
+  "event RewardClaimed(address indexed wallet, bytes32 indexed campaignId, uint256 amount, address token)"
+);
 
 export type OnChainStats = {
   totalPredictions: number;
@@ -37,43 +42,60 @@ export function useOnChainStats(): OnChainStats {
     setError(null);
 
     try {
-      // fromBlock = contract deployment block; set VITE_DEPLOY_BLOCK in Vercel env after deploy.
-      const fromBlock = MANGOAL_DEPLOY_BLOCK > 0n ? MANGOAL_DEPLOY_BLOCK : undefined;
+      const toBlock = await publicClient.getBlockNumber();
+      // If deploy block not set, default to last 50K blocks (contract was just deployed).
+      const fromBlock =
+        MANGOAL_DEPLOY_BLOCK > 0n
+          ? MANGOAL_DEPLOY_BLOCK
+          : toBlock > 50_000n
+          ? toBlock - 50_000n
+          : 0n;
 
-      const [commitLogs, passLogs, rewardLogs] = await Promise.all([
-        publicClient.getLogs({
-          address: MANGOAL_LEDGER_ADDRESS,
-          abi: STATS_ABI,
-          eventName: "PredictionCommitted",
-          fromBlock,
-          toBlock: "latest",
-        }),
-        publicClient.getLogs({
-          address: MANGOAL_LEDGER_ADDRESS,
-          abi: STATS_ABI,
-          eventName: "CoachPassPurchased",
-          fromBlock,
-          toBlock: "latest",
-        }),
-        publicClient.getLogs({
-          address: MANGOAL_LEDGER_ADDRESS,
-          abi: STATS_ABI,
-          eventName: "RewardClaimed",
-          fromBlock,
-          toBlock: "latest",
-        }),
-      ]);
+      // Celo public RPC rejects getLogs ranges > ~50K blocks (error -32011).
+      // Chunk the range so stats always work regardless of contract age.
+      const CHUNK = 49_999n;
+      let commitCount = 0;
+      const wallets = new Set<string>();
+      let passCount = 0;
+      let rewardCount = 0;
 
-      const wallets = new Set(
-        commitLogs
-          .map((l) => l.args.wallet?.toLowerCase())
-          .filter((w): w is string => w !== undefined)
-      );
+      for (let from = fromBlock; from <= toBlock; from += CHUNK + 1n) {
+        const to = from + CHUNK > toBlock ? toBlock : from + CHUNK;
 
-      setTotalPredictions(commitLogs.length);
+        const [commits, passes, rewards] = await Promise.all([
+          publicClient.getLogs({
+            address: MANGOAL_LEDGER_ADDRESS,
+            event: COMMITTED_EVENT,
+            fromBlock: from,
+            toBlock: to,
+          }),
+          publicClient.getLogs({
+            address: MANGOAL_LEDGER_ADDRESS,
+            event: PASS_EVENT,
+            fromBlock: from,
+            toBlock: to,
+          }),
+          publicClient.getLogs({
+            address: MANGOAL_LEDGER_ADDRESS,
+            event: REWARD_EVENT,
+            fromBlock: from,
+            toBlock: to,
+          }),
+        ]);
+
+        commitCount += commits.length;
+        for (const l of commits) {
+          const w = l.args.wallet?.toLowerCase();
+          if (w) wallets.add(w);
+        }
+        passCount += passes.length;
+        rewardCount += rewards.length;
+      }
+
+      setTotalPredictions(commitCount);
       setUniquePlayers(wallets.size);
-      setCoachPassSold(passLogs.length);
-      setRewardsClaimed(rewardLogs.length);
+      setCoachPassSold(passCount);
+      setRewardsClaimed(rewardCount);
       setLastUpdated(Date.now());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Stats unavailable");

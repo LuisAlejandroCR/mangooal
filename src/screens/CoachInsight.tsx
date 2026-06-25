@@ -1,27 +1,82 @@
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { CeloBadge } from "../components/CeloBadge";
 import { useHasActiveCoachPass } from "../hooks/useMangoalLedger";
+import { getMatchById } from "../config/matches";
+
+type InsightData = {
+  suggestedScore: string;
+  formHome: string;
+  formAway: string;
+  recentTrend: string;
+};
+
+const INSIGHTS: Record<string, InsightData> = {
+  "cop26-col-bra": {
+    suggestedScore: "2 – 1",
+    formHome: "W W D L W",
+    formAway: "W W W D W",
+    recentTrend:
+      "Colombia have scored in each of their last 5 fixtures. Brazil are unbeaten in the last 8 competitive matches.",
+  },
+  "cop26-arg-mex": {
+    suggestedScore: "3 – 0",
+    formHome: "W W W W D",
+    formAway: "L W D L W",
+    recentTrend:
+      "Argentina have conceded just 2 goals in their last 6 matches. Mexico's away record has been inconsistent this cycle.",
+  },
+  "cop26-uru-usa": {
+    suggestedScore: "1 – 1",
+    formHome: "W D W L W",
+    formAway: "W W L D W",
+    recentTrend:
+      "Uruguay are defensively disciplined with a low expected goals against. USA have improved rapidly but struggle against deep defensive blocks.",
+  },
+};
+
+const DEFAULT_INSIGHT: InsightData = {
+  suggestedScore: "1 – 1",
+  formHome: "W D W D L",
+  formAway: "D L W W D",
+  recentTrend:
+    "Match context is based on public football data and recent form statistics.",
+};
 
 export function CoachInsight() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { address } = useAccount();
   const { hasPass } = useHasActiveCoachPass(address);
 
-  // Mock insight data — replace with real sports API response
-  const insight = {
-    home: "Colombia",
-    away: "Brazil",
-    homeFlag: "🇨🇴",
-    awayFlag: "🇧🇷",
-    suggestedScore: "2 – 1",
-    freeInsight: {
-      formHome: "W W D L W",
-      formAway: "W W W D W",
-      recentTrend: "Colombia have scored in each of the last 5 home fixtures. Brazil are unbeaten in the last 8 qualifiers.",
-    },
-    premiumLocked: !hasPass,
-  };
+  const match = getMatchById(id ?? "");
+  const insight = match ? (INSIGHTS[match.id] ?? DEFAULT_INSIGHT) : DEFAULT_INSIGHT;
+
+  if (!match) {
+    return (
+      <div className="screen">
+        <div className="topbar">
+          <button
+            onClick={() => navigate(-1)}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 6 }}
+            aria-label="Back"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span style={{ fontWeight: 800, fontSize: 16 }}>🏅 Mangooal Coach</span>
+          <CeloBadge variant="built" />
+        </div>
+        <div
+          className="screen-body"
+          style={{ paddingTop: 40, textAlign: "center", color: "var(--text-muted)" }}
+        >
+          Match not found
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="screen">
@@ -43,10 +98,13 @@ export function CoachInsight() {
         {/* Teams */}
         <div style={{ textAlign: "center", marginBottom: 16 }}>
           <div style={{ fontSize: 28, marginBottom: 4 }}>
-            {insight.homeFlag} vs {insight.awayFlag}
+            {match.homeFlag} vs {match.awayFlag}
           </div>
           <div style={{ fontWeight: 700, fontSize: 17 }}>
-            {insight.home} vs {insight.away}
+            {match.home} vs {match.away}
+          </div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
+            {match.competition}
           </div>
         </div>
 
@@ -69,13 +127,20 @@ export function CoachInsight() {
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
             <div>
               <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, marginBottom: 4 }}>
-                {insight.homeFlag} {insight.home} · Last 5
+                {match.homeFlag} {match.home} · Last 5
               </div>
               <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2 }}>
-                {insight.freeInsight.formHome.split(" ").map((r, i) => (
+                {insight.formHome.split(" ").map((r, i) => (
                   <span
                     key={i}
-                    style={{ color: r === "W" ? "var(--success)" : r === "L" ? "#EF4444" : "var(--text-muted)" }}
+                    style={{
+                      color:
+                        r === "W"
+                          ? "var(--success)"
+                          : r === "L"
+                          ? "#EF4444"
+                          : "var(--text-muted)",
+                    }}
                   >
                     {r}{" "}
                   </span>
@@ -84,13 +149,20 @@ export function CoachInsight() {
             </div>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, marginBottom: 4 }}>
-                {insight.awayFlag} {insight.away} · Last 5
+                {match.awayFlag} {match.away} · Last 5
               </div>
               <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2 }}>
-                {insight.freeInsight.formAway.split(" ").map((r, i) => (
+                {insight.formAway.split(" ").map((r, i) => (
                   <span
                     key={i}
-                    style={{ color: r === "W" ? "var(--success)" : r === "L" ? "#EF4444" : "var(--text-muted)" }}
+                    style={{
+                      color:
+                        r === "W"
+                          ? "var(--success)"
+                          : r === "L"
+                          ? "#EF4444"
+                          : "var(--text-muted)",
+                    }}
                   >
                     {r}{" "}
                   </span>
@@ -98,13 +170,21 @@ export function CoachInsight() {
               </div>
             </div>
           </div>
-          <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6, borderTop: "1px solid var(--border)", paddingTop: 10 }}>
-            {insight.freeInsight.recentTrend}
+          <div
+            style={{
+              fontSize: 13,
+              color: "var(--text-muted)",
+              lineHeight: 1.6,
+              borderTop: "1px solid var(--border)",
+              paddingTop: 10,
+            }}
+          >
+            {insight.recentTrend}
           </div>
         </div>
 
-        {/* Coach Pass upsell — shown when no active pass */}
-        {insight.premiumLocked && (
+        {/* Coach Pass upsell */}
+        {!hasPass && (
           <div
             className="card"
             style={{
@@ -116,11 +196,26 @@ export function CoachInsight() {
             <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 6 }}>
               🔒 Coach Pass insight locked
             </div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)", lineHeight: 1.6, marginBottom: 14 }}>
-              Unlock deeper match context: head-to-head summary, injury reports, lineup analysis, and rest-day impact.
+            <div
+              style={{
+                fontSize: 12,
+                color: "var(--text-muted)",
+                lineHeight: 1.6,
+                marginBottom: 14,
+              }}
+            >
+              Unlock deeper match context: head-to-head summary, lineup analysis,
+              rest-day impact, and key player form.
             </div>
             <div
-              style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12, padding: "8px 10px", background: "var(--bg)", borderRadius: 8 }}
+              style={{
+                fontSize: 11,
+                color: "var(--text-muted)",
+                marginBottom: 12,
+                padding: "8px 10px",
+                background: "var(--bg)",
+                borderRadius: 8,
+              }}
             >
               Coach Pass does not affect points, ranking, or promotional rewards.
               Predictions remain free for everyone.
@@ -135,9 +230,17 @@ export function CoachInsight() {
           </div>
         )}
 
-        <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>
-          Mangooal Coach uses public sports data to generate match context.
-          <br />No betting advice. No odds. No guaranteed result.
+        <div
+          style={{
+            textAlign: "center",
+            fontSize: 11,
+            color: "var(--text-muted)",
+            lineHeight: 1.6,
+          }}
+        >
+          Mangooal Coach uses public football data to generate match context.
+          <br />
+          No betting advice. No odds. No guaranteed result.
         </div>
       </div>
     </div>
