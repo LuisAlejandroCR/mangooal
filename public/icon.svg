@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="#1A2E0F"/>
+  <!-- Yellow accent ring -->
+  <circle cx="256" cy="256" r="240" fill="none" stroke="#FFC83D" stroke-width="12"/>
+  <!-- Soccer ball -->
+  <circle cx="256" cy="270" r="110" fill="white"/>
+  <path d="M256 160 L290 190 L310 230 L300 275 L256 295 L212 275 L202 230 L222 190 Z" fill="#1A2E0F"/>
+  <path d="M256 295 L212 275 L198 315 L220 345 L256 355 L292 345 L314 315 L300 275 Z" fill="#1A2E0F"/>
+  <path d="M202 230 L165 220 L148 255 L162 290 L198 315 L212 275 Z" fill="#1A2E0F"/>
+  <path d="M310 230 L347 220 L364 255 L350 290 L314 315 L300 275 Z" fill="#1A2E0F"/>
+  <path d="M222 190 L196 165 L160 178 L148 220 L165 220 L202 230 Z" fill="#1A2E0F"/>
+  <path d="M290 190 L316 165 L352 178 L364 220 L347 220 L310 230 Z" fill="#1A2E0F"/>
+  <!-- Mango shape -->
+  <ellipse cx="256" cy="110" rx="48" ry="70" fill="#FFC83D" transform="rotate(-15, 256, 110)"/>
+  <ellipse cx="256" cy="108" rx="36" ry="55" fill="#FF9500" transform="rotate(-15, 256, 108)"/>
+  <!-- Mango stem -->
+  <path d="M270 55 Q285 25 310 30" stroke="#4A7C3F" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <!-- Leaf -->
+  <ellipse cx="305" cy="32" rx="18" ry="8" fill="#4A7C3F" transform="rotate(-30, 305, 32)"/>
+</svg>

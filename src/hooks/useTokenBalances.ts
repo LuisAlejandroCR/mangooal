@@ -19,11 +19,13 @@ export function useTokenBalances(walletAddress?: `0x${string}`) {
   });
 
   const balances: Record<string, string> = {};
+  const rawBalances: Record<string, bigint> = {};
 
   if (data) {
     FEATURED_TOKENS.forEach((token, i) => {
       const result = data[i];
       if (result?.status === "success" && typeof result.result === "bigint") {
+        rawBalances[token.symbol] = result.result;
         const num = parseFloat(formatUnits(result.result, token.decimals));
         balances[token.symbol] = num.toLocaleString("en", {
           maximumFractionDigits: 2,
@@ -35,5 +37,5 @@ export function useTokenBalances(walletAddress?: `0x${string}`) {
     });
   }
 
-  return { balances, isLoading, refetch };
+  return { balances, rawBalances, isLoading, refetch };
 }

@@ -46,8 +46,8 @@ export function WalletStatus() {
               <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }}>
                 {isMiniPay ? "MiniPay wallet connected" : "Celo wallet connected"}
               </div>
-              <div style={{ fontSize: 13, wordBreak: "break-all", fontFamily: "monospace", color: "var(--text-muted)", marginBottom: 10 }}>
-                {address}
+              <div style={{ fontSize: 12, fontFamily: "monospace", color: "var(--text-muted)", marginBottom: 10, letterSpacing: "0.04em" }}>
+                {address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "—"}
               </div>
               {isMiniPay && (
                 <div className="badge badge-celo" style={{ marginBottom: 10 }}>
@@ -106,6 +106,39 @@ export function WalletStatus() {
                 <circle cx="7" cy="7" r="3.5" fill="white" />
               </svg>
               Powered by Celo stablecoins
+            </div>
+
+            {/* Legal & support — required for MiniPay listing */}
+            <div className="card" style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }}>
+                Legal & support
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <a
+                  href="https://mangooal.xyz/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: 13, color: "var(--green)", textDecoration: "none", fontWeight: 600 }}
+                >
+                  Terms of Service ↗
+                </a>
+                <a
+                  href="https://mangooal.xyz/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: 13, color: "var(--green)", textDecoration: "none", fontWeight: 600 }}
+                >
+                  Privacy Policy ↗
+                </a>
+                <a
+                  href="https://t.me/mangooal_support"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: 13, color: "var(--green)", textDecoration: "none", fontWeight: 600 }}
+                >
+                  Support on Telegram ↗
+                </a>
+              </div>
             </div>
           </>
         ) : (

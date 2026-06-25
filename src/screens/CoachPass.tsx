@@ -2,7 +2,10 @@ import { useState } from "react";
 import { useAccount } from "wagmi";
 import { CeloBadge } from "../components/CeloBadge";
 import { FEATURED_TOKENS, type StablecoinInfo } from "../config/stablecoins";
-import { usePurchaseCoachPass } from "../hooks/useMangoalLedger";
+import { usePurchaseCoachPass, PASS_AMOUNTS } from "../hooks/useMangoalLedger";
+import { useTokenBalances } from "../hooks/useTokenBalances";
+
+const ADD_CASH_URL = "https://link.minipay.xyz/add_cash?tokens=USDm,USDC,USDT";
 
 type PassOption = {
   id: string;
@@ -44,7 +47,7 @@ const PASS_OPTIONS: PassOption[] = [
 ];
 
 const PERKS = [
-  "Advanced match context from Mangoal Coach",
+  "Advanced match context from Mangooal Coach",
   "Deeper team recent-form analysis",
   "Head-to-head summaries",
   "Reminders before prediction lock",
@@ -57,14 +60,18 @@ const PERKS = [
 export function CoachPass() {
   const [selectedPass, setSelectedPass] = useState<string>("weekly");
   const [selectedToken, setSelectedToken] = useState<StablecoinInfo>(FEATURED_TOKENS[0]); // COPm first
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { purchase, step, txHash, isPending, error, reset } = usePurchaseCoachPass();
+  const { rawBalances } = useTokenBalances(address as `0x${string}` | undefined);
 
   const currentPass = PASS_OPTIONS.find((p) => p.id === selectedPass)!;
+  const requiredAmount = PASS_AMOUNTS[currentPass.type]?.[selectedToken.symbol] ?? 0n;
+  const userBalance = rawBalances[selectedToken.symbol] ?? 0n;
+  const isLowBalance = isConnected && userBalance < requiredAmount;
 
   async function handleUnlock() {
     if (!isConnected) {
-      alert("Please open Mangoal inside MiniPay or connect a Celo wallet.");
+      alert("Please open Mangooal inside MiniPay or connect a Celo wallet.");
       return;
     }
     try {
@@ -194,6 +201,33 @@ export function CoachPass() {
           </div>
         )}
 
+        {/* Low-balance notice */}
+        {isLowBalance && (
+          <div
+            style={{
+              background: "#FFFBEB",
+              border: "1px solid #FCD34D",
+              borderRadius: "var(--radius-sm)",
+              padding: "10px 14px",
+              fontSize: 12,
+              color: "#92400E",
+              marginTop: 12,
+              lineHeight: 1.6,
+            }}
+          >
+            <strong>Not enough {selectedToken.symbol}.</strong>
+            {" "}
+            <a
+              href={ADD_CASH_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#B45309", textDecoration: "underline", fontWeight: 700 }}
+            >
+              Add funds in MiniPay
+            </a>
+          </div>
+        )}
+
         {/* Error banner */}
         {step === "error" && error && (
           <div
@@ -231,7 +265,7 @@ export function CoachPass() {
           <button
             className="btn btn-primary"
             onClick={handleUnlock}
-            disabled={isPending}
+            disabled={isPending || isLowBalance}
           >
             {step === "approving"
               ? "Approving spend..."

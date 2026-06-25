@@ -80,6 +80,7 @@ export function useCommitPrediction() {
       abi: MANGOAL_LEDGER_ABI,
       functionName: "commitPrediction",
       args: [campaignId, matchId, predictionHash],
+      type: "legacy",
     });
 
     // Persist salt + scores locally so the reveal phase can reconstruct the hash
@@ -135,6 +136,7 @@ export function usePurchaseCoachPass() {
         abi: ERC20_ABI,
         functionName: "approve",
         args: [MANGOAL_LEDGER_ADDRESS, amount],
+        type: "legacy",
       });
       await publicClient.waitForTransactionReceipt({ hash: approveTx });
 
@@ -145,6 +147,7 @@ export function usePurchaseCoachPass() {
         abi: MANGOAL_LEDGER_ABI,
         functionName: "purchaseCoachPass",
         args: [passType, token.address as `0x${string}`, amount],
+        type: "legacy",
       });
       await publicClient.waitForTransactionReceipt({ hash: purchaseTx });
 
@@ -202,6 +205,7 @@ export function useRevealPrediction() {
       abi: MANGOAL_LEDGER_ABI,
       functionName: "revealPrediction",
       args: [campaignId, matchId, scores.homeScore, scores.awayScore, salt],
+      type: "legacy",
     });
 
     setTxHash(hash);
@@ -234,6 +238,7 @@ export function useClaimReward() {
       abi: MANGOAL_LEDGER_ABI,
       functionName: "claimPromotionalReward",
       args: [campaignId, token, amount, operatorSignature],
+      type: "legacy",
     });
 
     setTxHash(hash);

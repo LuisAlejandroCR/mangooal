@@ -3,8 +3,7 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
 
-// Import path uses the original filename; contract inside is MangooalLedger.
-import "../contracts/MangoalLedger.sol";
+import "../contracts/MangooalLedger.sol";
 
 /**
  * Deploy MangooalLedger to Celo Mainnet.
