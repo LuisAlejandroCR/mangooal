@@ -29,7 +29,7 @@ import "../contracts/MangooalLedger.sol";
  * Verify the campaign was created:
  *   cast call <LEDGER_ADDRESS> \
  *     "getCampaign(bytes32)((bytes32,uint64,uint64,bool))" \
- *     $(cast keccak "copa-america-2026") \
+ *     $(cast keccak "fifa-world-cup-2026") \
  *     --rpc-url https://forno.celo.org
  */
 contract SetupAfterDeploy is Script {
@@ -64,11 +64,11 @@ contract SetupAfterDeploy is Script {
     uint256 constant SEASON_USDT   =  7_000_000;
     uint256 constant SEASON_USDM   =  7 ether;     // 7.00 USDm
 
-    // ── Copa América 2026 campaign ─────────────────────────────────────────────
-    // campaignId must match keccak256(toHex("copa-america-2026")) used in the frontend.
-    // UPDATE these timestamps to match the actual tournament schedule before deploying.
-    uint64 constant CAMPAIGN_STARTS = 1782345600; // 2026-06-25 00:00 UTC — UPDATE
-    uint64 constant CAMPAIGN_ENDS   = 1788048000; // 2026-08-30 00:00 UTC — UPDATE
+    // ── FIFA World Cup 2026 campaign ──────────────────────────────────────────
+    // campaignId must match keccak256(toHex("fifa-world-cup-2026")) used in the frontend.
+    // Starts after all groups resolve (June 28); ends after the Final + 48h reveal window.
+    uint64 constant CAMPAIGN_STARTS = 1782604800; // 2026-06-28 00:00 UTC
+    uint64 constant CAMPAIGN_ENDS   = 1784678400; // 2026-07-22 00:00 UTC
 
     function run() external {
         MangooalLedger ledger  = MangooalLedger(vm.envAddress("LEDGER_ADDRESS"));
@@ -111,12 +111,12 @@ contract SetupAfterDeploy is Script {
 
         console.log("Pass prices configured (16 combinations)");
 
-        // ── 3. Create Copa America 2026 campaign ────────────────────────────
-        // keccak256(abi.encodePacked("copa-america-2026")) must equal
-        // keccak256(toHex("copa-america-2026")) from the frontend — they hash
+        // ── 3. Create FIFA World Cup 2026 campaign ───────────────────────────
+        // keccak256(abi.encodePacked("fifa-world-cup-2026")) must equal
+        // keccak256(toHex("fifa-world-cup-2026")) from the frontend — they hash
         // the same UTF-8 bytes, so the IDs will match.
-        bytes32 campaignId   = keccak256(abi.encodePacked("copa-america-2026"));
-        bytes32 metadataHash = keccak256(abi.encodePacked("Copa America 2026 - Mangooal"));
+        bytes32 campaignId   = keccak256(abi.encodePacked("fifa-world-cup-2026"));
+        bytes32 metadataHash = keccak256(abi.encodePacked("FIFA World Cup 2026 - Mangooal"));
 
         ledger.createCampaign(campaignId, metadataHash, CAMPAIGN_STARTS, CAMPAIGN_ENDS);
 

@@ -36,7 +36,7 @@ contract RecordPoints is Script {
         string memory slug    = vm.envString("MATCH_SLUG");
         string memory path    = vm.envString("SCORES_JSON");
 
-        bytes32 campaignId = keccak256(abi.encodePacked("copa-america-2026"));
+        bytes32 campaignId = keccak256(abi.encodePacked("fifa-world-cup-2026"));
         bytes32 matchId    = keccak256(abi.encodePacked(slug));
 
         string memory json = vm.readFile(path);

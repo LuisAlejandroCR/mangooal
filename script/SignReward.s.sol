@@ -28,7 +28,7 @@ import "../contracts/MangooalLedger.sol";
  *   RECIPIENT=0x...               \
  *   TOKEN=0x8A567...              \
  *   AMOUNT=500000000000000000000  \
- *   LABEL=Copa%20Am%C3%A9rica%202026 \
+ *   LABEL=FIFA%20World%20Cup%202026 \
  *   forge script script/SignReward.s.sol --rpc-url celo
  *
  * Output:
@@ -56,7 +56,7 @@ contract SignReward is Script {
         uint256 amount        = vm.envUint("AMOUNT");
         string  memory label  = vm.envString("LABEL");
 
-        bytes32 campaignId = keccak256(abi.encodePacked("copa-america-2026"));
+        bytes32 campaignId = keccak256(abi.encodePacked("fifa-world-cup-2026"));
 
         // Read current nonce for this recipient — sign this exact value
         uint256 nonce = ledger.rewardNonces(recipient);

@@ -38,7 +38,7 @@ set -euo pipefail
 RPC="${CELO_RPC:-https://forno.celo.org}"
 CHUNK=49999  # Forno rejects spans > ~50,000 blocks (error -32011)
 
-CAMPAIGN_HASH=$(cast keccak "copa-america-2026")
+CAMPAIGN_HASH=$(cast keccak "fifa-world-cup-2026")
 MATCH_HASH=$(cast keccak "$MATCH_SLUG")
 
 >&2 echo "=== Mangooal Score Computation ==="
