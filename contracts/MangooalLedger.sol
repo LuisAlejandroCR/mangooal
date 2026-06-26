@@ -360,7 +360,7 @@ contract MangooalLedger is AccessControl, Pausable, ReentrancyGuard {
         bytes32 expected = keccak256(
             abi.encodePacked(msg.sender, campaignId, matchId, homeScore, awayScore, salt)
         );
-        require(expected == p.predictionHash, "hash mismatch — scores or salt incorrect");
+        require(expected == p.predictionHash, "hash mismatch: scores or salt incorrect");
 
         p.homeScore  = homeScore;
         p.awayScore  = awayScore;

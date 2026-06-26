@@ -81,7 +81,7 @@ contract SetupAfterDeploy is Script {
             ledger.grantRole(ledger.ORACLE_ROLE(), oracleAddr);
             console.log("ORACLE_ROLE granted to:", oracleAddr);
         } else {
-            console.log("ORACLE_ADDRESS not set — skipping ORACLE_ROLE grant");
+            console.log("ORACLE_ADDRESS not set, skipping ORACLE_ROLE grant");
         }
 
         // ── 2. Set pass prices (16 combinations: 4 types × 4 tokens) ───────
