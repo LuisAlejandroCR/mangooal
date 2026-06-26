@@ -37,6 +37,10 @@ coverage.json
 broadcast/
 out/
 
+# Generated / temporary files
+*.flat.sol
+safe-setup-batch.json
+
 # Local wallets / private keys
 *.key
 *.pem

@@ -6,9 +6,8 @@ import { ERC20_ABI } from "../contracts/erc20.abi";
 import type { StablecoinInfo } from "../config/stablecoins";
 import { analytics } from "../lib/analytics";
 
-// TODO: replace with deployed contract address after deploying MangooalLedger on Celo Mainnet
 export const MANGOAL_LEDGER_ADDRESS =
-  "0x0000000000000000000000000000000000000000" as `0x${string}`;
+  "0xCF00CaE3610cA8C410948C240b930c9cE3C03d66" as `0x${string}`;
 
 export const CONTRACT_LIVE = MANGOAL_LEDGER_ADDRESS !== "0x0000000000000000000000000000000000000000";
 

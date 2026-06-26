@@ -15,5 +15,6 @@ celo-ankr   = "https://rpc.ankr.com/celo"
 celo-drpc   = "https://celo.drpc.org"
 
 [etherscan]
-celo        = { key = "${ETHERSCAN_API_KEY}", url = "https://api.celoscan.io/api", chain = 42220 }
+celo          = { key = "unused", url = "https://api.celoscan.io/api", chain = 42220 }
+celo-sourcify = { key = "unused", url = "https://sourcify.dev/server/",  chain = 42220 }
 
