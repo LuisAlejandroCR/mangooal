@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useAccount } from "wagmi";
 import { CeloBadge } from "../components/CeloBadge";
 import {
   FEATURED_TOKENS,
@@ -9,6 +8,7 @@ import {
   PASS_AMOUNTS,
   usePurchaseCoachPass,
 } from "../hooks/useMangoalLedger";
+import { useMiniPay } from "../hooks/useMiniPay";
 import { useTokenBalances } from "../hooks/useTokenBalances";
 
 const ADD_CASH_URL = "https://link.minipay.xyz/add_cash?tokens=USDm,USDC,USDT";
@@ -83,21 +83,7 @@ const PERKS = [
   "Historical performance dashboard",
 ];
 
-function detectMiniPayRuntime() {
-  if (typeof window === "undefined") return false;
-
-  const ethereum = (
-    window as typeof window & {
-      ethereum?: {
-        isMiniPay?: boolean;
-      };
-    }
-  ).ethereum;
-
-  return Boolean(ethereum?.isMiniPay);
-}
-
-function getPreferredMiniPayToken() {
+function getDefaultMiniPayToken() {
   return (
     FEATURED_TOKENS.find((token) => token.symbol === "USDC") ??
     FEATURED_TOKENS.find((token) => token.symbol === "USDm") ??
@@ -106,28 +92,25 @@ function getPreferredMiniPayToken() {
   );
 }
 
-const DEFAULT_MINIPAY_TOKEN = getPreferredMiniPayToken();
+const DEFAULT_MINIPAY_TOKEN = getDefaultMiniPayToken();
 
 export function CoachPass() {
   const [selectedPass, setSelectedPass] = useState("weekly");
   const [selectedToken, setSelectedToken] =
     useState<StablecoinInfo>(DEFAULT_MINIPAY_TOKEN);
 
-  const { isConnected, address } = useAccount();
+  const { isMiniPay, isConnected, address } = useMiniPay();
   const { purchase, step, txHash, isPending, error, reset } =
     usePurchaseCoachPass();
+
   const { rawBalances } = useTokenBalances(
     address as `0x${string}` | undefined
   );
 
-  const isMiniPay = useMemo(() => detectMiniPayRuntime(), []);
-
   const paymentTokens = useMemo(() => {
-    if (isMiniPay) {
-      return FEATURED_TOKENS.filter((token) => token.miniPayCore);
-    }
-
-    return FEATURED_TOKENS;
+    return isMiniPay
+      ? FEATURED_TOKENS.filter((token) => token.miniPayCore)
+      : FEATURED_TOKENS;
   }, [isMiniPay]);
 
   useEffect(() => {
@@ -147,8 +130,6 @@ export function CoachPass() {
 
   const isLowBalance =
     isConnected && requiredAmount > 0n && userBalance < requiredAmount;
-
-  const explorerUrl = txHash ? `https://celoscan.io/tx/${txHash}` : undefined;
 
   async function handleUnlock() {
     if (!isConnected) {
@@ -172,264 +153,360 @@ export function CoachPass() {
         token: selectedToken,
       });
     } catch {
-      // The hook stores and exposes the error state.
+      // Error is displayed from hook state.
     }
   }
 
   if (step === "done" && txHash) {
-    return (
-      <PassSuccessView
-        txHash={txHash}
-        explorerUrl={explorerUrl}
-        onClose={reset}
-      />
-    );
+    return <PassSuccessView txHash={txHash} onClose={reset} />;
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6">
-      <section className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-100 p-6 shadow-sm">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-amber-700">
-              Coach Pass
-            </p>
-            <h1 className="mt-1 text-3xl font-black text-stone-950">
-              Mangooal Coach Pass
-            </h1>
-          </div>
+    <div className="screen">
+      <div className="topbar">
+        <span className="topbar-logo">
+          ⚽ <span>Mangoo</span>al
+        </span>
 
-          <CeloBadge />
-        </div>
+        <CeloBadge variant={isConnected ? "connected" : "network"} />
+      </div>
 
-        <p className="max-w-2xl text-base text-stone-700">
-          Unlock deeper match insights from Mangooal Coach. Predictions stay
-          free for everyone.
-        </p>
+      <div className="screen-body" style={{ paddingTop: 16 }}>
+        <div className="coach-card">
+          <div className="coach-label">Coach Pass</div>
 
-        <div className="mt-5 rounded-2xl border border-amber-300 bg-white/75 p-4 text-sm text-stone-700">
-          <strong className="text-stone-950">Fair-play note:</strong> Coach
-          Pass does not affect points, ranking, or promotional rewards. It is
-          optional and non-competitive.
-        </div>
-      </section>
-
-      <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
-        <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-bold text-stone-950">
-            What you unlock
-          </h2>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {PERKS.map((perk) => (
-              <div
-                key={perk}
-                className="rounded-2xl border border-stone-100 bg-stone-50 p-3 text-sm text-stone-700"
-              >
-                <span className="mr-2 font-bold text-emerald-600">✓</span>
-                {perk}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <aside className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-bold text-stone-950">
-            Choose your pass
-          </h2>
-
-          <div className="mt-4 flex flex-col gap-3">
-            {PASS_OPTIONS.map((pass) => {
-              const active = selectedPass === pass.id;
-
-              return (
-                <button
-                  key={pass.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedPass(pass.id);
-                    reset();
-                  }}
-                  className={`rounded-2xl border p-4 text-left transition ${
-                    active
-                      ? "border-amber-500 bg-amber-50"
-                      : "border-stone-200 bg-white hover:border-amber-300"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-bold text-stone-950">{pass.label}</p>
-                      <p className="text-sm text-stone-500">{pass.duration}</p>
-                    </div>
-
-                    <p className="text-sm font-bold text-amber-700">
-                      {pass.price[selectedToken.symbol]}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-5">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="font-bold text-stone-950">Pay with</h3>
-
-              {isMiniPay && (
-                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
-                  MiniPay-safe
-                </span>
-              )}
-            </div>
-
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              {paymentTokens.map((token) => {
-                const active = selectedToken.symbol === token.symbol;
-
-                return (
-                  <button
-                    key={token.symbol}
-                    type="button"
-                    onClick={() => {
-                      setSelectedToken(token);
-                      reset();
-                    }}
-                    className={`rounded-2xl border px-3 py-3 text-sm font-bold transition ${
-                      active
-                        ? "border-amber-500 bg-amber-50 text-amber-800"
-                        : "border-stone-200 bg-white text-stone-700 hover:border-amber-300"
-                    }`}
-                  >
-                    <span className="mr-1">{token.flagEmoji}</span>
-                    {token.symbol}
-                  </button>
-                );
-              })}
-            </div>
-
-            {!isMiniPay && (
-              <p className="mt-3 text-xs text-stone-500">
-                COPm is available as a Celo Mainnet option outside MiniPay. For
-                MiniPay users, Mangooal prioritizes USDC, USDT, and USDm.
-              </p>
-            )}
-          </div>
-
-          {isLowBalance && (
-            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              Not enough {selectedToken.symbol}.{" "}
-              <a
-                href={ADD_CASH_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="font-bold underline"
-              >
-                Add funds in MiniPay
-              </a>
-            </div>
-          )}
-
-          {step === "error" && error && (
-            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              {error.message || "Transaction failed. Please try again."}
-            </div>
-          )}
-
-          <div className="mt-5 rounded-2xl border border-stone-200 bg-stone-50 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-stone-500">Total</span>
-              <span className="text-lg font-black text-stone-950">
-                {currentPass.price[selectedToken.symbol]}
-              </span>
-            </div>
-
-            <p className="mt-1 text-xs text-stone-500">
-              Payment processed on Celo Mainnet.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleUnlock}
-            disabled={isPending || isLowBalance}
-            className="mt-4 w-full rounded-2xl bg-stone-950 px-5 py-4 text-sm font-black text-white shadow-sm transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 900,
+              letterSpacing: "-0.04em",
+              lineHeight: 1.05,
+            }}
           >
-            {step === "approving"
-              ? "Approving spend..."
-              : step === "purchasing"
-                ? "Processing Coach Pass..."
-                : `Unlock Coach Pass · ${currentPass.price[selectedToken.symbol]}`}
-          </button>
+            Mangooal Coach Pass
+          </div>
 
-          <p className="mt-3 text-center text-xs text-stone-500">
-            Coach Pass gives deeper match context. It does not affect points,
-            rankings, or rewards.
+          <p style={{ fontSize: 14, lineHeight: 1.55, marginTop: 10 }}>
+            Unlock deeper match insights from Mangooal Coach. Predictions stay
+            free for everyone.
           </p>
-        </aside>
-      </section>
-    </main>
+
+          <p className="coach-disclaimer">
+            Fair-play note: Coach Pass does not affect points, ranking, or
+            promotional rewards. It is optional and non-competitive.
+          </p>
+        </div>
+
+        <div className="section-title">What you unlock</div>
+
+        <div className="card" style={{ marginBottom: 14 }}>
+          {PERKS.map((perk, index) => (
+            <div
+              key={perk}
+              style={{
+                display: "flex",
+                gap: 8,
+                padding: "9px 0",
+                borderBottom:
+                  index < PERKS.length - 1 ? "1px solid var(--border)" : "none",
+                fontSize: 14,
+                lineHeight: 1.35,
+              }}
+            >
+              <span style={{ color: "var(--green)", fontWeight: 900 }}>✓</span>
+              <span>{perk}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="section-title">Choose your pass</div>
+
+        {PASS_OPTIONS.map((pass) => {
+          const active = selectedPass === pass.id;
+
+          return (
+            <button
+              key={pass.id}
+              type="button"
+              onClick={() => {
+                setSelectedPass(pass.id);
+                reset();
+              }}
+              className={`pass-card ${active ? "selected" : ""}`}
+              style={{
+                width: "100%",
+                background: active ? "#FFF9EC" : "var(--card)",
+                textAlign: "left",
+              }}
+            >
+              <div className="pass-card-header">
+                <div>
+                  <div className="pass-type">{pass.label}</div>
+                  <div className="pass-perks">{pass.duration}</div>
+                </div>
+
+                <div className="pass-price">
+                  {pass.price[selectedToken.symbol]}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+
+        <div className="section-title">Pay with</div>
+
+        {isMiniPay && (
+          <div className="badge badge-celo" style={{ marginBottom: 10 }}>
+            MiniPay-safe tokens
+          </div>
+        )}
+
+        <div className="token-pills">
+          {paymentTokens.map((token) => {
+            const active = selectedToken.symbol === token.symbol;
+
+            return (
+              <button
+                key={token.symbol}
+                type="button"
+                className={`token-pill ${active ? "selected" : ""}`}
+                onClick={() => {
+                  setSelectedToken(token);
+                  reset();
+                }}
+              >
+                <span>{token.flagEmoji}</span>
+                <span>{token.symbol}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {!isMiniPay && (
+          <div
+            className="card"
+            style={{
+              marginBottom: 14,
+              fontSize: 12,
+              color: "var(--text-muted)",
+              lineHeight: 1.55,
+            }}
+          >
+            COPm is available as a Celo Mainnet option outside MiniPay. Inside
+            MiniPay, Mangooal prioritizes USDC, USDT, and USDm for payment
+            flows.
+          </div>
+        )}
+
+        {isLowBalance && (
+          <div
+            className="card"
+            style={{
+              marginBottom: 14,
+              borderColor: "#FCA5A5",
+              background: "#FEF2F2",
+              color: "#991B1B",
+              fontSize: 13,
+              lineHeight: 1.5,
+            }}
+          >
+            Not enough {selectedToken.symbol}.{" "}
+            <a
+              href={ADD_CASH_URL}
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "#991B1B", fontWeight: 800 }}
+            >
+              Add funds in MiniPay
+            </a>
+          </div>
+        )}
+
+        {step === "error" && error && (
+          <div
+            className="card"
+            style={{
+              marginBottom: 14,
+              borderColor: "#FCA5A5",
+              background: "#FEF2F2",
+              color: "#991B1B",
+              fontSize: 13,
+              lineHeight: 1.5,
+            }}
+          >
+            {error.message || "Transaction failed. Please try again."}
+          </div>
+        )}
+
+        <div className="card" style={{ marginBottom: 14 }}>
+          <div className="audit-row">
+            <span className="audit-label">Total</span>
+            <span className="audit-value">
+              {currentPass.price[selectedToken.symbol]}
+            </span>
+          </div>
+
+          <div className="audit-row" style={{ borderBottom: "none" }}>
+            <span className="audit-label">Network</span>
+            <span className="audit-value">Celo Mainnet</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={handleUnlock}
+          disabled={isPending || isLowBalance}
+          style={{
+            opacity: isPending || isLowBalance ? 0.6 : 1,
+            cursor: isPending || isLowBalance ? "not-allowed" : "pointer",
+          }}
+        >
+          {step === "approving"
+            ? "Approving spend..."
+            : step === "purchasing"
+              ? "Processing Coach Pass..."
+              : `Unlock Coach Pass · ${currentPass.price[selectedToken.symbol]}`}
+        </button>
+
+        <div className="compliance-note">
+          Coach Pass gives deeper match context. It does not affect points,
+          rankings, or rewards.
+          <br />
+          Predictions remain free for everyone.
+        </div>
+      </div>
+    </div>
   );
 }
 
 function PassSuccessView({
   txHash,
-  explorerUrl,
   onClose,
 }: {
   txHash: `0x${string}`;
-  explorerUrl?: string;
   onClose: () => void;
 }) {
+  const explorerUrl = `https://celoscan.io/tx/${txHash}`;
+
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8">
-      <section className="rounded-3xl border border-emerald-200 bg-emerald-50 p-6 text-center shadow-sm">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-2xl text-white">
-          ✓
-        </div>
+    <div className="screen">
+      <div className="topbar">
+        <span className="topbar-logo">
+          ⚽ <span>Mangoo</span>al
+        </span>
 
-        <h1 className="mt-4 text-2xl font-black text-stone-950">
-          Coach Pass active!
-        </h1>
+        <CeloBadge variant="connected" />
+      </div>
 
-        <p className="mt-2 text-sm text-stone-700">
-          Your Coach Pass is now live on Celo Mainnet. Deeper match insights are
-          now unlocked.
-        </p>
+      <div className="screen-body" style={{ paddingTop: 16 }}>
+        <div className="card" style={{ textAlign: "center" }}>
+          <div
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: "50%",
+              background: "var(--success)",
+              color: "white",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 28,
+              fontWeight: 900,
+              marginBottom: 16,
+            }}
+          >
+            ✓
+          </div>
 
-        <div className="mt-5 rounded-2xl border border-emerald-200 bg-white p-4 text-left">
-          <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
-            Recorded on Celo Mainnet
+          <h1
+            style={{
+              fontSize: 24,
+              fontWeight: 900,
+              letterSpacing: "-0.04em",
+              marginBottom: 8,
+            }}
+          >
+            Coach Pass active!
+          </h1>
+
+          <p
+            style={{
+              fontSize: 14,
+              color: "var(--text-muted)",
+              lineHeight: 1.55,
+              marginBottom: 16,
+            }}
+          >
+            Your Coach Pass is now live on Celo Mainnet. Deeper match insights
+            are now unlocked.
           </p>
 
-          <p className="mt-2 break-all font-mono text-xs text-stone-700">
-            {txHash}
-          </p>
+          <div
+            className="card"
+            style={{
+              textAlign: "left",
+              marginBottom: 16,
+              boxShadow: "none",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                color: "var(--text-muted)",
+                fontWeight: 800,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                marginBottom: 8,
+              }}
+            >
+              Recorded on Celo Mainnet
+            </div>
 
-          {explorerUrl && (
+            <div
+              style={{
+                fontSize: 11,
+                fontFamily: "monospace",
+                color: "var(--text-muted)",
+                wordBreak: "break-all",
+                marginBottom: 10,
+              }}
+            >
+              {txHash}
+            </div>
+
             <a
               href={explorerUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-3 inline-flex text-sm font-bold text-emerald-700 underline"
+              style={{
+                color: "var(--green)",
+                fontSize: 13,
+                fontWeight: 800,
+                textDecoration: "none",
+              }}
             >
-              View on Celoscan
+              View on Celoscan ↗
             </a>
-          )}
+          </div>
+
+          <p
+            style={{
+              fontSize: 12,
+              color: "var(--text-muted)",
+              lineHeight: 1.5,
+              marginBottom: 16,
+            }}
+          >
+            Coach Pass does not affect your points, ranking, or promotional
+            reward eligibility.
+          </p>
+
+          <button type="button" className="btn btn-primary" onClick={onClose}>
+            Done
+          </button>
         </div>
-
-        <p className="mt-4 text-xs text-stone-500">
-          Coach Pass does not affect your points, ranking, or promotional reward
-          eligibility.
-        </p>
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-5 w-full rounded-2xl bg-stone-950 px-5 py-4 text-sm font-black text-white"
-        >
-          Done
-        </button>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }
