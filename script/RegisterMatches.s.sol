@@ -47,12 +47,12 @@ contract RegisterMatches is Script {
 
         vm.startBroadcast();
 
-        // ── 0. Bootstrap OPERATOR_ROLE ────────────────────────────────────────
-        // Deployer EOA still holds DEFAULT_ADMIN_ROLE (Safe granted it during setup).
-        // registerMatch requires OPERATOR_ROLE — self-grant then revoke after.
+        // ── 0. OPERATOR_ROLE pre-granted by Safe ──────────────────────────────
+        // Safe executed grantRole(OPERATOR_ROLE, deployer) before this script runs.
+        // No self-grant needed (self-grant requires DEFAULT_ADMIN_ROLE which is gone).
+        // At the end we renounceRole — role holders can renounce without admin rights.
         address me = msg.sender;
-        ledger.grantRole(ledger.OPERATOR_ROLE(), me);
-        console.log("OPERATOR_ROLE self-granted to broadcaster:", me);
+        console.log("Registering matches as:", me);
 
         // ── Round of 32 (June 29 – July 3, 2026) ─────────────────────────────
         // Kickoff times confirmed via ESPN API (June 25, 2026).
@@ -186,8 +186,9 @@ contract RegisterMatches is Script {
         // (Safe holds OPERATOR_ROLE).
 
         // ── Cleanup ──────────────────────────────────────────────────────────
-        ledger.revokeRole(ledger.OPERATOR_ROLE(), me);
-        console.log("OPERATOR_ROLE revoked from broadcaster");
+        // renounceRole = role holder gives up own role. No admin rights needed.
+        ledger.renounceRole(ledger.OPERATOR_ROLE(), me);
+        console.log("OPERATOR_ROLE renounced by broadcaster");
 
         vm.stopBroadcast();
 
