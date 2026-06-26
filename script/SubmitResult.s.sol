@@ -5,7 +5,7 @@ import "forge-std/Script.sol";
 import "../contracts/MangooalLedger.sol";
 
 /**
- * Submit the official result for a Copa América 2026 match.
+ * Submit the official result for a FIFA World Cup 2026 match.
  * Must be run by a wallet with ORACLE_ROLE.
  *
  * Required env vars:
@@ -36,7 +36,7 @@ contract SubmitResult is Script {
         uint8  homeScore      = uint8(vm.envUint("HOME_SCORE"));
         uint8  awayScore      = uint8(vm.envUint("AWAY_SCORE"));
 
-        bytes32 campaignId = keccak256(abi.encodePacked("copa-america-2026"));
+        bytes32 campaignId = keccak256(abi.encodePacked("fifa-world-cup-2026"));
         bytes32 matchId    = keccak256(abi.encodePacked(slug));
 
         console.log("Submitting result for match slug:", slug);

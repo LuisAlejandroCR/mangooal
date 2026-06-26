@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -13,6 +14,7 @@ import { WalletStatus } from "./screens/WalletStatus";
 import { OnChainAudit } from "./screens/OnChainAudit";
 import { RewardClaim } from "./screens/RewardClaim";
 import { Stats } from "./screens/Stats";
+import { SplashScreen } from "./screens/SplashScreen";
 
 const queryClient = new QueryClient();
 
@@ -37,12 +39,18 @@ function AppShell() {
 }
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AppShell />
-        </BrowserRouter>
+        {showSplash ? (
+          <SplashScreen onDone={() => setShowSplash(false)} />
+        ) : (
+          <BrowserRouter>
+            <AppShell />
+          </BrowserRouter>
+        )}
       </QueryClientProvider>
     </WagmiProvider>
   );

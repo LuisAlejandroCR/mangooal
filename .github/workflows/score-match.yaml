@@ -1,0 +1,101 @@
+name: Score Match
+
+# Manually triggered after each match result is confirmed.
+# Inputs: match slug + official score from the referee.
+# Steps: submit result on-chain → compute per-wallet points → record points on-chain.
+on:
+  workflow_dispatch:
+    inputs:
+      match_slug:
+        description: 'Match slug (e.g. wc26-r32-01)'
+        required: true
+      home_score:
+        description: 'Official home team goals (integer)'
+        required: true
+      away_score:
+        description: 'Official away team goals (integer)'
+        required: true
+
+env:
+  LEDGER_ADDRESS: ${{ vars.LEDGER_ADDRESS }}       # Set in repo Settings → Variables
+  DEPLOY_BLOCK:   ${{ vars.DEPLOY_BLOCK }}         # Block number of the deploy tx
+  CELO_RPC:       https://forno.celo.org
+
+jobs:
+  score-match:
+    name: Submit → Score → Record
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Cache Foundry build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.foundry/cache
+            out/
+          key: foundry-${{ hashFiles('foundry.toml', 'contracts/**/*.sol') }}
+
+      - name: Forge install
+        run: forge install
+
+      - name: Forge build
+        run: forge build
+
+      # ── Step 1: submit official result on-chain (requires ORACLE_ROLE) ────────
+      - name: Submit official result
+        env:
+          PRIVATE_KEY:  ${{ secrets.ORACLE_PRIVATE_KEY }}
+          MATCH_SLUG:   ${{ inputs.match_slug }}
+          HOME_SCORE:   ${{ inputs.home_score }}
+          AWAY_SCORE:   ${{ inputs.away_score }}
+        run: |
+          forge script script/SubmitResult.s.sol \
+            --rpc-url "$CELO_RPC"  \
+            --broadcast            \
+            --legacy               \
+            --private-key "$PRIVATE_KEY"
+          echo "✅ Result submitted for $MATCH_SLUG ($HOME_SCORE–$AWAY_SCORE)"
+
+      # ── Step 2: compute per-wallet points from on-chain PredictionRevealed events
+      - name: Compute scores
+        env:
+          MATCH_SLUG:  ${{ inputs.match_slug }}
+          HOME_SCORE:  ${{ inputs.home_score }}
+          AWAY_SCORE:  ${{ inputs.away_score }}
+        run: |
+          bash scripts/score-revealed.sh > scores.json
+          WALLET_COUNT=$(python3 -c "import json; d=json.load(open('scores.json')); print(len(d['wallets']))")
+          echo "✅ Scored $WALLET_COUNT wallets"
+
+      # ── Step 3: record points on-chain for every scored wallet ────────────────
+      - name: Record points on-chain
+        env:
+          PRIVATE_KEY:  ${{ secrets.ORACLE_PRIVATE_KEY }}
+          MATCH_SLUG:   ${{ inputs.match_slug }}
+          SCORES_JSON:  scores.json
+        run: |
+          forge script script/RecordPoints.s.sol \
+            --rpc-url "$CELO_RPC"  \
+            --broadcast            \
+            --legacy               \
+            --private-key "$PRIVATE_KEY"
+          echo "✅ Points recorded on-chain"
+
+      # ── Keep scores.json as a run artifact for audit trail ───────────────────
+      - name: Upload scores artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scores-${{ inputs.match_slug }}-run${{ github.run_number }}
+          path: scores.json
+          retention-days: 365
