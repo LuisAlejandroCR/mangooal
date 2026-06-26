@@ -47,6 +47,13 @@ contract RegisterMatches is Script {
 
         vm.startBroadcast();
 
+        // ── 0. Bootstrap OPERATOR_ROLE ────────────────────────────────────────
+        // Deployer EOA still holds DEFAULT_ADMIN_ROLE (Safe granted it during setup).
+        // registerMatch requires OPERATOR_ROLE — self-grant then revoke after.
+        address me = msg.sender;
+        ledger.grantRole(ledger.OPERATOR_ROLE(), me);
+        console.log("OPERATOR_ROLE self-granted to broadcaster:", me);
+
         // ── Round of 32 (June 29 – July 3, 2026) ─────────────────────────────
         // Kickoff times confirmed via ESPN API (June 25, 2026).
         // lockedAt = kickoffAt - 1800 (predictions lock 30 min before kickoff).
@@ -140,16 +147,55 @@ contract RegisterMatches is Script {
             1783045800  // lockedAt:  2026-07-03 02:30 UTC
         );
 
-        // ── TODO: Add wc26-r32-12 through wc26-r32-16 on June 28 ─────────────
-        // Run the ESPN curl loop above to get the remaining 5 match times,
-        // then add entries here following the same pattern.
-        // Expected slots: ~July 2 early morning UTC + July 3 afternoon/evening UTC.
+        // wc26-r32-12: USA vs Bosnia-Herz (Jul 2 00:00 UTC)
+        _register(ledger, campaignId,
+            keccak256(abi.encodePacked("wc26-r32-12")),
+            keccak256(abi.encodePacked("wc26-r32-12")),
+            1782950400, // kickoffAt: 2026-07-02 00:00 UTC — SoFi Stadium, Inglewood CA
+            1782948600  // lockedAt:  2026-07-01 23:30 UTC
+        );
+
+        // wc26-r32-13: Australia vs TBD (Group G Runner-up)
+        _register(ledger, campaignId,
+            keccak256(abi.encodePacked("wc26-r32-13")),
+            keccak256(abi.encodePacked("wc26-r32-13")),
+            1783101600, // kickoffAt: 2026-07-03 18:00 UTC — Lincoln Financial Field, Philadelphia PA
+            1783099800  // lockedAt:  2026-07-03 17:30 UTC
+        );
+
+        // wc26-r32-14: Argentina vs TBD (Group H Runner-up)
+        _register(ledger, campaignId,
+            keccak256(abi.encodePacked("wc26-r32-14")),
+            keccak256(abi.encodePacked("wc26-r32-14")),
+            1783116000, // kickoffAt: 2026-07-03 22:00 UTC — Levi's Stadium, Santa Clara CA
+            1783114200  // lockedAt:  2026-07-03 21:30 UTC
+        );
+
+        // wc26-r32-15: TBD (Group K Winner) vs TBD (Best 3rd Groups D/E/I/J/L)
+        _register(ledger, campaignId,
+            keccak256(abi.encodePacked("wc26-r32-15")),
+            keccak256(abi.encodePacked("wc26-r32-15")),
+            1783128600, // kickoffAt: 2026-07-04 01:30 UTC — Estadio Akron, Guadalajara MX
+            1783126800  // lockedAt:  2026-07-04 01:00 UTC
+        );
+
+        // ── TODO: wc26-r32-16 ───────────────────────────────────────────────
+        // 16th R32 match not yet confirmed in ESPN API (June 26, 2026).
+        // Add on June 28 once all groups resolve. If deployer DEFAULT_ADMIN_ROLE
+        // has already been revoked by Safe, use Safe UI to call registerMatch directly
+        // (Safe holds OPERATOR_ROLE).
+
+        // ── Cleanup ──────────────────────────────────────────────────────────
+        ledger.revokeRole(ledger.OPERATOR_ROLE(), me);
+        console.log("OPERATOR_ROLE revoked from broadcaster");
 
         vm.stopBroadcast();
 
-        console.log("Matches registered.");
-        console.log("Next: verify on Celoscan that getMatch() returns correct data.");
-        console.log("Then: update src/config/matches.ts with real team names and redeploy frontend.");
+        console.log("Matches registered (wc26-r32-01 through wc26-r32-15).");
+        console.log("Next: Safe revokes DEFAULT_ADMIN_ROLE from deployer.");
+        console.log("  revokeRole(0x00...0, 0x8cCb6982f9786C1AC3fF6E4BA18541917A82e0F1)");
+        console.log("Then: verify on Celoscan that getMatch() returns correct data.");
+        console.log("Then: set VITE_DEPLOY_BLOCK in Vercel + LEDGER_ADDRESS in GitHub.");
     }
 
     function _register(

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 export function SplashScreen({ onDone }: { onDone: () => void }) {
   useEffect(() => {
-    const t = setTimeout(onDone, 2250);
+    const t = setTimeout(onDone, 3750);
     return () => clearTimeout(t);
   }, [onDone]);
 
@@ -15,7 +15,7 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
       </div>
       <div className="splash-words">
         <div className="splash-name">Mangoo<span>al</span></div>
-        <div className="splash-sub">FIFA World Cup 2026 · Predictions</div>
+        <div className="splash-sub">Free score picks · Every tournament</div>
       </div>
     </div>
   );

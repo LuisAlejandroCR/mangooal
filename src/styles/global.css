@@ -418,7 +418,7 @@ body { background: #f0ece0; }
   justify-content: center;
   gap: 28px;
   z-index: 200;
-  animation: splash-fade-out 0.4s ease 1.85s both;
+  animation: splash-fade-out 0.4s ease 3.35s both;
 }
 
 @keyframes splash-fade-out { to { opacity: 0; pointer-events: none; } }

@@ -3,6 +3,7 @@ import { useAccount } from "wagmi";
 import { CeloBadge } from "../components/CeloBadge";
 import { useHasActiveCoachPass } from "../hooks/useMangoalLedger";
 import { getMatchById } from "../config/matches";
+import { useEspnScores, findMatch } from "../hooks/useEspnScores";
 
 type InsightData = {
   suggestedScore: string;
@@ -51,6 +52,16 @@ export function CoachInsight() {
 
   const match = getMatchById(id ?? "");
   const insight = match ? (INSIGHTS[match.id] ?? DEFAULT_INSIGHT) : DEFAULT_INSIGHT;
+
+  // Live ESPN data for the match date
+  const matchDate = match
+    ? new Date(match.kickoffAt).toISOString().slice(0, 10).replace(/-/g, "")
+    : undefined;
+  const { matches: espnMatches, isLoading: liveLoading } = useEspnScores(
+    "fifa.world",
+    matchDate
+  );
+  const live = match ? findMatch(espnMatches, match.home, match.away) : null;
 
   if (!match) {
     return (
@@ -108,6 +119,53 @@ export function CoachInsight() {
           </div>
         </div>
 
+        {/* Live score (ESPN) */}
+        {!liveLoading && live && (live.status === "in_progress" || live.status === "final") && (
+          <div
+            style={{
+              background: live.status === "in_progress" ? "#0F4C2A" : "#1F2937",
+              borderRadius: "var(--radius-sm)",
+              padding: "14px 16px",
+              marginBottom: 14,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              color: "white",
+            }}
+          >
+            <div style={{ textAlign: "center", flex: 1 }}>
+              <div style={{ fontSize: 11, opacity: 0.65, fontWeight: 700, marginBottom: 4 }}>
+                {match!.homeFlag} {live.home}
+              </div>
+              <div style={{ fontSize: 30, fontWeight: 900 }}>
+                {live.homeScore ?? "–"}
+              </div>
+            </div>
+            <div style={{ textAlign: "center", padding: "0 12px" }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: live.status === "in_progress" ? "#4ADE80" : "#9CA3AF",
+                  marginBottom: 4,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {live.status === "in_progress" ? "LIVE" : "FT"}
+              </div>
+              <div style={{ fontSize: 13, opacity: 0.6 }}>{live.clock}</div>
+            </div>
+            <div style={{ textAlign: "center", flex: 1 }}>
+              <div style={{ fontSize: 11, opacity: 0.65, fontWeight: 700, marginBottom: 4 }}>
+                {match!.awayFlag} {live.away}
+              </div>
+              <div style={{ fontSize: 30, fontWeight: 900 }}>
+                {live.awayScore ?? "–"}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Suggested score */}
         <div className="coach-card">
           <div className="coach-label">🏅 Mangooal Coach · Suggested score</div>
@@ -127,47 +185,57 @@ export function CoachInsight() {
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
             <div>
               <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, marginBottom: 4 }}>
-                {match.homeFlag} {match.home} · Last 5
+                {match.homeFlag} {match.home}
               </div>
-              <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2 }}>
-                {insight.formHome.split(" ").map((r, i) => (
-                  <span
-                    key={i}
-                    style={{
-                      color:
-                        r === "W"
-                          ? "var(--success)"
-                          : r === "L"
-                          ? "#EF4444"
-                          : "var(--text-muted)",
-                    }}
-                  >
-                    {r}{" "}
+              {live?.homeRecord ? (
+                <div style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>
+                  {live.homeRecord}
+                  <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted)", marginLeft: 4 }}>
+                    W-D-L
                   </span>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2 }}>
+                  {insight.formHome.split(" ").map((r, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        color:
+                          r === "W" ? "var(--success)" : r === "L" ? "#EF4444" : "var(--text-muted)",
+                      }}
+                    >
+                      {r}{" "}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, marginBottom: 4 }}>
-                {match.awayFlag} {match.away} · Last 5
+                {match.awayFlag} {match.away}
               </div>
-              <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2 }}>
-                {insight.formAway.split(" ").map((r, i) => (
-                  <span
-                    key={i}
-                    style={{
-                      color:
-                        r === "W"
-                          ? "var(--success)"
-                          : r === "L"
-                          ? "#EF4444"
-                          : "var(--text-muted)",
-                    }}
-                  >
-                    {r}{" "}
+              {live?.awayRecord ? (
+                <div style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>
+                  {live.awayRecord}
+                  <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted)", marginLeft: 4 }}>
+                    W-D-L
                   </span>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2 }}>
+                  {insight.formAway.split(" ").map((r, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        color:
+                          r === "W" ? "var(--success)" : r === "L" ? "#EF4444" : "var(--text-muted)",
+                      }}
+                    >
+                      {r}{" "}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div

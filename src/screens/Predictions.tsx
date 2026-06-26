@@ -102,6 +102,76 @@ export function Predictions() {
           </div>
         )}
 
+        {/* Coming next */}
+        <div className="section-title" style={{ marginTop: 8 }}>Coming next on Mangooal</div>
+        {[
+          {
+            emoji: "⭐",
+            name: "UEFA Champions League",
+            sub: "2026–27 season · Group stage from Sept 2026",
+            color: "#1B3A8A",
+          },
+          {
+            emoji: "🏆",
+            name: "Copa América 2027",
+            sub: "South America · Predictions open 2027",
+            color: "#176B3A",
+          },
+          {
+            emoji: "🌍",
+            name: "Africa Cup of Nations 2027",
+            sub: "Continental · Predictions open 2027",
+            color: "#7C3AED",
+          },
+        ].map((c) => (
+          <div
+            key={c.name}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              background: "var(--card)",
+              borderRadius: "var(--radius-sm)",
+              padding: "12px 14px",
+              marginBottom: 8,
+              border: "1px solid var(--border)",
+              opacity: 0.75,
+            }}
+          >
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                background: c.color,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 20,
+                flexShrink: 0,
+              }}
+            >
+              {c.emoji}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{c.name}</div>
+              <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{c.sub}</div>
+            </div>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: "var(--text-muted)",
+                background: "var(--border)",
+                padding: "3px 8px",
+                borderRadius: 50,
+              }}
+            >
+              Soon
+            </span>
+          </div>
+        ))}
+
         {/* Compliance notice */}
         <div
           style={{
