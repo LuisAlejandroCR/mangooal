@@ -95,7 +95,7 @@ function mapLiveStatus(
   if (now < lockedAt) return "open";
   if (now < kickoffAt) return "locked";
 
-  return "live";
+  return "locked";
 }
 
 function staticToMatchData(match: MatchConfig): MatchData {

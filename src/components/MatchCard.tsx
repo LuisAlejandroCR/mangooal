@@ -17,6 +17,7 @@ export type MatchData = {
   };
   status: "open" | "locked" | "live" | "finished";
 
+  statusLabel?: string;
   source?: "local" | "espn";
   espnId?: string;
   venue?: string | null;
@@ -26,6 +27,27 @@ export type MatchData = {
   awayScore?: number | null;
   canPredict?: boolean;
 };
+
+function getMatchBadge(match: MatchData) {
+  if (match.status === "live") {
+    return match.clock ? `LIVE · ${match.clock}` : "LIVE";
+  }
+
+  if (match.status === "finished") {
+    return "FT";
+  }
+
+  if (match.status === "locked") {
+    return "Locked";
+  }
+
+  if (match.source === "espn") {
+    return "ESPN schedule";
+  }
+
+  return match.competition;
+}
+
 
 function formatKickoff(
   date: Date,
@@ -102,9 +124,16 @@ export function MatchCard({ match }: { match: MatchData }) {
           gap: 8,
           marginBottom: 8,
         }}
-      >
-        <span className="badge badge-celo">
-          {match.source === "espn" ? "ESPN live" : match.competition}
+      > <span
+          className={
+            match.status === "live"
+              ? "badge badge-live"
+              : match.source === "espn"
+                ? "badge badge-celo"
+                : "badge"
+          }
+        >
+          {getMatchBadge(match)}
         </span>
 
         <span className="match-time">{getStatusLabel(match, copy)}</span>
