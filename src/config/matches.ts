@@ -40,9 +40,9 @@ export const COPA_MATCHES: MatchConfig[] = [
     matchId: keccak256(toHex("wc26-r32-01")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
     home: "Brazil",
-    away: "TBD",             // Group F Runner-up — fill in June 28
+    away: "Japan",
     homeFlag: "🇧🇷",
-    awayFlag: "🏴",
+    awayFlag: "🇯🇵",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_782_752_400_000,  // 2026-06-29 17:00 UTC — NRG Stadium, Houston TX
     lockedAt:  1_782_750_600_000,  // 2026-06-29 16:30 UTC
@@ -63,9 +63,9 @@ export const COPA_MATCHES: MatchConfig[] = [
     id: "wc26-r32-03",
     matchId: keccak256(toHex("wc26-r32-03")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
-    home: "TBD",             // Group F Winner — fill in June 28
+    home: "Netherlands",
     away: "Morocco",
-    homeFlag: "🏴",
+    homeFlag: "🇳🇱",
     awayFlag: "🇲🇦",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_782_781_200_000,  // 2026-06-30 01:00 UTC — Estadio BBVA, Guadalupe MX
@@ -76,9 +76,9 @@ export const COPA_MATCHES: MatchConfig[] = [
     id: "wc26-r32-04",
     matchId: keccak256(toHex("wc26-r32-04")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
-    home: "TBD",             // Group I Runner-up — fill in June 28
-    away: "TBD",             // Group E Runner-up — fill in June 28
-    homeFlag: "🏴",
+    home: "Ivory Coast",
+    away: "TBD",             // Group I Runner-up — fill in June 28
+    homeFlag: "🇨🇮",
     awayFlag: "🏴",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_782_838_800_000,  // 2026-06-30 17:00 UTC — AT&T Stadium, Arlington TX
@@ -171,8 +171,58 @@ export const COPA_MATCHES: MatchConfig[] = [
     kickoffAt: 1_783_047_600_000,  // 2026-07-03 03:00 UTC — BC Place, Vancouver CA
     lockedAt:  1_783_045_800_000,  // 2026-07-03 02:30 UTC
   },
-  // TODO: Add wc26-r32-12 through wc26-r32-16 on June 28 from ESPN API.
-  // Expected dates: ~July 2 early morning UTC + July 3 afternoon/evening UTC.
+  // ── Round of 32 — July 2, 2026 (early morning UTC) ─────────────────────────
+  {
+    id: "wc26-r32-12",
+    matchId: keccak256(toHex("wc26-r32-12")) as `0x${string}`,
+    campaignId: CAMPAIGN_ID,
+    home: "USA",
+    away: "Bosnia-Herz",
+    homeFlag: "🇺🇸",
+    awayFlag: "🇧🇦",
+    competition: "FIFA World Cup 2026",
+    kickoffAt: 1_782_950_400_000,  // 2026-07-02 00:00 UTC — SoFi Stadium, Inglewood CA
+    lockedAt:  1_782_948_600_000,  // 2026-07-01 23:30 UTC
+  },
+  // ── Round of 32 — July 3, 2026 ──────────────────────────────────────────
+  {
+    id: "wc26-r32-13",
+    matchId: keccak256(toHex("wc26-r32-13")) as `0x${string}`,
+    campaignId: CAMPAIGN_ID,
+    home: "Australia",
+    away: "TBD",             // Group G Runner-up — fill in June 28
+    homeFlag: "🇦🇺",
+    awayFlag: "🏴",
+    competition: "FIFA World Cup 2026",
+    kickoffAt: 1_783_101_600_000,  // 2026-07-03 18:00 UTC — Lincoln Financial Field, Philadelphia PA
+    lockedAt:  1_783_099_800_000,  // 2026-07-03 17:30 UTC
+  },
+  {
+    id: "wc26-r32-14",
+    matchId: keccak256(toHex("wc26-r32-14")) as `0x${string}`,
+    campaignId: CAMPAIGN_ID,
+    home: "Argentina",
+    away: "TBD",             // Group H Runner-up — fill in June 28
+    homeFlag: "🇦🇷",
+    awayFlag: "🏴",
+    competition: "FIFA World Cup 2026",
+    kickoffAt: 1_783_116_000_000,  // 2026-07-03 22:00 UTC — Levi's Stadium, Santa Clara CA
+    lockedAt:  1_783_114_200_000,  // 2026-07-03 21:30 UTC
+  },
+  // ── Round of 32 — July 4, 2026 (early morning UTC) ─────────────────────────
+  {
+    id: "wc26-r32-15",
+    matchId: keccak256(toHex("wc26-r32-15")) as `0x${string}`,
+    campaignId: CAMPAIGN_ID,
+    home: "TBD",             // Group K Winner — fill in June 28
+    away: "TBD",             // Best 3rd (Groups D/E/I/J/L) — fill in June 28
+    homeFlag: "🏴",
+    awayFlag: "🏴",
+    competition: "FIFA World Cup 2026",
+    kickoffAt: 1_783_128_600_000,  // 2026-07-04 01:30 UTC — Estadio Akron, Guadalajara MX
+    lockedAt:  1_783_126_800_000,  // 2026-07-04 01:00 UTC
+  },
+  // TODO: wc26-r32-16 — 16th R32 match not yet in ESPN (pending group stage completion June 28)
 ];
 
 export function getMatchById(id: string): MatchConfig | undefined {
