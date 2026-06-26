@@ -1,7 +1,7 @@
 import { CeloBadge } from "../components/CeloBadge";
 import { MatchCard, type MatchData } from "../components/MatchCard";
 import { useMiniPay } from "../hooks/useMiniPay";
-import { COPA_MATCHES, matchStatus } from "../config/matches";
+import { COPA_MATCHES, matchStatus, CAMPAIGN_DISPLAY_NAME } from "../config/matches";
 
 // Convert MatchConfig[] to MatchData[] for MatchCard on each render
 // so that `matchStatus()` always reflects the current time.
@@ -65,7 +65,7 @@ export function Predictions() {
           <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.7, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>
             Active campaign
           </div>
-          <div style={{ fontSize: 20, fontWeight: 800 }}>Copa América 2026 🏆</div>
+          <div style={{ fontSize: 20, fontWeight: 800 }}>{CAMPAIGN_DISPLAY_NAME} 🏆</div>
           <div style={{ fontSize: 13, opacity: 0.75, marginTop: 4 }}>
             {COPA_MATCHES.length} matches · Predictions are free for everyone
           </div>

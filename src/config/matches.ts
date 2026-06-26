@@ -4,6 +4,7 @@ import { keccak256, toHex } from "viem";
 // keccak256(abi.encodePacked("fifa-world-cup-2026")) in SetupAfterDeploy.s.sol —
 // both hash the same UTF-8 bytes, so the IDs are consistent on-chain.
 export const CAMPAIGN_ID = keccak256(toHex("fifa-world-cup-2026")) as `0x${string}`;
+export const CAMPAIGN_DISPLAY_NAME = "FIFA World Cup 2026";
 
 export type MatchConfig = {
   id: string;               // URL slug  e.g. "wc26-r32-01"

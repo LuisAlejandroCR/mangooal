@@ -1,6 +1,6 @@
 import { CeloBadge } from "../components/CeloBadge";
 import { useOnChainRanking, type RankEntry } from "../hooks/useOnChainRanking";
-import { CAMPAIGN_ID } from "../config/matches";
+import { CAMPAIGN_ID, CAMPAIGN_DISPLAY_NAME } from "../config/matches";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
@@ -119,7 +119,7 @@ export function Ranking() {
       <div className="screen-body" style={{ paddingTop: 16 }}>
         {/* Campaign badge */}
         <div style={{ marginBottom: 16, display: "flex", gap: 8, alignItems: "center" }}>
-          <span className="badge badge-yellow">🏆 Copa América 2026</span>
+          <span className="badge badge-yellow">🏆 {CAMPAIGN_DISPLAY_NAME}</span>
           <span className="badge badge-muted">On-chain</span>
         </div>
 

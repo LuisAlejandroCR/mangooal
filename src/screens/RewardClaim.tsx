@@ -22,7 +22,7 @@ export function RewardClaim() {
   const rawAmount = searchParams.get("amount");
   const rawNonce  = searchParams.get("nonce");
   const sig       = searchParams.get("sig") as `0x${string}` | null;
-  const label     = searchParams.get("label") ?? "Copa América 2026";
+  const label     = searchParams.get("label") ?? "FIFA World Cup 2026";
 
   const amount = rawAmount ? BigInt(rawAmount) : null;
   const nonce  = rawNonce != null ? BigInt(rawNonce) : null;

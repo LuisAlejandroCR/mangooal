@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useAccount, useReadContracts } from "wagmi";
 import { CeloBadge } from "../components/CeloBadge";
-import { getMatchById, matchStatus } from "../config/matches";
+import { getMatchById, matchStatus, CAMPAIGN_DISPLAY_NAME } from "../config/matches";
 import { MANGOAL_LEDGER_ABI } from "../contracts/mangoalLedger.abi";
 import {
   MANGOAL_LEDGER_ADDRESS,
@@ -175,7 +175,7 @@ export function OnChainAudit() {
 
           <div className="audit-row">
             <span className="audit-label">Campaign</span>
-            <span className="audit-value">Copa América 2026</span>
+            <span className="audit-value">{CAMPAIGN_DISPLAY_NAME}</span>
           </div>
 
           <div className="audit-row">
