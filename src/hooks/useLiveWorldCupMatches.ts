@@ -53,31 +53,19 @@ function teamsMatch(local: MatchConfig, live: EspnMatch) {
 }
 
 function getLiveEspnId(live: EspnMatch) {
-  return "espnId" in live ? String(live.espnId) : String(live.id);
+  return live.espnId;
 }
 
 function getLiveKickoffAt(live: EspnMatch) {
-  if ("kickoffAt" in live && typeof live.kickoffAt === "number") {
-    return live.kickoffAt;
-  }
-
-  return new Date(live.date).getTime();
+  return live.kickoffAt;
 }
 
 function getLiveVenue(live: EspnMatch) {
-  if ("venue" in live && typeof live.venue === "string") {
-    return live.venue;
-  }
-
-  return null;
+  return live.venue;
 }
 
 function getLiveStatusText(live: EspnMatch) {
-  if ("statusText" in live && typeof live.statusText === "string") {
-    return live.statusText;
-  }
-
-  return "";
+  return live.statusText;
 }
 
 function findEspnMatchForRegisteredMatch(
