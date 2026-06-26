@@ -1,10 +1,17 @@
 import { CeloBadge } from "../components/CeloBadge";
+import { LanguageToggle } from "../components/LanguageToggle";
 import { MatchCard, type MatchData } from "../components/MatchCard";
 import { useMiniPay } from "../hooks/useMiniPay";
+import { useLanguage } from "../i18n";
 import { COPA_MATCHES, matchStatus, CAMPAIGN_DISPLAY_NAME } from "../config/matches";
 
-// Convert MatchConfig[] to MatchData[] for MatchCard on each render
-// so that `matchStatus()` always reflects the current time.
+type ComingCompetition = {
+  marker: string;
+  name: string;
+  sub: string;
+  color: string;
+};
+
 function buildMatchData(): MatchData[] {
   return COPA_MATCHES.map((m) => ({
     id:          m.id,
@@ -20,23 +27,57 @@ function buildMatchData(): MatchData[] {
   }));
 }
 
+function buildComingCompetitions(language: "en" | "es"): ComingCompetition[] {
+  return [
+    {
+      marker: "UEFA",
+      name: "UEFA Champions League",
+      sub: language === "es"
+        ? "Temporada 2026-27 · Fase de liga desde septiembre de 2026"
+        : "2026-27 season · League phase from September 2026",
+      color: "#1B3A8A",
+    },
+    {
+      marker: "CONMEBOL",
+      name: "Copa América 2027",
+      sub: language === "es"
+        ? "Sudamérica · Predicciones para usuarios de Latam"
+        : "South America · Predictions for LatAm users",
+      color: "#176B3A",
+    },
+    {
+      marker: "CAF",
+      name: "Africa Cup of Nations 2027",
+      sub: language === "es"
+        ? "África · Predicciones para fans africanos"
+        : "Africa · Predictions for African football fans",
+      color: "#7C3AED",
+    },
+  ];
+}
+
 export function Predictions() {
   const { isMiniPay, isConnected, address } = useMiniPay();
+  const { language, copy } = useLanguage();
   const allMatches = buildMatchData();
   const openMatches = allMatches.filter((m) => m.status === "open");
   const lockedOrLive = allMatches.filter(
     (m) => m.status === "locked" || m.status === "live"
   );
+  const comingCompetitions = buildComingCompetitions(language);
+  const comingSoonNames = comingCompetitions.map((item) => item.name).join(" · ");
 
   return (
     <div className="screen">
       <div className="topbar">
-        <span className="topbar-logo">⚽ <span>Mangoo</span>al</span>
-        <CeloBadge variant={isConnected ? "connected" : "network"} />
+        <span className="topbar-logo"><span>Mangoo</span>al</span>
+        <div className="topbar-actions">
+          <LanguageToggle />
+          <CeloBadge variant={isConnected ? "connected" : "network"} />
+        </div>
       </div>
 
       <div className="screen-body">
-        {/* Wallet status bar */}
         {isConnected && (
           <div className="wallet-bar" style={{ marginTop: 12 }}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -46,145 +87,71 @@ export function Predictions() {
             {isMiniPay ? "MiniPay wallet connected · Celo Mainnet" : "Celo wallet connected"}
             {address && (
               <span style={{ marginLeft: "auto", opacity: 0.7 }}>
-                {address.slice(0, 6)}…{address.slice(-4)}
+                {address.slice(0, 6)}...{address.slice(-4)}
               </span>
             )}
           </div>
         )}
 
-        {/* Campaign header */}
-        <div
-          style={{
-            background: "linear-gradient(135deg, #176B3A 0%, #2E9E57 100%)",
-            borderRadius: "var(--radius)",
-            padding: "18px",
-            marginBottom: "16px",
-            color: "white",
-          }}
-        >
-          <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.7, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>
-            Active campaign
+        <div className="campaign-banner">
+          <div className="campaign-eyebrow">{copy.predictions.currentCup}</div>
+          <div className="campaign-title">
+            {copy.predictions.now}: {CAMPAIGN_DISPLAY_NAME}
           </div>
-          <div style={{ fontSize: 20, fontWeight: 800 }}>{CAMPAIGN_DISPLAY_NAME} 🏆</div>
-          <div style={{ fontSize: 13, opacity: 0.75, marginTop: 4 }}>
-            {COPA_MATCHES.length} matches · Predictions are free for everyone
+          <div className="campaign-meta">
+            {COPA_MATCHES.length} {copy.predictions.freePredictions}
           </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <span style={{ background: "rgba(255,255,255,0.15)", borderRadius: 50, padding: "4px 12px", fontSize: 12, fontWeight: 700 }}>
-              {openMatches.length} open
-            </span>
-            <span style={{ background: "rgba(255,200,61,0.25)", borderRadius: 50, padding: "4px 12px", fontSize: 12, fontWeight: 700, color: "#FFC83D" }}>
-              Promotional rewards available
-            </span>
+          <div className="campaign-next">
+            {copy.predictions.comingSoon}: {comingSoonNames}
+          </div>
+          <div className="campaign-pills">
+            <span>{openMatches.length} {copy.predictions.open}</span>
+            <span>{copy.predictions.promoRewards}</span>
           </div>
         </div>
 
-        {/* Open predictions */}
         {openMatches.length > 0 && (
           <>
-            <div className="section-title">Open predictions</div>
+            <div className="section-title">{copy.predictions.openPredictions}</div>
             {openMatches.map((m) => <MatchCard key={m.id} match={m} />)}
           </>
         )}
 
-        {/* Live / locked */}
         {lockedOrLive.length > 0 && (
           <>
-            <div className="section-title">In progress</div>
+            <div className="section-title">{copy.predictions.inProgress}</div>
             {lockedOrLive.map((m) => <MatchCard key={m.id} match={m} />)}
           </>
         )}
 
-        {/* All finished */}
         {openMatches.length === 0 && lockedOrLive.length === 0 && (
           <div className="card" style={{ textAlign: "center", padding: "24px 16px", color: "var(--text-muted)", fontSize: 14 }}>
-            No open matches right now. Check back soon — new rounds coming! ⚽
+            {copy.predictions.noOpen}
           </div>
         )}
 
-        {/* Coming next */}
-        <div className="section-title" style={{ marginTop: 8 }}>Coming next on Mangooal</div>
-        {[
-          {
-            emoji: "⭐",
-            name: "UEFA Champions League",
-            sub: "2026–27 season · Group stage from Sept 2026",
-            color: "#1B3A8A",
-          },
-          {
-            emoji: "🏆",
-            name: "Copa América 2027",
-            sub: "South America · Predictions open 2027",
-            color: "#176B3A",
-          },
-          {
-            emoji: "🌍",
-            name: "Africa Cup of Nations 2027",
-            sub: "Continental · Predictions open 2027",
-            color: "#7C3AED",
-          },
-        ].map((c) => (
-          <div
-            key={c.name}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              background: "var(--card)",
-              borderRadius: "var(--radius-sm)",
-              padding: "12px 14px",
-              marginBottom: 8,
-              border: "1px solid var(--border)",
-              opacity: 0.75,
-            }}
-          >
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 10,
-                background: c.color,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 20,
-                flexShrink: 0,
-              }}
-            >
-              {c.emoji}
+        <div className="section-title" style={{ marginTop: 8 }}>
+          {copy.predictions.roadmapTitle}
+        </div>
+        {comingCompetitions.map((competition) => (
+          <div className="coming-card" key={competition.name}>
+            <div className="coming-marker" style={{ background: competition.color }}>
+              {competition.marker}
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>{c.name}</div>
-              <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{c.sub}</div>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{competition.name}</div>
+              <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
+                {competition.sub}
+              </div>
             </div>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "var(--text-muted)",
-                background: "var(--border)",
-                padding: "3px 8px",
-                borderRadius: 50,
-              }}
-            >
-              Soon
-            </span>
+            <span className="coming-soon">{copy.common.soon}</span>
           </div>
         ))}
 
-        {/* Compliance notice */}
-        <div
-          style={{
-            textAlign: "center",
-            fontSize: 11,
-            color: "var(--text-muted)",
-            padding: "16px 8px 0",
-            lineHeight: 1.6,
-          }}
-        >
-          Mangooal is a free-to-play sports prediction game. Not betting. Not gambling.
+        <div className="compliance-note">
+          {copy.predictions.complianceLine1}
           <br />
-          No entry fees · No user-funded prize pools · No odds
+          {copy.predictions.complianceLine2}
         </div>
       </div>
     </div>

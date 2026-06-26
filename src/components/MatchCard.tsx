@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { CeloBadge } from "./CeloBadge";
+import { useLanguage } from "../i18n";
 
 export type MatchData = {
   id: string;
@@ -15,17 +16,21 @@ export type MatchData = {
   status: "open" | "locked" | "live" | "finished";
 };
 
-function formatKickoff(d: Date): string {
+function formatKickoff(
+  d: Date,
+  copy: ReturnType<typeof useLanguage>["copy"],
+): string {
   const now = new Date();
   const diff = d.getTime() - now.getTime();
-  if (diff < 0) return "Live";
+  if (diff < 0) return copy.matches.live;
   const hours = Math.floor(diff / 3600000);
-  if (hours < 24) return `${hours}h left`;
-  return d.toLocaleDateString("en", { weekday: "short", hour: "2-digit", minute: "2-digit" });
+  if (hours < 24) return copy.matches.hoursLeft(hours);
+  return d.toLocaleDateString(copy.matches.dateLocale, { weekday: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 export function MatchCard({ match }: { match: MatchData }) {
   const navigate = useNavigate();
+  const { copy } = useLanguage();
   const isLocked = match.status !== "open";
 
   return (
@@ -36,7 +41,7 @@ export function MatchCard({ match }: { match: MatchData }) {
           className={`badge ${isLocked ? "badge-muted" : "badge-yellow"}`}
           style={{ fontSize: 10 }}
         >
-          {isLocked ? "🔒 Locked" : `⏱ ${formatKickoff(match.kickoff)}`}
+          {isLocked ? copy.matches.locked : formatKickoff(match.kickoff, copy)}
         </span>
       </div>
 

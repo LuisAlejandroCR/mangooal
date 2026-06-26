@@ -67,6 +67,145 @@ body { background: #f0ece0; }
 
 .topbar-logo span { color: var(--yellow-hover); }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  padding: 2px;
+}
+
+.language-toggle button {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  min-width: 30px;
+  padding: 6px 8px;
+}
+
+.language-toggle button.active {
+  background: var(--yellow);
+  color: var(--text);
+}
+
+.campaign-banner {
+  background: linear-gradient(135deg, #176B3A 0%, #2E9E57 100%);
+  border-radius: var(--radius);
+  color: white;
+  margin-bottom: 16px;
+  padding: 18px;
+}
+
+.campaign-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  opacity: 0.72;
+  text-transform: uppercase;
+}
+
+.campaign-title {
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.campaign-meta {
+  font-size: 13px;
+  line-height: 1.45;
+  margin-top: 5px;
+  opacity: 0.78;
+}
+
+.campaign-next {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 10px;
+  opacity: 0.9;
+  padding-top: 10px;
+}
+
+.campaign-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.campaign-pills span {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 12px;
+}
+
+.campaign-pills span:nth-child(2) {
+  background: rgba(255, 200, 61, 0.25);
+  color: #FFC83D;
+}
+
+.coming-card {
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+  opacity: 0.82;
+  padding: 12px 14px;
+}
+
+.coming-marker {
+  align-items: center;
+  border-radius: 10px;
+  color: white;
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 9px;
+  font-weight: 900;
+  height: 40px;
+  justify-content: center;
+  letter-spacing: 0.03em;
+  padding: 0 5px;
+  text-align: center;
+  width: 48px;
+}
+
+.coming-soon {
+  background: var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+}
+
+.compliance-note {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 16px 8px 0;
+  text-align: center;
+}
+
 /* Cards */
 .card {
   background: var(--card);

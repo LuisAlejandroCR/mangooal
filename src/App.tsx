@@ -15,6 +15,7 @@ import { OnChainAudit } from "./screens/OnChainAudit";
 import { RewardClaim } from "./screens/RewardClaim";
 import { Stats } from "./screens/Stats";
 import { SplashScreen } from "./screens/SplashScreen";
+import { LanguageProvider } from "./i18n";
 
 const queryClient = new QueryClient();
 
@@ -44,13 +45,15 @@ export default function App() {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        {showSplash ? (
-          <SplashScreen onDone={() => setShowSplash(false)} />
-        ) : (
-          <BrowserRouter>
-            <AppShell />
-          </BrowserRouter>
-        )}
+        <LanguageProvider>
+          {showSplash ? (
+            <SplashScreen onDone={() => setShowSplash(false)} />
+          ) : (
+            <BrowserRouter>
+              <AppShell />
+            </BrowserRouter>
+          )}
+        </LanguageProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
