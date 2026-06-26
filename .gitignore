@@ -33,6 +33,10 @@ typechain-types/
 coverage/
 coverage.json
 
+# Foundry broadcast artifacts (public tx data, committed separately if needed)
+broadcast/
+out/
+
 # Local wallets / private keys
 *.key
 *.pem

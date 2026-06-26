@@ -76,6 +76,14 @@ contract SetupAfterDeploy is Script {
 
         vm.startBroadcast();
 
+        // ── 0. Bootstrap OPERATOR_ROLE onto the broadcaster ─────────────────
+        // The Safe holds DEFAULT_ADMIN_ROLE and granted it to this EOA via a
+        // single Safe tx. We now self-grant OPERATOR_ROLE so we can call
+        // setPassPrice and createCampaign, then revoke it at the end.
+        address me = msg.sender;
+        ledger.grantRole(ledger.OPERATOR_ROLE(), me);
+        console.log("OPERATOR_ROLE self-granted to broadcaster:", me);
+
         // ── 1. Grant ORACLE_ROLE ────────────────────────────────────────────
         if (oracleAddr != address(0)) {
             ledger.grantRole(ledger.ORACLE_ROLE(), oracleAddr);
@@ -125,10 +133,16 @@ contract SetupAfterDeploy is Script {
         console.log("  startsAt:", CAMPAIGN_STARTS, "(see CAMPAIGN_STARTS constant)");
         console.log("  endsAt  :", CAMPAIGN_ENDS,   "(see CAMPAIGN_ENDS constant)");
 
+        // ── 4. Revoke OPERATOR_ROLE from broadcaster (cleanup) ──────────────
+        ledger.revokeRole(ledger.OPERATOR_ROLE(), me);
+        console.log("OPERATOR_ROLE revoked from broadcaster");
+
         vm.stopBroadcast();
 
         console.log("");
         console.log("=== Setup complete ===");
+        console.log("ACTION REQUIRED: Have the Safe revoke DEFAULT_ADMIN_ROLE from", me);
+        console.log("  Safe tx: revokeRole(0x000...0,", me, ")");
         console.log("Next steps:");
         console.log("  1. Set VITE_DEPLOY_BLOCK=<block> in Vercel env vars");
         console.log("  2. Redeploy frontend on Vercel");
