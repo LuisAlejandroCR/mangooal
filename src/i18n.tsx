@@ -4,7 +4,15 @@ export type Language = "en" | "es";
 
 type Copy = {
   common: {
+    all: string;
     soon: string;
+  };
+  nav: {
+    picks: string;
+    ranking: string;
+    myPicks: string;
+    coachPass: string;
+    wallet: string;
   };
   predictions: {
     currentCup: string;
@@ -13,70 +21,110 @@ type Copy = {
     freePredictions: string;
     promoRewards: string;
     open: string;
-    openPredictions: string;
-    inProgress: string;
-    noOpen: string;
+    live: string;
+    schedule: string;
+    actionAll: string;
+    noMatches: string;
     roadmapTitle: string;
+    currentSource: string;
+    futureSource: string;
+    tapToSwitch: string;
     complianceLine1: string;
     complianceLine2: string;
+    fallbackNote: string;
   };
   matches: {
     live: string;
     hoursLeft: (hours: number) => string;
     locked: string;
     dateLocale: string;
+    confirmedSchedule: string;
+    notRegistered: string;
+    yourPick: string;
   };
 };
 
 const COPY: Record<Language, Copy> = {
   en: {
     common: {
+      all: "All",
       soon: "Soon",
     },
+    nav: {
+      picks: "Picks",
+      ranking: "Ranking",
+      myPicks: "My Picks",
+      coachPass: "Coach Pass",
+      wallet: "Wallet",
+    },
     predictions: {
-      currentCup: "Current cup",
+      currentCup: "Selected cup",
       now: "Now",
       comingSoon: "Coming soon",
-      freePredictions: "matches · Predictions are free for everyone",
+      freePredictions: "free picks",
       promoRewards: "Promotional rewards available",
       open: "open",
-      openPredictions: "Open predictions",
-      inProgress: "In progress",
-      noOpen: "No open matches right now. Check back soon — new rounds are coming.",
-      roadmapTitle: "Coming next on Mangooal",
+      live: "Live",
+      schedule: "Schedule",
+      actionAll: "All",
+      noMatches: "No matches in this view yet. Try Schedule or another cup.",
+      roadmapTitle: "Switch cup",
+      currentSource: "Live schedule and scores from ESPN.",
+      futureSource: "Future fixtures are previews until the cup is opened on-chain.",
+      tapToSwitch: "Tap a cup below to switch the match list.",
       complianceLine1: "Mangooal is a free-to-play sports prediction game. Not betting. Not gambling.",
-      complianceLine2: "No entry fees · No user-funded prize pools · No odds",
+      complianceLine2: "No entry fees - No user-funded prize pools - No odds",
+      fallbackNote: "ESPN is the live source. football-data.org is the documented backup candidate for fixtures.",
     },
     matches: {
       live: "Live",
       hoursLeft: (hours) => `${hours}h left`,
       locked: "Locked",
       dateLocale: "en",
+      confirmedSchedule: "Confirmed schedule",
+      notRegistered: "Preview only. Predictions open when this cup is registered on Celo.",
+      yourPick: "Your pick is recorded",
     },
   },
   es: {
     common: {
+      all: "Todo",
       soon: "Pronto",
     },
+    nav: {
+      picks: "Picks",
+      ranking: "Ranking",
+      myPicks: "Mis Picks",
+      coachPass: "Coach Pass",
+      wallet: "Billetera",
+    },
     predictions: {
-      currentCup: "Copa actual",
+      currentCup: "Copa seleccionada",
       now: "Ahora",
-      comingSoon: "Pronto",
-      freePredictions: "partidos · Las predicciones son gratis para todos",
+      comingSoon: "Proximamente",
+      freePredictions: "predicciones gratis",
       promoRewards: "Recompensas promocionales disponibles",
       open: "abiertos",
-      openPredictions: "Predicciones abiertas",
-      inProgress: "En progreso",
-      noOpen: "No hay partidos abiertos ahora. Vuelve pronto: vienen nuevas rondas.",
-      roadmapTitle: "Lo próximo en Mangooal",
-      complianceLine1: "Mangooal es un juego de predicciones deportivas gratis. No es apuestas ni gambling.",
-      complianceLine2: "Sin pagos de entrada · Sin pozos financiados por usuarios · Sin cuotas",
+      live: "En vivo",
+      schedule: "Calendario",
+      actionAll: "Todo",
+      noMatches: "No hay partidos en esta vista. Prueba Calendario u otra copa.",
+      roadmapTitle: "Cambiar copa",
+      currentSource: "Calendario y marcadores en vivo desde ESPN.",
+      futureSource: "Los proximos partidos son una vista previa hasta abrir la copa on-chain.",
+      tapToSwitch: "Toca una copa abajo para cambiar la lista de partidos.",
+      complianceLine1: "Mangooal es un juego gratis de predicciones deportivas. No es apuestas ni gambling.",
+      complianceLine2: "Sin pagos de entrada - Sin pozos financiados por usuarios - Sin cuotas",
+      fallbackNote: "ESPN es la fuente en vivo. football-data.org es el candidato de respaldo documentado para calendarios.",
     },
     matches: {
       live: "En vivo",
       hoursLeft: (hours) => `${hours}h restantes`,
       locked: "Cerrado",
       dateLocale: "es",
+      confirmedSchedule: "Calendario confirmado",
+      notRegistered: "Vista previa. Las predicciones abren cuando esta copa este registrada en Celo.",
+      yourPick: "Tu prediccion esta registrada",
     },
   },
 };

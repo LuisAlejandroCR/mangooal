@@ -83,6 +83,25 @@ const PERKS = [
   "Historical performance dashboard",
 ];
 
+function getPurchaseErrorMessage(error: Error) {
+  const message = error.message.toLowerCase();
+
+  if (message.includes("user rejected") || message.includes("rejected the request")) {
+    return "Request cancelled in your wallet. Nothing was charged.";
+  }
+
+  if (
+    message.includes("different chain") ||
+    message.includes("not on this chain") ||
+    message.includes("unsupported chain") ||
+    message.includes("chain mismatch")
+  ) {
+    return "Switch your wallet network to Celo Mainnet and try again.";
+  }
+
+  return "Coach Pass transaction failed. Please check your wallet and try again.";
+}
+
 function getDefaultMiniPayToken() {
   return (
     FEATURED_TOKENS.find((token) => token.symbol === "USDC") ??
@@ -334,7 +353,7 @@ export function CoachPass() {
               lineHeight: 1.5,
             }}
           >
-            {error.message || "Transaction failed. Please try again."}
+            {getPurchaseErrorMessage(error)}
           </div>
         )}
 
@@ -366,7 +385,7 @@ export function CoachPass() {
             ? "Approving spend..."
             : step === "purchasing"
               ? "Processing Coach Pass..."
-              : `Unlock Coach Pass · ${currentPass.price[selectedToken.symbol]}`}
+              : `Unlock Coach Pass - ${currentPass.price[selectedToken.symbol]}`}
         </button>
 
         <div className="compliance-note">
@@ -486,7 +505,7 @@ function PassSuccessView({
                 textDecoration: "none",
               }}
             >
-              View on Celoscan ↗
+              View on Celoscan
             </a>
           </div>
 

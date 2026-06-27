@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useWriteContract, useReadContract, useAccount, usePublicClient } from "wagmi";
 import { keccak256, encodePacked, toHex, parseUnits } from "viem";
+import { celo } from "viem/chains";
 import { MANGOAL_LEDGER_ABI } from "../contracts/mangoalLedger.abi";
 import { ERC20_ABI } from "../contracts/erc20.abi";
 import type { StablecoinInfo } from "../config/stablecoins";
@@ -90,6 +91,7 @@ export function useCommitPrediction() {
     );
 
     const hash = await writeContractAsync({
+      chainId: celo.id,
       address: MANGOAL_LEDGER_ADDRESS,
       abi: MANGOAL_LEDGER_ABI,
       functionName: "commitPrediction",
@@ -150,6 +152,7 @@ export function usePurchaseCoachPass() {
       // Step 1: ERC-20 approve (spender = MangoalLedger)
       setStep("approving");
       const approveTx = await writeContractAsync({
+        chainId: celo.id,
         address: token.address as `0x${string}`,
         abi: ERC20_ABI,
         functionName: "approve",
@@ -161,6 +164,7 @@ export function usePurchaseCoachPass() {
       // Step 2: purchaseCoachPass
       setStep("purchasing");
       const purchaseTx = await writeContractAsync({
+        chainId: celo.id,
         address: MANGOAL_LEDGER_ADDRESS,
         abi: MANGOAL_LEDGER_ABI,
         functionName: "purchaseCoachPass",
@@ -220,6 +224,7 @@ export function useRevealPrediction() {
     }
 
     const hash = await writeContractAsync({
+      chainId: celo.id,
       address: MANGOAL_LEDGER_ADDRESS,
       abi: MANGOAL_LEDGER_ABI,
       functionName: "revealPrediction",
@@ -257,6 +262,7 @@ export function useClaimReward() {
     operatorSignature: `0x${string}`;
   }) {
     const hash = await writeContractAsync({
+      chainId: celo.id,
       address: MANGOAL_LEDGER_ADDRESS,
       abi: MANGOAL_LEDGER_ABI,
       functionName: "claimPromotionalReward",

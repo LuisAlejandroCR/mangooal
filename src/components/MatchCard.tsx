@@ -28,30 +28,24 @@ export type MatchData = {
   canPredict?: boolean;
 };
 
-function getMatchBadge(match: MatchData) {
+function getMatchBadge(
+  match: MatchData,
+  copy: ReturnType<typeof useLanguage>["copy"],
+) {
   if (match.status === "live") {
-    return match.clock ? `LIVE · ${match.clock}` : "LIVE";
+    return match.clock ? `${copy.matches.live} · ${match.clock}` : copy.matches.live;
   }
 
-  if (match.status === "finished") {
-    return "FT";
-  }
-
-  if (match.status === "locked") {
-    return "Locked";
-  }
-
-  if (match.source === "espn") {
-    return "Confirmed schedule";
-  }
+  if (match.status === "finished") return "FT";
+  if (match.status === "locked") return copy.matches.locked;
+  if (match.source === "espn") return copy.matches.confirmedSchedule;
 
   return match.competition;
 }
 
-
 function formatKickoff(
   date: Date,
-  copy: ReturnType<typeof useLanguage>["copy"]
+  copy: ReturnType<typeof useLanguage>["copy"],
 ): string {
   const now = new Date();
   const diff = date.getTime() - now.getTime();
@@ -59,10 +53,7 @@ function formatKickoff(
   if (diff < 0) return copy.matches.live;
 
   const hours = Math.floor(diff / 3_600_000);
-
-  if (hours < 24) {
-    return copy.matches.hoursLeft(hours);
-  }
+  if (hours < 24) return copy.matches.hoursLeft(hours);
 
   return date.toLocaleDateString(copy.matches.dateLocale, {
     weekday: "short",
@@ -71,8 +62,13 @@ function formatKickoff(
   });
 }
 
-function getStatusLabel(match: MatchData, copy: ReturnType<typeof useLanguage>["copy"]) {
-  if (match.status === "live") return match.clock ? `LIVE · ${match.clock}` : "LIVE";
+function getStatusLabel(
+  match: MatchData,
+  copy: ReturnType<typeof useLanguage>["copy"],
+) {
+  if (match.status === "live") {
+    return match.clock ? `${copy.matches.live} · ${match.clock}` : copy.matches.live;
+  }
   if (match.status === "finished") return "FT";
   if (match.status === "locked") return copy.matches.locked;
 
@@ -92,9 +88,7 @@ export function MatchCard({ match }: { match: MatchData }) {
 
   function handleOpen() {
     if (!canPredict) {
-      alert(
-        "This match came from ESPN live data, but it is not registered on-chain yet. Register it in MangooalLedger before enabling predictions."
-      );
+      alert(copy.matches.notRegistered);
       return;
     }
 
@@ -112,19 +106,10 @@ export function MatchCard({ match }: { match: MatchData }) {
           handleOpen();
         }
       }}
-      style={{
-        opacity: canPredict ? 1 : 0.78,
-      }}
+      style={{ opacity: canPredict ? 1 : 0.78 }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 8,
-          marginBottom: 8,
-        }}
-      > <span
+      <div className="match-card-top">
+        <span
           className={
             match.status === "live"
               ? "badge badge-live"
@@ -133,7 +118,7 @@ export function MatchCard({ match }: { match: MatchData }) {
                 : "badge"
           }
         >
-          {getMatchBadge(match)}
+          {getMatchBadge(match, copy)}
         </span>
 
         <span className="match-time">{getStatusLabel(match, copy)}</span>
@@ -155,11 +140,11 @@ export function MatchCard({ match }: { match: MatchData }) {
         >
           {hasLiveScore ? (
             <>
-              {match.homeScore} – {match.awayScore}
+              {match.homeScore} - {match.awayScore}
             </>
           ) : match.userPick ? (
             <>
-              {match.userPick.home} – {match.userPick.away}
+              {match.userPick.home} - {match.userPick.away}
             </>
           ) : (
             "vs"
@@ -173,44 +158,20 @@ export function MatchCard({ match }: { match: MatchData }) {
       </div>
 
       {match.venue && (
-        <div
-          style={{
-            color: "var(--text-muted)",
-            fontSize: 12,
-            lineHeight: 1.4,
-            textAlign: "center",
-            marginTop: 6,
-          }}
-        >
+        <div className="match-venue">
           {match.venue}
         </div>
       )}
 
       {!canPredict && (
-        <div
-          style={{
-            color: "var(--text-muted)",
-            fontSize: 11,
-            lineHeight: 1.4,
-            textAlign: "center",
-            marginTop: 8,
-          }}
-        >
-          
+        <div className="match-preview-note">
+          {copy.matches.notRegistered}
         </div>
       )}
 
       {match.userPick && (
-        <div
-          style={{
-            color: "var(--green-dark)",
-            fontSize: 12,
-            fontWeight: 800,
-            textAlign: "center",
-            marginTop: 8,
-          }}
-        >
-          Your pick is recorded
+        <div className="match-pick-note">
+          {copy.matches.yourPick}
         </div>
       )}
     </div>

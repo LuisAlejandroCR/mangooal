@@ -11,6 +11,12 @@ const ALLOWED_LEAGUES = new Set([
   "concacaf.gold",
 ]);
 
+// ESPN's soccer scoreboard endpoint is fast and currently powers live UX, but it is not
+// formally documented. Documented backup candidates:
+// - football-data.org v4: Competition / Matches resources for fixtures and scores.
+// - Sportmonks Football API 3.0: broad fixtures, livescores, and World Cup guides.
+// Keep backups server-side because both require provider keys / rate-limit handling.
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",

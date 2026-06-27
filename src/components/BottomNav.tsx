@@ -1,9 +1,10 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { useLanguage } from "../i18n";
 
 const TABS = [
   {
     path: "/",
-    label: "Picks",
+    labelKey: "picks",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9 11l3 3L22 4" />
@@ -13,7 +14,7 @@ const TABS = [
   },
   {
     path: "/ranking",
-    label: "Ranking",
+    labelKey: "ranking",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
@@ -23,7 +24,7 @@ const TABS = [
   },
   {
     path: "/my-picks",
-    label: "My Picks",
+    labelKey: "myPicks",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
@@ -33,7 +34,7 @@ const TABS = [
   },
   {
     path: "/coach-pass",
-    label: "Coach Pass",
+    labelKey: "coachPass",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -42,7 +43,7 @@ const TABS = [
   },
   {
     path: "/wallet",
-    label: "Wallet",
+    labelKey: "wallet",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20 12V22H4V12" />
@@ -58,20 +59,25 @@ const TABS = [
 export function BottomNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const { copy } = useLanguage();
 
   return (
     <nav className="bottom-nav">
-      {TABS.map((tab) => (
-        <button
-          key={tab.path}
-          className={`nav-item${pathname === tab.path ? " active" : ""}`}
-          onClick={() => navigate(tab.path)}
-          aria-label={tab.label}
-        >
-          {tab.icon}
-          {tab.label}
-        </button>
-      ))}
+      {TABS.map((tab) => {
+        const label = copy.nav[tab.labelKey as keyof typeof copy.nav];
+
+        return (
+          <button
+            key={tab.path}
+            className={`nav-item${pathname === tab.path ? " active" : ""}`}
+            onClick={() => navigate(tab.path)}
+            aria-label={label}
+          >
+            {tab.icon}
+            {label}
+          </button>
+        );
+      })}
     </nav>
   );
 }
