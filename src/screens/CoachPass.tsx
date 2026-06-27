@@ -294,7 +294,7 @@ export function CoachPass() {
                   reset();
                 }}
               >
-                <span>{token.flagEmoji}</span>
+                <span className="token-dot" />
                 <span>{token.symbol}</span>
               </button>
             );

@@ -44,6 +44,12 @@ function scoresKey(matchId: string, addr: string) {
 function txHashKey(matchId: string, addr: string) {
   return `mangoal:txhash:${matchId}:${addr.toLowerCase()}`;
 }
+function coachPassLocalKey(addr: string) {
+  return `mangoal:coach-pass:${addr.toLowerCase()}`;
+}
+function coachPassHistoryKey(addr: string) {
+  return `mangoal:coach-pass-history:${addr.toLowerCase()}`;
+}
 
 // Retrieve commit tx hash stored at prediction time (for on-chain audit display)
 export function getCommitTxHash(matchId: string, address: string): `0x${string}` | null {
@@ -119,13 +125,35 @@ export function useHasActiveCoachPass(walletAddress?: `0x${string}`) {
   // Fallback to zero address when undefined — query is disabled anyway,
   // but we need a valid args type to satisfy wagmi's strict generics.
   const { data, isLoading } = useReadContract({
+    chainId: celo.id,
     address: MANGOAL_LEDGER_ADDRESS,
     abi: MANGOAL_LEDGER_ABI,
     functionName: "hasActiveCoachPass",
     args: [walletAddress ?? "0x0000000000000000000000000000000000000000"],
     query: { enabled: !!walletAddress && CONTRACT_LIVE },
   });
-  return { hasPass: data ?? false, isLoading };
+  const localExpiresAt = walletAddress
+    ? Number(localStorage.getItem(coachPassLocalKey(walletAddress)) ?? "0")
+    : 0;
+  return { hasPass: Boolean(data) || localExpiresAt > Date.now(), isLoading };
+}
+
+export type CoachPassHistoryItem = {
+  txHash: `0x${string}`;
+  passType: number;
+  tokenSymbol: string;
+  purchasedAt: number;
+};
+
+export function getLocalCoachPassHistory(walletAddress?: string | null): CoachPassHistoryItem[] {
+  if (!walletAddress) return [];
+  const raw = localStorage.getItem(coachPassHistoryKey(walletAddress));
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as CoachPassHistoryItem[];
+  } catch {
+    return [];
+  }
 }
 
 // ── purchaseCoachPass ───────────────────────────────────────────────────────
@@ -174,6 +202,16 @@ export function usePurchaseCoachPass() {
       await publicClient.waitForTransactionReceipt({ hash: purchaseTx });
 
       setTxHash(purchaseTx);
+      const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+      localStorage.setItem(coachPassLocalKey(address), String(expiresAt));
+      const history = getLocalCoachPassHistory(address);
+      localStorage.setItem(
+        coachPassHistoryKey(address),
+        JSON.stringify([
+          { txHash: purchaseTx, passType, tokenSymbol: token.symbol, purchasedAt: Date.now() },
+          ...history,
+        ].slice(0, 20))
+      );
       setStep("done");
       analytics.coachPassPurchased(passType, token.symbol);
       return { txHash: purchaseTx };

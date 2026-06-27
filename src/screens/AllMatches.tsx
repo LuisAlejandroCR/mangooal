@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { CeloBadge } from "../components/CeloBadge";
 import { LanguageToggle } from "../components/LanguageToggle";
 import { MatchCard } from "../components/MatchCard";
 import {
@@ -11,18 +10,16 @@ import {
 } from "../config/competitions";
 import { useEspnScores } from "../hooks/useEspnScores";
 import { useLiveWorldCupMatches } from "../hooks/useLiveWorldCupMatches";
-import { useMiniPay } from "../hooks/useMiniPay";
 import { useLanguage } from "../i18n";
 
 function getFilter(value: string | null): MatchFilter {
-  if (value === "live" || value === "schedule" || value === "all") return value;
+  if (value === "live" || value === "schedule" || value === "finished" || value === "all") return value;
   return "all";
 }
 
 export function AllMatches() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isConnected } = useMiniPay();
   const { language, copy } = useLanguage();
 
   const selectedCompetition = getCompetition(searchParams.get("cup"));
@@ -58,7 +55,6 @@ export function AllMatches() {
 
         <div className="topbar-actions">
           <LanguageToggle />
-          <CeloBadge variant={isConnected ? "connected" : "network"} />
         </div>
       </div>
 

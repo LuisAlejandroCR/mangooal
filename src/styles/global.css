@@ -67,6 +67,17 @@ body { background: #f0ece0; }
 
 .topbar-logo span { color: var(--yellow-hover); }
 
+.brand-ball {
+  color: inherit !important;
+}
+
+.network-text {
+  color: var(--green-dark);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .topbar-logo.compact {
   font-size: 16px;
   letter-spacing: 0;
@@ -209,7 +220,7 @@ body { background: #f0ece0; }
 
 .action-filter {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   margin: 0 0 14px;
 }
@@ -363,6 +374,112 @@ body { background: #f0ece0; }
   line-height: 1.4;
   margin-top: 6px;
   text-align: center;
+}
+
+.team-logo {
+  border-radius: 50%;
+  height: 18px;
+  margin-right: 5px;
+  object-fit: contain;
+  vertical-align: -3px;
+  width: 18px;
+}
+
+.picks-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.matches-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.matches-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 8px;
+}
+
+.balance-strip {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.balance-chip {
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  padding: 7px 10px;
+}
+
+.token-dot {
+  border-radius: 50%;
+  height: 9px;
+  width: 9px;
+}
+
+.balance-symbol {
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.balance-value {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.mini-perks {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mini-perks div {
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 6px;
+  padding: 9px;
+}
+
+.history-row {
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 12px;
+  text-decoration: none;
+}
+
+.history-row span:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.history-row small {
+  color: var(--text-muted);
+  font-size: 11px;
 }
 
 .match-venue,
@@ -686,6 +803,10 @@ body { background: #f0ece0; }
   border-color: var(--yellow);
   background: #FFF3CD;
   color: var(--text);
+}
+
+.token-pill .token-dot {
+  background: var(--green);
 }
 
 /* Pass option card */

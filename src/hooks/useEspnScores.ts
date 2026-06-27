@@ -89,6 +89,12 @@ function parseScore(competitor: any): number | null {
   return Number.isFinite(score) ? score : null;
 }
 
+function cleanTeamName(value: string) {
+  return value
+    .replace(/\bThird Place Group\b/gi, "To define")
+    .replace(/\bTPG\b/g, "To define");
+}
+
 function normalizeEvents(events: unknown[]): EspnMatch[] {
   return events
     .map((event: any): EspnMatch | null => {
@@ -115,11 +121,11 @@ function normalizeEvents(events: unknown[]): EspnMatch[] {
         date: String(event.date),
         kickoffAt: new Date(event.date).getTime(),
 
-        home: home?.team?.displayName ?? home?.team?.shortDisplayName ?? "?",
+        home: cleanTeamName(home?.team?.displayName ?? home?.team?.shortDisplayName ?? "?"),
         homeAbbr: home?.team?.abbreviation ?? "",
         homeLogo: home?.team?.logo ?? null,
 
-        away: away?.team?.displayName ?? away?.team?.shortDisplayName ?? "?",
+        away: cleanTeamName(away?.team?.displayName ?? away?.team?.shortDisplayName ?? "?"),
         awayAbbr: away?.team?.abbreviation ?? "",
         awayLogo: away?.team?.logo ?? null,
 
@@ -176,11 +182,20 @@ export function useEspnScores(
   const [matches, setMatches] = useState<EspnMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const dateKey = useMemo(() => {
     if (Array.isArray(date)) return date.join(",");
     return date ?? "";
   }, [date]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setRefreshKey((value) => value + 1);
+    }, 60_000);
+
+    return () => window.clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -230,7 +245,7 @@ export function useEspnScores(
     return () => {
       cancelled = true;
     };
-  }, [league, dateKey, language]);
+  }, [league, dateKey, language, refreshKey]);
 
   return { matches, isLoading, error };
 }

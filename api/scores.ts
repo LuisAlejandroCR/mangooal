@@ -11,6 +11,16 @@ const ALLOWED_LEAGUES = new Set([
   "concacaf.gold",
 ]);
 
+declare const process: {
+  env: Record<string, string | undefined>;
+};
+
+const FOOTBALL_DATA_COMPETITIONS: Record<string, string> = {
+  "fifa.world": "WC",
+  "uefa.champions": "CL",
+  "uefa.euro": "EC",
+};
+
 // ESPN's soccer scoreboard endpoint is fast and currently powers live UX, but it is not
 // formally documented. Documented backup candidates:
 // - football-data.org v4: Competition / Matches resources for fixtures and scores.
@@ -40,6 +50,64 @@ function jsonResponse(
 
 function isValidEspnDate(date: string) {
   return /^\d{8}$/.test(date);
+}
+
+function toIsoDate(date: string | null) {
+  if (!date || !isValidEspnDate(date)) return null;
+  return `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
+}
+
+async function fetchFootballDataFallback(league: string, date: string | null) {
+  const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+  const competition = FOOTBALL_DATA_COMPETITIONS[league];
+  const isoDate = toIsoDate(date);
+
+  if (!apiKey || !competition || !isoDate) return null;
+
+  const url = new URL(`https://api.football-data.org/v4/competitions/${competition}/matches`);
+  url.searchParams.set("dateFrom", isoDate);
+  url.searchParams.set("dateTo", isoDate);
+
+  const response = await fetch(url.toString(), {
+    headers: { "X-Auth-Token": apiKey },
+    signal: AbortSignal.timeout(5_000),
+  });
+
+  if (!response.ok) return null;
+  const data = await response.json();
+  const matches = Array.isArray(data?.matches) ? data.matches : [];
+
+  return {
+    events: matches.map((match: any) => ({
+      id: String(match.id),
+      date: match.utcDate,
+      competitions: [
+        {
+          venue: { fullName: "" },
+          status: {
+            type: {
+              name: match.status === "FINISHED" ? "STATUS_FINAL" : "STATUS_SCHEDULED",
+              state: match.status === "FINISHED" ? "post" : "pre",
+              completed: match.status === "FINISHED",
+              shortDetail: match.status === "FINISHED" ? "FT" : "",
+            },
+          },
+          competitors: [
+            {
+              homeAway: "home",
+              score: match.score?.fullTime?.home,
+              team: { displayName: match.homeTeam?.name, logo: match.homeTeam?.crest },
+            },
+            {
+              homeAway: "away",
+              score: match.score?.fullTime?.away,
+              team: { displayName: match.awayTeam?.name, logo: match.awayTeam?.crest },
+            },
+          ],
+        },
+      ],
+    })),
+  };
 }
 
 function getLocale(searchParams: URLSearchParams) {
@@ -103,6 +171,8 @@ export default async function handler(request: Request): Promise<Response> {
     });
 
     if (!upstream.ok) {
+      const fallback = await fetchFootballDataFallback(league, date);
+      if (fallback) return jsonResponse(fallback, 200, "public, s-maxage=300, stale-while-revalidate=600");
       return jsonResponse(
         { events: [] },
         200,
@@ -111,8 +181,14 @@ export default async function handler(request: Request): Promise<Response> {
     }
 
     const body = await upstream.text();
+    const parsed = JSON.parse(body);
 
-    return new Response(body, {
+    if (!Array.isArray(parsed?.events) || parsed.events.length === 0) {
+      const fallback = await fetchFootballDataFallback(league, date);
+      if (fallback) return jsonResponse(fallback, 200, "public, s-maxage=300, stale-while-revalidate=600");
+    }
+
+    return new Response(JSON.stringify(parsed), {
       status: 200,
       headers: {
         ...CORS_HEADERS,
@@ -121,6 +197,8 @@ export default async function handler(request: Request): Promise<Response> {
       },
     });
   } catch {
+    const fallback = await fetchFootballDataFallback(league, date);
+    if (fallback) return jsonResponse(fallback, 200, "public, s-maxage=300, stale-while-revalidate=600");
     return jsonResponse(
       { events: [] },
       200,

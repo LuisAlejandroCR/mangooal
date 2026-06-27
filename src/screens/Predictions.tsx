@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CeloBadge } from "../components/CeloBadge";
 import { LanguageToggle } from "../components/LanguageToggle";
 import { MatchCard } from "../components/MatchCard";
+import { StablecoinBalances } from "../components/StablecoinBalances";
 import {
   COMPETITIONS,
   MAX_VISIBLE_MATCHES,
@@ -14,11 +14,9 @@ import {
 } from "../config/competitions";
 import { useEspnScores } from "../hooks/useEspnScores";
 import { useLiveWorldCupMatches } from "../hooks/useLiveWorldCupMatches";
-import { useMiniPay } from "../hooks/useMiniPay";
 import { useLanguage } from "../i18n";
 
 export function Predictions() {
-  const { isMiniPay, isConnected, address } = useMiniPay();
   const { language, copy } = useLanguage();
   const navigate = useNavigate();
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<CompetitionId>("world-cup");
@@ -47,6 +45,7 @@ export function Predictions() {
   const visibleMatches = filteredMatches.slice(0, MAX_VISIBLE_MATCHES);
   const liveCount = selectedMatches.filter((match) => match.status === "live").length;
   const scheduleCount = filterMatches(selectedMatches, "schedule").length;
+  const finishedCount = filterMatches(selectedMatches, "finished").length;
   const predictionReadyCount = selectedMatches.filter((match) => match.canPredict !== false).length;
 
   function switchCup() {
@@ -59,27 +58,30 @@ export function Predictions() {
     <div className="screen">
       <div className="topbar">
         <span className="topbar-logo">
-          <span>Mangoo</span>al
+          <span className="brand-ball">⚽</span> <span>Mangoo</span>al
         </span>
 
         <div className="topbar-actions">
           <LanguageToggle />
-          <CeloBadge variant={isConnected ? "connected" : "network"} />
+          <a className="icon-button" href="https://mangooal.xyz/terms" target="_blank" rel="noreferrer" aria-label="Legal and support">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.1 9a3 3 0 1 1 5.8 1c-.4.9-1.2 1.4-2 2-.6.4-.9.8-.9 1.6" />
+              <path d="M12 17h.01" />
+            </svg>
+          </a>
+          <button className="icon-button" type="button" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+          </button>
+          <span className="network-text">Celo Mainnet</span>
         </div>
       </div>
 
-      <div className="screen-body" style={{ paddingTop: 16 }}>
-        {isConnected && (
-          <div className="wallet-bar">
-            <span>{isMiniPay ? copy.predictions.minipayConnected : copy.predictions.walletConnected}</span>
-
-            {address && !isMiniPay && (
-              <span>
-                {address.slice(0, 6)}...{address.slice(-4)}
-              </span>
-            )}
-          </div>
-        )}
+      <div className="screen-body picks-body" style={{ paddingTop: 16 }}>
+        <StablecoinBalances />
 
         <button
           className="campaign-banner campaign-banner-button"
@@ -91,7 +93,6 @@ export function Predictions() {
             {copy.predictions.now}: {selectedCompetition.name}
           </div>
           <div className="campaign-meta">{selectedCompetition.description[language]}</div>
-          <div className="campaign-next">{copy.predictions.tapBannerToSwitch}</div>
           <div className="campaign-pills">
             <span>{predictionReadyCount} {copy.predictions.freePredictions}</span>
             <span>{scheduleCount} {copy.predictions.open}</span>
@@ -103,6 +104,7 @@ export function Predictions() {
           {([
             ["live", `${copy.predictions.live} (${liveCount})`],
             ["schedule", `${copy.predictions.schedule} (${scheduleCount})`],
+            ["finished", `${copy.predictions.finished} (${finishedCount})`],
             ["all", `${copy.predictions.actionAll} (${selectedMatches.length})`],
           ] as const).map(([value, label]) => (
             <button
@@ -126,30 +128,34 @@ export function Predictions() {
           </div>
         )}
 
-        <div className="match-list-heading">
-          <div>
-            <div className="section-title">{selectedCompetition.name}</div>
-            <div className="source-note">{copy.predictions.nextMatches}</div>
+        <div className="matches-panel">
+          <div className="match-list-heading">
+            <div>
+              <div className="section-title">{selectedCompetition.name}</div>
+              <div className="source-note">{copy.predictions.nextMatches}</div>
+            </div>
+
+            {filteredMatches.length > MAX_VISIBLE_MATCHES && (
+              <button
+                className="text-action"
+                onClick={() => navigate(`/matches?cup=${selectedCompetition.id}&filter=${filter}`)}
+                type="button"
+              >
+                {copy.predictions.seeAll}
+              </button>
+            )}
           </div>
 
-          {filteredMatches.length > MAX_VISIBLE_MATCHES && (
-            <button
-              className="text-action"
-              onClick={() => navigate(`/matches?cup=${selectedCompetition.id}&filter=${filter}`)}
-              type="button"
-            >
-              {copy.predictions.seeAll}
-            </button>
-          )}
+          <div className="matches-scroll">
+            {visibleMatches.length > 0 ? (
+              visibleMatches.map((match) => <MatchCard key={match.id} match={match} />)
+            ) : (
+              <div className="card" style={{ textAlign: "center" }}>
+                <strong>{copy.predictions.noMatches}</strong>
+              </div>
+            )}
+          </div>
         </div>
-
-        {visibleMatches.length > 0 ? (
-          visibleMatches.map((match) => <MatchCard key={match.id} match={match} />)
-        ) : (
-          <div className="card" style={{ textAlign: "center" }}>
-            <strong>{copy.predictions.noMatches}</strong>
-          </div>
-        )}
 
         <div className="compliance-note">
           {copy.predictions.complianceLine1}

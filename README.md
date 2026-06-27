@@ -57,6 +57,11 @@ Mangooal keeps competition metadata locally, but fixtures and scores should come
 Provider keys are kept server-side in Vercel environment variables. The client should not
 hardcode future fixtures, API keys, or provider URLs.
 
+Scoreboard data refreshes automatically in the client every minute. `/api/scores` tries ESPN
+first and falls back to football-data.org for supported competitions when `FOOTBALL_DATA_API_KEY`
+is configured. Finished matches are available through the `finished` filter for recent results,
+with the full list reachable from `/matches`.
+
 When the user switches the app to Spanish, the client sends `lang=es` to `/api/scores`.
 The proxy forwards `lang=es&region=co` to the football provider so country/team names and
 status text can be localized by the API instead of by a hardcoded translation table.
@@ -126,6 +131,7 @@ log reads can be scoped to the contract's lifetime.
 | `/match/:id` | Score prediction screen for one match |
 | `/coach/:id` | Coach insight and Coach Pass upsell |
 | `/coach-pass` | Coach Pass purchase flow |
+| `/coach-pass/history` | Coach Pass purchase history saved on this device |
 | `/ranking` | On-chain leaderboard |
 | `/my-picks` | User prediction history |
 | `/wallet` | Wallet status and balances |

@@ -75,6 +75,20 @@ function getStatusLabel(
   return formatKickoff(match.kickoff, copy);
 }
 
+function TeamMark({ value }: { value: string }) {
+  if (!value) return null;
+
+  if (value.startsWith("http")) {
+    return <img className="team-logo" src={value} alt="" aria-hidden="true" loading="lazy" />;
+  }
+
+  if (value.length > 4) {
+    return <span>{value} </span>;
+  }
+
+  return null;
+}
+
 export function MatchCard({ match }: { match: MatchData }) {
   const navigate = useNavigate();
   const { copy } = useLanguage();
@@ -126,7 +140,7 @@ export function MatchCard({ match }: { match: MatchData }) {
 
       <div className="match-teams">
         <div className="team-name">
-          {match.homeFlag && <span>{match.homeFlag} </span>}
+          <TeamMark value={match.homeFlag} />
           {match.home}
         </div>
 
@@ -152,7 +166,7 @@ export function MatchCard({ match }: { match: MatchData }) {
         </div>
 
         <div className="team-name">
-          {match.awayFlag && <span>{match.awayFlag} </span>}
+          <TeamMark value={match.awayFlag} />
           {match.away}
         </div>
       </div>

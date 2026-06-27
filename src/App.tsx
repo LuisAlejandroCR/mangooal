@@ -9,9 +9,9 @@ import { AllMatches } from "./screens/AllMatches";
 import { PredictionDetail } from "./screens/PredictionDetail";
 import { CoachInsight } from "./screens/CoachInsight";
 import { CoachPass } from "./screens/CoachPass";
+import { CoachPassHistory } from "./screens/CoachPassHistory";
 import { Ranking } from "./screens/Ranking";
 import { MyPicks } from "./screens/MyPicks";
-import { WalletStatus } from "./screens/WalletStatus";
 import { OnChainAudit } from "./screens/OnChainAudit";
 import { RewardClaim } from "./screens/RewardClaim";
 import { Stats } from "./screens/Stats";
@@ -29,9 +29,9 @@ function AppShell() {
         <Route path="/match/:id" element={<PredictionDetail />} />
         <Route path="/coach/:id" element={<CoachInsight />} />
         <Route path="/coach-pass" element={<CoachPass />} />
+        <Route path="/coach-pass/history" element={<CoachPassHistory />} />
         <Route path="/ranking" element={<Ranking />} />
         <Route path="/my-picks" element={<MyPicks />} />
-        <Route path="/wallet" element={<WalletStatus />} />
         <Route path="/audit/:id" element={<OnChainAudit />} />
         <Route path="/claim" element={<RewardClaim />} />
         <Route path="/stats" element={<Stats />} />

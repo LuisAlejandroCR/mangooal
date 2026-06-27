@@ -4,7 +4,7 @@ import type { Language } from "../i18n";
 import { CAMPAIGN_DISPLAY_NAME } from "./matches";
 
 export type CompetitionId = "world-cup" | "champions" | "copa-america" | "afcon";
-export type MatchFilter = "live" | "schedule" | "all";
+export type MatchFilter = "live" | "schedule" | "finished" | "all";
 
 type ApiMatch = {
   espnId: string;
@@ -124,6 +124,12 @@ export function toApiMatch(competition: Competition, item: ApiMatch): MatchData 
 
 export function filterMatches(matches: MatchData[], filter: MatchFilter) {
   if (filter === "live") return matches.filter((match) => match.status === "live");
+  if (filter === "finished") {
+    const cutoff = Date.now() - 2 * 24 * 60 * 60 * 1000;
+    return matches.filter(
+      (match) => match.status === "finished" && match.kickoff.getTime() >= cutoff
+    );
+  }
   if (filter === "schedule") {
     return matches.filter((match) => match.status === "open" || match.status === "locked");
   }

@@ -24,6 +24,7 @@ type Copy = {
     open: string;
     live: string;
     schedule: string;
+    finished: string;
     actionAll: string;
     noMatches: string;
     roadmapTitle: string;
@@ -76,6 +77,7 @@ const COPY: Record<Language, Copy> = {
       open: "open",
       live: "Live",
       schedule: "Schedule",
+      finished: "Finished",
       actionAll: "All",
       noMatches: "No matches in this view yet. Try Schedule or another cup.",
       roadmapTitle: "Switch cup",
@@ -87,7 +89,7 @@ const COPY: Record<Language, Copy> = {
       fallbackNote: "Schedule backup is ready.",
       minipayConnected: "MiniPay connected",
       walletConnected: "Wallet connected",
-      tapBannerToSwitch: "Tap this card to switch cups",
+      tapBannerToSwitch: "Tap to switch cups",
       scheduleFallback: "Live schedule is taking longer than expected. Showing saved matches.",
       loading: "Loading matches...",
       nextMatches: "Next matches",
@@ -100,7 +102,7 @@ const COPY: Record<Language, Copy> = {
       locked: "Locked",
       dateLocale: "en",
       confirmedSchedule: "Confirmed schedule",
-      notRegistered: "Preview only. Predictions open when this cup is registered on Celo.",
+      notRegistered: "Preview only. Predictions open when this cup is ready.",
       yourPick: "Your pick is recorded",
     },
   },
@@ -126,6 +128,7 @@ const COPY: Record<Language, Copy> = {
       open: "abiertos",
       live: "En vivo",
       schedule: "Calendario",
+      finished: "Finalizados",
       actionAll: "Todo",
       noMatches: "No hay partidos en esta vista. Prueba Calendario u otra copa.",
       roadmapTitle: "Cambiar copa",
@@ -137,7 +140,7 @@ const COPY: Record<Language, Copy> = {
       fallbackNote: "El respaldo de calendario esta listo.",
       minipayConnected: "MiniPay conectado",
       walletConnected: "Billetera conectada",
-      tapBannerToSwitch: "Toca esta tarjeta para cambiar de copa",
+      tapBannerToSwitch: "Toca para cambiar de copa",
       scheduleFallback: "El calendario esta tardando mas de lo esperado. Mostrando partidos guardados.",
       loading: "Cargando partidos...",
       nextMatches: "Proximos partidos",
@@ -150,7 +153,7 @@ const COPY: Record<Language, Copy> = {
       locked: "Cerrado",
       dateLocale: "es",
       confirmedSchedule: "Calendario confirmado",
-      notRegistered: "Vista previa. Las predicciones abren cuando esta copa este registrada en Celo.",
+      notRegistered: "Vista previa. Las predicciones abren cuando esta copa este lista.",
       yourPick: "Tu prediccion esta registrada",
     },
   },
