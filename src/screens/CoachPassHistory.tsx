@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { LanguageToggle } from "../components/LanguageToggle";
 import { useLanguage } from "../i18n";
 import { useCoachPassHistory } from "../hooks/useMangoalLedger";
 import { useMiniPay } from "../hooks/useMiniPay";
@@ -37,7 +36,7 @@ export function CoachPassHistory() {
           </svg>
         </button>
         <span className="topbar-logo compact"><span>Coach Pass</span></span>
-        <LanguageToggle />
+        <span />
       </div>
 
       <div className="screen-body" style={{ paddingTop: 16 }}>

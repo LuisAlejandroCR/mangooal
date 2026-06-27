@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FEATURED_TOKENS } from "../config/stablecoins";
 import { useTokenBalances } from "../hooks/useTokenBalances";
 import { useMiniPay } from "../hooks/useMiniPay";
+import { useLanguage } from "../i18n";
 
 const SELECTED_TOKEN_KEY = "mangooal:selected-stablecoin";
 
@@ -19,6 +20,7 @@ function initialToken() {
 
 export function StablecoinBalances() {
   const { isMiniPay, isConnected, address } = useMiniPay();
+  const { language } = useLanguage();
   const { balances, isLoading } = useTokenBalances(address as `0x${string}` | undefined);
   const [selectedToken, setSelectedToken] = useState(initialToken);
   const availableTokens = isMiniPay ? FEATURED_TOKENS.filter((item) => item.miniPayCore) : FEATURED_TOKENS;
@@ -39,7 +41,7 @@ export function StablecoinBalances() {
       <span className="selected-stablecoin-line">
         <span className="token-dot" style={{ background: tokenTone(token.symbol) }} />
         <strong>{token.symbol}</strong>
-        <small>{value}</small>
+        <small>{value} · {language === "es" ? "Cambiar" : "Change"}</small>
       </span>
       <select
         value={selectedToken}

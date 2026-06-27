@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LanguageToggle } from "../components/LanguageToggle";
 import { WalletRequired } from "../components/WalletRequired";
 import { FEATURED_TOKENS, type StablecoinInfo } from "../config/stablecoins";
 import {
@@ -151,7 +150,6 @@ export function CoachPass() {
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
           </button>
-          <LanguageToggle />
         </div>
       </div>
 

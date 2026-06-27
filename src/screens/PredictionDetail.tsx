@@ -152,8 +152,8 @@ export function PredictionDetail() {
   const awayMark = liveMatch?.awayLogo ?? activeMatch?.awayFlag;
   const hasResult = liveMatch?.homeScore !== null && liveMatch?.homeScore !== undefined && liveMatch?.awayScore !== null && liveMatch?.awayScore !== undefined;
   const savedPick = useMemo(
-    () => activeMatch ? getLocalPicks().find((pick) => pick.id === activeMatch.id) : undefined,
-    [activeMatch],
+    () => activeMatch ? getLocalPicks(address).find((pick) => pick.id === activeMatch.id) : undefined,
+    [activeMatch, address],
   );
   const isEditing = Boolean(savedPick && Date.now() < activeLockedAt);
 
@@ -203,6 +203,7 @@ export function PredictionDetail() {
       lockedAt: activeLockedAt,
       savedAt: Date.now(),
       source: registeredMatch ? "celo" as const : "preview" as const,
+      wallet: address?.toLowerCase(),
     };
 
     if (!registeredMatch) {
@@ -210,7 +211,7 @@ export function PredictionDetail() {
         `mangooal:preview-pick:${activeMatch.id}`,
         JSON.stringify({ homeScore: Number(home), awayScore: Number(away), savedAt: Date.now() })
       );
-      saveLocalPick(localEntry);
+      saveLocalPick(localEntry, address);
       setSubmittedPreview(true);
       setSubmitted(true);
       return;
@@ -223,7 +224,7 @@ export function PredictionDetail() {
         homeScore: Number(home),
         awayScore: Number(away),
       });
-      saveLocalPick({ ...localEntry, txHash: result.hash });
+      saveLocalPick({ ...localEntry, txHash: result.hash }, address);
       setSubmittedTxHash(result.hash);
       setSubmittedPreview(false);
       setSubmitted(true);

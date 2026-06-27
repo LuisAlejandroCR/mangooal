@@ -193,22 +193,25 @@ function LocalPickCard({ pick, isConnected }: { pick: LocalPick; isConnected: bo
 
 export function MyPicks() {
   const navigate = useNavigate();
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { picks, isLoading } = useMyPicks();
-  const [localPicks, setLocalPicks] = useState<LocalPick[]>(() => getLocalPicks());
+  const [localPicks, setLocalPicks] = useState<LocalPick[]>(() => getLocalPicks(address));
   const activePicks = picks.filter((p) => p.status !== "none");
   const totalPoints = activePicks.reduce((s, p) => s + (p.points ?? 0), 0);
   const hasAnyPicks = activePicks.length > 0 || localPicks.length > 0;
 
   useEffect(() => {
-    const refresh = () => setLocalPicks(getLocalPicks());
+    const refresh = () => setLocalPicks(getLocalPicks(address));
+    refresh();
     window.addEventListener("storage", refresh);
     window.addEventListener("focus", refresh);
+    window.addEventListener("mangooal:picks", refresh);
     return () => {
       window.removeEventListener("storage", refresh);
       window.removeEventListener("focus", refresh);
+      window.removeEventListener("mangooal:picks", refresh);
     };
-  }, []);
+  }, [address]);
 
   return (
     <div className="screen">
