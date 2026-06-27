@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { CeloBadge } from "../components/CeloBadge";
 import type { MatchData } from "../components/MatchCard";
-import { useCommitPrediction } from "../hooks/useMangoalLedger";
+import { useCommitPrediction, useHasActiveCoachPass } from "../hooks/useMangoalLedger";
 import { getMatchById, matchStatus } from "../config/matches";
 import { findMatch, useEspnScores } from "../hooks/useEspnScores";
 import { useLanguage } from "../i18n";
-import { saveLocalPick } from "../utils/localPicks";
+import { getLocalPicks, saveLocalPick } from "../utils/localPicks";
 
 function toEspnDateUTC(date: Date) {
   const year = date.getUTCFullYear();
@@ -47,6 +47,9 @@ const DETAIL_COPY = {
     finishedNoPick: "This match is finished. You did not record a pick for it.",
     yourForecast: "Your forecast",
     submit: "Submit prediction - Free",
+    update: "Update pick - Free",
+    coachActiveTitle: "Coach Pass active",
+    coachActiveBody: "Use Coach insight before submitting. You can still edit until 30 minutes before kickoff.",
     connect: "Connect wallet to submit",
     waiting: "Waiting for confirmation...",
     openMiniPay: "Open in MiniPay or connect a Celo wallet",
@@ -77,6 +80,9 @@ const DETAIL_COPY = {
     finishedNoPick: "Este partido ya termino. No registraste un pick para este partido.",
     yourForecast: "Tu pronostico",
     submit: "Enviar prediccion - Gratis",
+    update: "Actualizar pick - Gratis",
+    coachActiveTitle: "Coach Pass activo",
+    coachActiveBody: "Usa Coach insight antes de enviar. Puedes editar hasta 30 minutos antes del partido.",
     connect: "Conecta wallet para enviar",
     waiting: "Esperando confirmacion...",
     openMiniPay: "Abre en MiniPay o conecta una wallet de Celo",
@@ -111,7 +117,7 @@ export function PredictionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { language } = useLanguage();
   const copy = DETAIL_COPY[language];
   const locale = language === "es" ? "es" : "en";
@@ -122,6 +128,7 @@ export function PredictionDetail() {
   const [submittedTxHash, setSubmittedTxHash] = useState<`0x${string}` | undefined>();
   const [submittedPreview, setSubmittedPreview] = useState(false);
   const { commit, isPending, error } = useCommitPrediction();
+  const { hasPass } = useHasActiveCoachPass(address);
 
   const registeredMatch = getMatchById(id ?? "");
   const stateMatch = (location.state as { match?: MatchData } | null)?.match;
@@ -138,6 +145,17 @@ export function PredictionDetail() {
   const homeMark = liveMatch?.homeLogo ?? activeMatch?.homeFlag;
   const awayMark = liveMatch?.awayLogo ?? activeMatch?.awayFlag;
   const hasResult = liveMatch?.homeScore !== null && liveMatch?.homeScore !== undefined && liveMatch?.awayScore !== null && liveMatch?.awayScore !== undefined;
+  const savedPick = useMemo(
+    () => activeMatch ? getLocalPicks().find((pick) => pick.id === activeMatch.id) : undefined,
+    [activeMatch],
+  );
+  const isEditing = Boolean(savedPick && Date.now() < activeLockedAt);
+
+  useEffect(() => {
+    if (!savedPick || submitted) return;
+    setHome(String(savedPick.homeScore));
+    setAway(String(savedPick.awayScore));
+  }, [savedPick, submitted]);
 
   function goMyPicks() {
     window.localStorage.setItem("mangooal:root-tab", "my-picks");
@@ -296,6 +314,12 @@ export function PredictionDetail() {
               <>
                 <div className="section-title">{copy.yourForecast}</div>
                 <div className="card forecast-input-card">
+                  {hasPass && (
+                    <div className="coach-pass-advice">
+                      <strong>{copy.coachActiveTitle}</strong>
+                      <span>{copy.coachActiveBody}</span>
+                    </div>
+                  )}
                   <div className="forecast-teams-line">
                     <span>{homeName}</span>
                     <span>{awayName}</span>
@@ -345,7 +369,7 @@ export function PredictionDetail() {
                       ? copy.connect
                       : isPending
                         ? copy.waiting
-                        : copy.submit}
+                        : isEditing ? copy.update : copy.submit}
                   </button>
 
                   {registeredMatch && !isConnected && (

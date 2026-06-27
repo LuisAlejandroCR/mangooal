@@ -1412,3 +1412,129 @@ body { background: #f0ece0; }
   margin-top: 8px;
   text-align: center;
 }
+
+
+.wallet-connect-label {
+  background: #E8F5E9;
+  border: 1px solid rgba(46, 158, 87, 0.24);
+  border-radius: 999px;
+  color: var(--green-dark);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+
+.wallet-connect-label:disabled {
+  cursor: default;
+  opacity: 0.9;
+}
+
+.picks-control-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  margin-bottom: 8px;
+}
+
+.stablecoin-select-card,
+.cup-select-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+  display: grid;
+  gap: 4px;
+  min-height: 76px;
+  padding: 10px 12px;
+  position: relative;
+}
+
+.select-card-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.selected-stablecoin-line {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.selected-stablecoin-line strong,
+.cup-select-card strong {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.selected-stablecoin-line small,
+.cup-select-card small {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stablecoin-select-card select,
+.cup-select-card select {
+  inset: 0;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.coach-pass-advice {
+  background: #E8F5E9;
+  border: 1px solid rgba(46, 158, 87, 0.2);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: 3px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+}
+
+.coach-pass-advice strong {
+  color: var(--green-dark);
+  font-size: 12px;
+}
+
+.coach-pass-advice span {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.match-time-group {
+  align-items: flex-end;
+  display: grid;
+  gap: 3px;
+  justify-items: end;
+}
+
+.match-edit-label {
+  color: var(--green-dark);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.local-pick-actions {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.local-pick-actions span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}

@@ -1,5 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useConnect } from "wagmi";
+import { injected } from "wagmi/connectors";
 import { LanguageToggle } from "../components/LanguageToggle";
 import { MatchCard } from "../components/MatchCard";
 import { StablecoinBalances } from "../components/StablecoinBalances";
@@ -14,10 +16,15 @@ import {
 import { useEspnScores } from "../hooks/useEspnScores";
 import { useLiveWorldCupMatches } from "../hooks/useLiveWorldCupMatches";
 import { useLanguage } from "../i18n";
+import { useMiniPay } from "../hooks/useMiniPay";
+import { getLocalPicks, type LocalPick } from "../utils/localPicks";
 
 export function Predictions() {
   const { language, copy } = useLanguage();
   const navigate = useNavigate();
+  const { isConnected } = useMiniPay();
+  const { connect, isPending: isConnecting } = useConnect();
+  const [localPicks, setLocalPicks] = useState<LocalPick[]>(() => getLocalPicks());
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<CompetitionId>("world-cup");
   const [filter, setFilter] = useState<MatchFilter>("schedule");
 
@@ -32,10 +39,34 @@ export function Predictions() {
     error: cupApiError,
   } = useEspnScores(selectedCompetition.league, undefined, language);
 
+  useEffect(() => {
+    const refresh = () => setLocalPicks(getLocalPicks());
+    window.addEventListener("storage", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, []);
+
   const selectedMatches = useMemo(() => {
-    if (selectedCompetition.current) return worldCupMatches;
-    return cupApiMatches.map((match) => toApiMatch(selectedCompetition, match));
-  }, [cupApiMatches, selectedCompetition, worldCupMatches]);
+    const baseMatches = selectedCompetition.current
+      ? worldCupMatches
+      : cupApiMatches.map((match) => toApiMatch(selectedCompetition, match));
+    const pickById = new Map(localPicks.map((pick) => [pick.id, pick]));
+
+    return baseMatches.map((match) => {
+      const savedPick = pickById.get(match.id);
+      if (!savedPick) return match;
+      return {
+        ...match,
+        userPick: {
+          home: savedPick.homeScore,
+          away: savedPick.awayScore,
+        },
+      };
+    });
+  }, [cupApiMatches, localPicks, selectedCompetition, worldCupMatches]);
 
   const isLoading = selectedCompetition.current ? worldCupLoading : cupApiLoading;
   const error = selectedCompetition.current ? worldCupError : cupApiError;
@@ -74,12 +105,38 @@ export function Predictions() {
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
           </button>
-          <span className="network-text">Celo Mainnet</span>
+          <button
+            className="wallet-connect-label"
+            type="button"
+            disabled={isConnected || isConnecting}
+            onClick={() => connect({ connector: injected() })}
+          >
+            {isConnected ? "Wallet ready" : isConnecting ? "Connecting..." : "Connect wallet"}
+          </button>
         </div>
       </div>
 
       <div className="screen-body picks-body">
-        <StablecoinBalances />
+        <div className="picks-control-grid">
+          <StablecoinBalances />
+
+          <label className="cup-select-card">
+            <span className="select-card-label">{language === "es" ? "Copa" : "Cup"}</span>
+            <strong>{selectedCompetition.marker}</strong>
+            <small>{selectedCompetition.name}</small>
+            <select
+              value={selectedCompetitionId}
+              onChange={(event) => selectCup(event.target.value as CompetitionId)}
+              aria-label="Cup selector"
+            >
+              {COMPETITIONS.map((competition) => (
+                <option key={competition.id} value={competition.id}>
+                  {competition.marker} - {competition.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
         <div className="campaign-banner">
           <div className="campaign-eyebrow">{copy.predictions.currentCup}</div>
@@ -89,20 +146,6 @@ export function Predictions() {
           <div className="campaign-meta">{selectedCompetition.description[language]}</div>
         </div>
 
-        <label className="cup-select-row">
-          <span>{language === "es" ? "Cambiar copa" : "Cup"}</span>
-          <select
-            value={selectedCompetitionId}
-            onChange={(event) => selectCup(event.target.value as CompetitionId)}
-            aria-label="Cup selector"
-          >
-            {COMPETITIONS.map((competition) => (
-              <option key={competition.id} value={competition.id}>
-                {competition.marker} - {competition.name}
-              </option>
-            ))}
-          </select>
-        </label>
 
         <div className="action-filter" aria-label="Match view">
           {([

@@ -125,7 +125,35 @@ function PickCard({ entry }: { entry: PickEntry }) {
   );
 }
 
+function localPickToMatchState(pick: LocalPick) {
+  return {
+    id: pick.id,
+    campaignId: "0x0000000000000000000000000000000000000000000000000000000000000000",
+    home: pick.home,
+    away: pick.away,
+    homeFlag: pick.homeMark ?? "",
+    awayFlag: pick.awayMark ?? "",
+    competition: pick.competition,
+    kickoff: new Date(pick.kickoffAt),
+    lockedAt: new Date(pick.lockedAt),
+    status: Date.now() >= pick.lockedAt ? "locked" : "open",
+    source: "espn",
+    canPredict: true,
+    userPick: {
+      home: pick.homeScore,
+      away: pick.awayScore,
+    },
+  };
+}
+
 function LocalPickCard({ pick }: { pick: LocalPick }) {
+  const navigate = useNavigate();
+  const canEdit = Date.now() < pick.lockedAt;
+
+  function editPick() {
+    navigate(`/match/${pick.id}`, { state: { match: localPickToMatchState(pick), editing: true } });
+  }
+
   return (
     <div className="card local-pick-card">
       <div className="local-pick-top">
@@ -147,6 +175,15 @@ function LocalPickCard({ pick }: { pick: LocalPick }) {
       </div>
       <div className="local-pick-meta">
         {pick.competition} - {new Date(pick.kickoffAt).toLocaleString("en", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+      </div>
+      <div className="local-pick-actions">
+        {canEdit ? (
+          <button className="btn btn-secondary btn-sm" onClick={editPick} type="button">
+            Edit
+          </button>
+        ) : (
+          <span>Locked 30 min before kickoff</span>
+        )}
       </div>
       {pick.txHash && <div className="record-hash">{pick.txHash}</div>}
     </div>

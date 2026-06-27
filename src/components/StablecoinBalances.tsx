@@ -21,34 +21,31 @@ export function StablecoinBalances() {
   const { isConnected, address } = useMiniPay();
   const { balances, isLoading } = useTokenBalances(address as `0x${string}` | undefined);
   const [selectedToken, setSelectedToken] = useState(initialToken);
+  const token = FEATURED_TOKENS.find((item) => item.symbol === selectedToken) ?? FEATURED_TOKENS[1];
+  const value = !isConnected ? "--" : isLoading ? "..." : balances[token.symbol] ?? "-";
 
   useEffect(() => {
     window.localStorage.setItem(SELECTED_TOKEN_KEY, selectedToken);
   }, [selectedToken]);
 
   return (
-    <div className="stablecoin-panel" aria-label="Stablecoin balances">
-      <div className="stablecoin-panel-head">
-        <span>Stablecoins</span>
-        <strong>{selectedToken} selected</strong>
-      </div>
-
-      <div className="balance-strip">
-        {FEATURED_TOKENS.map((token) => (
-          <button
-            className={`balance-chip ${selectedToken === token.symbol ? "selected" : ""}`}
-            key={token.symbol}
-            onClick={() => setSelectedToken(token.symbol)}
-            type="button"
-          >
-            <span className="token-dot" style={{ background: tokenTone(token.symbol) }} />
-            <span className="balance-symbol">{token.symbol}</span>
-            <span className="balance-value">
-              {!isConnected ? "--" : isLoading ? "..." : balances[token.symbol] ?? "-"}
-            </span>
-          </button>
+    <label className="stablecoin-select-card" aria-label="Selected stablecoin">
+      <span className="select-card-label">Stablecoin</span>
+      <span className="selected-stablecoin-line">
+        <span className="token-dot" style={{ background: tokenTone(token.symbol) }} />
+        <strong>{token.symbol}</strong>
+        <small>{value}</small>
+      </span>
+      <select
+        value={selectedToken}
+        onChange={(event) => setSelectedToken(event.target.value)}
+      >
+        {FEATURED_TOKENS.map((item) => (
+          <option key={item.symbol} value={item.symbol}>
+            {item.symbol}
+          </option>
         ))}
-      </div>
-    </div>
+      </select>
+    </label>
   );
 }
