@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useWriteContract, useReadContract, useAccount, usePublicClient } from "wagmi";
 import { keccak256, encodePacked, toHex, parseUnits } from "viem";
 import { celo } from "viem/chains";
@@ -154,6 +154,76 @@ export function getLocalCoachPassHistory(walletAddress?: string | null): CoachPa
   } catch {
     return [];
   }
+}
+
+function tokenSymbolFromAddress(token: string) {
+  const normalized = token.toLowerCase();
+  if (normalized === "0xceba9300f2b948710d2653dd7b07f33a8b32118c") return "USDC";
+  if (normalized === "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e") return "USDT";
+  if (normalized === "0x765de816845861e75a25fca122bb6898b8b1282a") return "USDm";
+  if (normalized === "0x8a567e2ae79ca692bd748ab832081c45de4041ea") return "COPm";
+  return "Token";
+}
+
+export function useCoachPassHistory(walletAddress?: `0x${string}`) {
+  const publicClient = usePublicClient({ chainId: celo.id });
+  const [items, setItems] = useState<CoachPassHistoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function run() {
+      if (!walletAddress || !publicClient || !CONTRACT_LIVE) {
+        setItems(getLocalCoachPassHistory(walletAddress));
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const logs = await publicClient.getLogs({
+          address: MANGOAL_LEDGER_ADDRESS,
+          event: {
+            type: "event",
+            name: "CoachPassPurchased",
+            inputs: [
+              { name: "wallet", type: "address", indexed: true },
+              { name: "passType", type: "uint8", indexed: false },
+              { name: "token", type: "address", indexed: false },
+              { name: "amount", type: "uint256", indexed: false },
+              { name: "expiresAt", type: "uint64", indexed: false },
+            ],
+          },
+          args: { wallet: walletAddress },
+          fromBlock: MANGOAL_DEPLOY_BLOCK > 0n ? MANGOAL_DEPLOY_BLOCK : 0n,
+          toBlock: "latest",
+        });
+
+        if (cancelled) return;
+
+        const onChain = logs.map((log) => ({
+          txHash: log.transactionHash,
+          passType: Number(log.args.passType ?? 0),
+          tokenSymbol: tokenSymbolFromAddress(String(log.args.token ?? "")),
+          purchasedAt: Number(log.args.expiresAt ?? 0n) * 1000,
+        }));
+
+        setItems([...onChain, ...getLocalCoachPassHistory(walletAddress)]);
+      } catch {
+        if (!cancelled) setItems(getLocalCoachPassHistory(walletAddress));
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [publicClient, walletAddress]);
+
+  return { items, isLoading };
 }
 
 // ── purchaseCoachPass ───────────────────────────────────────────────────────

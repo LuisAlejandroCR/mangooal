@@ -1,7 +1,6 @@
-import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { LanguageToggle } from "../components/LanguageToggle";
-import { getLocalCoachPassHistory } from "../hooks/useMangoalLedger";
+import { useCoachPassHistory } from "../hooks/useMangoalLedger";
 import { useMiniPay } from "../hooks/useMiniPay";
 
 const PASS_LABELS: Record<number, string> = {
@@ -14,7 +13,7 @@ const PASS_LABELS: Record<number, string> = {
 export function CoachPassHistory() {
   const navigate = useNavigate();
   const { address } = useMiniPay();
-  const history = useMemo(() => getLocalCoachPassHistory(address), [address]);
+  const { items: history, isLoading } = useCoachPassHistory(address as `0x${string}` | undefined);
 
   return (
     <div className="screen">
@@ -33,6 +32,7 @@ export function CoachPassHistory() {
 
       <div className="screen-body" style={{ paddingTop: 16 }}>
         <div className="section-title">History</div>
+        {isLoading && <div className="card" style={{ marginBottom: 12 }}>Loading...</div>}
         {history.length > 0 ? (
           history.map((item) => (
             <a
