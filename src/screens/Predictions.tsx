@@ -5,6 +5,7 @@ import { injected } from "wagmi/connectors";
 import { LanguageToggle } from "../components/LanguageToggle";
 import { MatchCard } from "../components/MatchCard";
 import { StablecoinBalances } from "../components/StablecoinBalances";
+import { WalletRequired } from "../components/WalletRequired";
 import {
   COMPETITIONS,
   MAX_VISIBLE_MATCHES,
@@ -26,7 +27,7 @@ export function Predictions() {
   const { connect, isPending: isConnecting } = useConnect();
   const [localPicks, setLocalPicks] = useState<LocalPick[]>(() => getLocalPicks());
   const [showWalletModal, setShowWalletModal] = useState(false);
-  const [selectedCompetitionId, setSelectedCompetitionId] = useState<CompetitionId>("world-cup");
+  const [selectedCompetitionId, setSelectedCompetitionId] = useState<CompetitionId>(() => (localStorage.getItem("mangooal:selected-cup") as CompetitionId | null) ?? "world-cup");
   const [filter, setFilter] = useState<MatchFilter>("schedule");
 
   const selectedCompetition =
@@ -81,6 +82,8 @@ export function Predictions() {
   function selectCup(id: CompetitionId) {
     const nextCompetition = COMPETITIONS.find((competition) => competition.id === id) ?? COMPETITIONS[0];
     setSelectedCompetitionId(nextCompetition.id);
+    localStorage.setItem("mangooal:selected-cup", nextCompetition.id);
+    window.dispatchEvent(new Event("mangooal:cup"));
     setFilter(nextCompetition.current ? "schedule" : "all");
   }
 
@@ -123,6 +126,9 @@ export function Predictions() {
         </div>
       </div>
 
+      {!isConnected ? (
+        <WalletRequired />
+      ) : (
       <div className="screen-body picks-body">
         <div className="picks-control-grid">
           <StablecoinBalances />
@@ -208,6 +214,7 @@ export function Predictions() {
           </div>
         </div>
       </div>
+      )}
 
       {showWalletModal && !isMiniPay && (
         <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Connect wallet">

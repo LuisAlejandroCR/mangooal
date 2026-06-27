@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LanguageToggle } from "../components/LanguageToggle";
-import { useLanguage } from "../i18n";
+import { WalletRequired } from "../components/WalletRequired";
 import { FEATURED_TOKENS, type StablecoinInfo } from "../config/stablecoins";
 import {
   PASS_AMOUNTS,
@@ -11,6 +11,7 @@ import {
 } from "../hooks/useMangoalLedger";
 import { useMiniPay } from "../hooks/useMiniPay";
 import { useTokenBalances } from "../hooks/useTokenBalances";
+import { useLanguage } from "../i18n";
 
 const ADD_CASH_URL = "https://link.minipay.xyz/add_cash?tokens=USDm,USDC,USDT";
 const PASS_DURATIONS_MS: Record<number, number> = {
@@ -47,7 +48,7 @@ function getPurchaseErrorMessage(error: Error, language: "en" | "es") {
     return language === "es" ? "Solicitud cancelada. No se cobro nada." : "Request cancelled. Nothing was charged.";
   }
   if (message.includes("chain")) {
-    return language === "es" ? "Cambia tu billetera a Celo e intenta de nuevo." : "Switch your wallet to Celo and try again.";
+    return language === "es" ? "Cambia tu wallet a Celo e intenta de nuevo." : "Switch your wallet to Celo and try again.";
   }
   return language === "es" ? "La compra de Coach Pass fallo. Intenta de nuevo." : "Coach Pass transaction failed. Please try again.";
 }
@@ -59,7 +60,6 @@ function hasActiveHistoryPass(history: { passType: number; purchasedAt: number }
 export function CoachPass() {
   const navigate = useNavigate();
   const { language } = useLanguage();
-  const [view, setView] = useState<"overview" | "buy">("overview");
   const [selectedPass, setSelectedPass] = useState("weekly");
   const [selectedToken, setSelectedToken] = useState<StablecoinInfo>(DEFAULT_MINIPAY_TOKEN);
   const { isMiniPay, isConnected, address } = useMiniPay();
@@ -73,40 +73,36 @@ export function CoachPass() {
     title: "Coach Pass",
     active: "Coach Pass activo",
     activeBody: "Tu contexto avanzado esta desbloqueado.",
-    receipt: "Ver recibo",
     history: "Historial",
     overviewTitle: "Decide con mas contexto",
     overviewBody: "Coach Pass agrega forma reciente, duelos directos, notas clave y recordatorios. Los picks siguen gratis y no cambia tu ranking.",
     perks: ["Forma reciente", "Duelos directos", "Notas de partido", "Recordatorios"],
-    choose: "Elegir pase",
-    buy: "Pagar pase",
+    choose: "Elige tu pase",
     payWith: "Paga con",
     addFunds: "Agregar fondos",
     noFunds: "Saldo insuficiente",
     unlock: "Desbloquear",
     approving: "Aprobando...",
     processing: "Procesando...",
-    back: "Volver",
-    notRanked: "No afecta puntos, ranking ni recompensas promocionales.",
+    notRanked: "No afecta puntos ni ranking.",
+    done: "Listo",
   } : {
     title: "Coach Pass",
     active: "Coach Pass active",
     activeBody: "Advanced match context is unlocked.",
-    receipt: "View receipt",
     history: "History",
     overviewTitle: "Decide with more context",
     overviewBody: "Coach Pass adds recent form, head-to-head notes, key match context, and reminders. Picks stay free and your ranking does not change.",
     perks: ["Recent form", "Head-to-head", "Match notes", "Reminders"],
-    choose: "Choose pass",
-    buy: "Pay pass",
+    choose: "Choose your pass",
     payWith: "Pay with",
     addFunds: "Add funds",
     noFunds: "Not enough",
     unlock: "Unlock",
     approving: "Approving...",
     processing: "Processing...",
-    back: "Back",
-    notRanked: "Does not affect points, ranking, or promotional rewards.",
+    notRanked: "Does not affect points or ranking.",
+    done: "Done",
   };
 
   const paymentTokens = useMemo(
@@ -127,18 +123,9 @@ export function CoachPass() {
   const isLowBalance = isConnected && requiredAmount > 0n && userBalance < requiredAmount;
 
   async function handleUnlock() {
-    if (!isConnected) {
-      alert(language === "es" ? "Abre Mangooal en MiniPay o conecta una billetera Celo." : "Open Mangooal inside MiniPay or connect a Celo wallet.");
-      return;
-    }
-    if (isMiniPay && !selectedToken.miniPayCore) {
-      alert(language === "es" ? "MiniPay usa USDC, USDT o USDm para pagos." : "MiniPay payments use USDC, USDT, or USDm.");
-      return;
-    }
-    if (isLowBalance) {
-      alert(`${c.noFunds} ${selectedToken.symbol}.`);
-      return;
-    }
+    if (!isConnected) return;
+    if (isMiniPay && !selectedToken.miniPayCore) return;
+    if (isLowBalance) return;
     try {
       await purchase({ passType: currentPass.type, token: selectedToken });
     } catch {
@@ -146,23 +133,10 @@ export function CoachPass() {
     }
   }
 
-  if (step === "done" && txHash) {
-    return <PassSuccessView />;
-  }
-
   return (
     <div className="screen">
       <div className="topbar">
-        {view === "buy" ? (
-          <button className="icon-button" onClick={() => setView("overview")} type="button" aria-label={c.back}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5" />
-              <path d="M12 19l-7-7 7-7" />
-            </svg>
-          </button>
-        ) : (
-          <span className="topbar-logo"><span className="brand-ball-icon" aria-hidden="true" /> <span>Mangoo</span>al</span>
-        )}
+        <span className="topbar-logo"><span className="brand-ball-icon" aria-hidden="true" /> <span>Mangoo</span>al</span>
         <div className="topbar-actions">
           <a className="icon-button" href="/support" aria-label="Legal and support">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
@@ -181,141 +155,108 @@ export function CoachPass() {
         </div>
       </div>
 
-      <div className="screen-body" style={{ paddingTop: 16 }}>
-        {activePass && view === "overview" ? (
+      {!isConnected ? (
+        <WalletRequired />
+      ) : activePass ? (
+        <div className="screen-body" style={{ paddingTop: 16 }}>
           <div className="card coach-active-card">
             <div className="success-mark">OK</div>
             <h1>{c.active}</h1>
             <p>{c.activeBody}</p>
             <div className="mini-perks">
-              {c.perks.slice(0, 3).map((perk) => (
-                <div key={perk}><span className="status-dot dot-green" />{perk}</div>
-              ))}
+              {c.perks.slice(0, 3).map((perk) => <div key={perk}><span className="status-dot dot-green" />{perk}</div>)}
             </div>
             <button className="btn btn-primary" onClick={() => navigate("/coach-pass/history")} type="button">
               {c.history}
             </button>
           </div>
-        ) : view === "overview" ? (
-          <>
-            <div className="coach-card compact-card">
-              <div className="coach-label">Mangooal Coach</div>
-              <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1.05 }}>{c.overviewTitle}</div>
-              <p style={{ fontSize: 14, lineHeight: 1.55, marginTop: 10 }}>{c.overviewBody}</p>
-            </div>
-            <div className="mini-perks coach-perks-grid">
-              {c.perks.map((perk) => (
-                <div key={perk}><span className="status-dot dot-green" />{perk}</div>
-              ))}
-            </div>
-            <div className="card coach-pass-summary">
-              <div>
-                <strong>{PASS_OPTIONS[1].label[language]} Pass</strong>
-                <small>{PASS_OPTIONS[1].duration[language]}</small>
-              </div>
-              <strong>{PASS_OPTIONS[1].price[selectedToken.symbol]}</strong>
-            </div>
-            <p className="compliance-note">{c.notRanked}</p>
-            <button className="btn btn-primary" onClick={() => setView("buy")} type="button">
-              {c.choose}
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="section-title">{c.choose}</div>
-            <label className="pass-select-card">
-              <span>{c.choose}</span>
-              <strong>{currentPass.label[language]} Pass</strong>
-              <small>{currentPass.duration[language]} - {currentPass.price[selectedToken.symbol]}</small>
-              <select
-                value={selectedPass}
-                onChange={(event) => {
-                  setSelectedPass(event.target.value);
+        </div>
+      ) : step === "done" && txHash ? (
+        <div className="screen-body" style={{ paddingTop: 16 }}>
+          <div className="card coach-active-card">
+            <div className="success-mark">OK</div>
+            <h1>{c.active}</h1>
+            <p>{c.activeBody}</p>
+            <button type="button" className="btn btn-primary" onClick={() => navigate("/coach-pass/history")}>{c.history}</button>
+            <button type="button" className="btn btn-secondary" onClick={() => navigate("/")}>{c.done}</button>
+          </div>
+        </div>
+      ) : (
+        <div className="screen-body" style={{ paddingTop: 16 }}>
+          <div className="coach-card compact-card">
+            <div className="coach-label">Mangooal Coach</div>
+            <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1.05 }}>{c.overviewTitle}</div>
+            <p style={{ fontSize: 14, lineHeight: 1.55, marginTop: 10 }}>{c.overviewBody}</p>
+          </div>
+
+          <div className="mini-perks coach-perks-grid">
+            {c.perks.map((perk) => <div key={perk}><span className="status-dot dot-green" />{perk}</div>)}
+          </div>
+
+          <div className="section-title">{c.choose}</div>
+          <div className="pass-option-list">
+            {PASS_OPTIONS.map((pass) => (
+              <button
+                className={`pass-option-button ${selectedPass === pass.id ? "selected" : ""}`}
+                key={pass.id}
+                type="button"
+                onClick={() => {
+                  setSelectedPass(pass.id);
                   reset();
                 }}
               >
-                {PASS_OPTIONS.map((pass) => (
-                  <option key={pass.id} value={pass.id}>
-                    {pass.label[language]} Pass - {pass.price[selectedToken.symbol]}
-                  </option>
-                ))}
-              </select>
-            </label>
+                <span>
+                  <strong>{pass.label[language]} Pass</strong>
+                  <small>{pass.duration[language]}</small>
+                </span>
+                <strong>{pass.price[selectedToken.symbol]}</strong>
+              </button>
+            ))}
+          </div>
 
-            <div className="section-title">{c.payWith}</div>
-            <div className="token-pills">
-              {paymentTokens.map((token) => (
-                <button
-                  key={token.symbol}
-                  type="button"
-                  className={`token-pill ${selectedToken.symbol === token.symbol ? "selected" : ""}`}
-                  onClick={() => {
-                    setSelectedToken(token);
-                    reset();
-                  }}
-                >
-                  <span className="token-dot" />
-                  <span>{token.symbol}</span>
-                </button>
-              ))}
+          <div className="section-title">{c.payWith}</div>
+          <div className="token-pills">
+            {paymentTokens.map((token) => (
+              <button
+                key={token.symbol}
+                type="button"
+                className={`token-pill ${selectedToken.symbol === token.symbol ? "selected" : ""}`}
+                onClick={() => {
+                  setSelectedToken(token);
+                  reset();
+                }}
+              >
+                <span className="token-dot" />
+                <span>{token.symbol}</span>
+              </button>
+            ))}
+          </div>
+
+          <p className="compliance-note">{c.notRanked}</p>
+
+          {isLowBalance && (
+            <div className="hint-card error">
+              {c.noFunds} {selectedToken.symbol}. <a href={ADD_CASH_URL} target="_blank" rel="noreferrer">{c.addFunds}</a>
             </div>
+          )}
 
-            {isLowBalance && (
-              <div className="hint-card error">
-                {c.noFunds} {selectedToken.symbol}.{" "}
-                <a href={ADD_CASH_URL} target="_blank" rel="noreferrer">{c.addFunds}</a>
-              </div>
-            )}
+          {step === "error" && error && <div className="hint-card error">{getPurchaseErrorMessage(error, language)}</div>}
 
-            {step === "error" && error && <div className="hint-card error">{getPurchaseErrorMessage(error, language)}</div>}
-
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleUnlock}
-              disabled={isPending || isLowBalance}
-              style={{ opacity: isPending || isLowBalance ? 0.6 : 1 }}
-            >
-              {step === "approving"
-                ? c.approving
-                : step === "purchasing"
-                  ? c.processing
-                  : `${c.unlock} - ${currentPass.price[selectedToken.symbol]}`}
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function PassSuccessView() {
-  const { language } = useLanguage();
-  const c = language === "es"
-    ? { active: "Coach Pass activo", body: "Contexto de partidos desbloqueado." }
-    : { active: "Coach Pass active", body: "Deeper match insights are unlocked." };
-  const navigate = useNavigate();
-
-  return (
-    <div className="screen">
-      <div className="topbar">
-        <span className="topbar-logo"><span className="brand-ball-icon" aria-hidden="true" /> <span>Mangoo</span>al</span>
-        <LanguageToggle />
-      </div>
-
-      <div className="screen-body" style={{ paddingTop: 16 }}>
-        <div className="card coach-active-card">
-          <div className="success-mark">OK</div>
-          <h1>{c.active}</h1>
-          <p>{c.body}</p>
-          <button type="button" className="btn btn-primary" onClick={() => navigate("/coach-pass/history")}>
-            {language === "es" ? "Historial" : "History"}
-          </button>
-          <button type="button" className="btn btn-secondary" onClick={() => navigate("/")}>
-            Done
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleUnlock}
+            disabled={isPending || isLowBalance}
+            style={{ opacity: isPending || isLowBalance ? 0.6 : 1 }}
+          >
+            {step === "approving"
+              ? c.approving
+              : step === "purchasing"
+                ? c.processing
+                : `${c.unlock} - ${currentPass.price[selectedToken.symbol]}`}
           </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }

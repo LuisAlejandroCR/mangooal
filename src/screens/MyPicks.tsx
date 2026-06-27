@@ -5,6 +5,7 @@ import { useRevealPrediction } from "../hooks/useMangoalLedger";
 import { useMyPicks, type PickEntry, type PickStatus } from "../hooks/useMyPicks";
 import type { MatchConfig } from "../config/matches";
 import { getLocalPicks, type LocalPick } from "../utils/localPicks";
+import { WalletRequired } from "../components/WalletRequired";
 
 const STATUS_LABELS: Record<PickStatus, { text: string; color: string }> = {
   none:      { text: "Not submitted",          color: "var(--text-muted)" },
@@ -230,6 +231,9 @@ export function MyPicks() {
         </div>
       </div>
 
+      {!isConnected ? (
+        <WalletRequired />
+      ) : (
       <div className="screen-body" style={{ paddingTop: 16 }}>
         {hasAnyPicks && (
           <div className="card" style={{ marginBottom: 16 }}>
@@ -266,6 +270,7 @@ export function MyPicks() {
           activePicks.map((entry) => <PickCard key={entry.match.id} entry={entry} />)
         )}
       </div>
+      )}
     </div>
   );
 }

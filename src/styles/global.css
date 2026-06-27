@@ -1685,3 +1685,69 @@ body { background: #f0ece0; }
   padding: 8px 6px;
   text-align: center;
 }
+
+.locked-body {
+  display: grid;
+  place-items: center;
+  padding-top: 24px;
+}
+
+.wallet-required-card {
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.wallet-required-card h1 {
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.wallet-required-card p {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.pass-option-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.pass-option-button {
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  text-align: left;
+  width: 100%;
+}
+
+.pass-option-button.selected {
+  border-color: var(--yellow-hover);
+  box-shadow: 0 0 0 2px rgba(255, 200, 61, 0.22), var(--shadow);
+}
+
+.pass-option-button span {
+  display: grid;
+  gap: 3px;
+}
+
+.pass-option-button strong {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.pass-option-button small {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
