@@ -13,7 +13,6 @@ type Copy = {
     ranking: string;
     myPicks: string;
     coachPass: string;
-    wallet: string;
   };
   predictions: {
     currentCup: string;
@@ -34,8 +33,6 @@ type Copy = {
     complianceLine1: string;
     complianceLine2: string;
     fallbackNote: string;
-    minipayConnected: string;
-    walletConnected: string;
     tapBannerToSwitch: string;
     scheduleFallback: string;
     loading: string;
@@ -66,7 +63,6 @@ const COPY: Record<Language, Copy> = {
       ranking: "Ranking",
       myPicks: "My Picks",
       coachPass: "Coach Pass",
-      wallet: "Wallet",
     },
     predictions: {
       currentCup: "Selected cup",
@@ -84,11 +80,9 @@ const COPY: Record<Language, Copy> = {
       currentSource: "Live schedule and scores.",
       futureSource: "Future fixtures preview.",
       tapToSwitch: "Tap this card to switch cups.",
-      complianceLine1: "Mangooal is a free-to-play sports prediction game. Not betting. Not gambling.",
-      complianceLine2: "No entry fees - No user-funded prize pools - No odds",
+      complianceLine1: "Free picks. No entry fee, odds, or user-funded prize pools.",
+      complianceLine2: "Coach Pass adds match context only.",
       fallbackNote: "Schedule backup is ready.",
-      minipayConnected: "MiniPay connected",
-      walletConnected: "Wallet connected",
       tapBannerToSwitch: "Tap to switch cups",
       scheduleFallback: "Live schedule is taking longer than expected. Showing saved matches.",
       loading: "Loading matches...",
@@ -117,7 +111,6 @@ const COPY: Record<Language, Copy> = {
       ranking: "Ranking",
       myPicks: "Mis Picks",
       coachPass: "Coach Pass",
-      wallet: "Billetera",
     },
     predictions: {
       currentCup: "Copa seleccionada",
@@ -135,11 +128,9 @@ const COPY: Record<Language, Copy> = {
       currentSource: "Calendario y marcadores en vivo.",
       futureSource: "Vista previa de proximos partidos.",
       tapToSwitch: "Toca esta tarjeta para cambiar de copa.",
-      complianceLine1: "Mangooal es un juego gratis de predicciones deportivas. No es apuestas ni gambling.",
-      complianceLine2: "Sin pagos de entrada - Sin pozos financiados por usuarios - Sin cuotas",
+      complianceLine1: "Picks gratis. Sin pagos de entrada, cuotas ni pozos de usuarios.",
+      complianceLine2: "Coach Pass solo agrega contexto de partidos.",
       fallbackNote: "El respaldo de calendario esta listo.",
-      minipayConnected: "MiniPay conectado",
-      walletConnected: "Billetera conectada",
       tapBannerToSwitch: "Toca para cambiar de copa",
       scheduleFallback: "El calendario esta tardando mas de lo esperado. Mostrando partidos guardados.",
       loading: "Cargando partidos...",

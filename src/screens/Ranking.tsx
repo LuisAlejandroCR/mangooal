@@ -216,7 +216,7 @@ export function Ranking() {
             lineHeight: 1.6,
           }}
         >
-          Ranking built from on-chain prediction events on Celo Mainnet.
+          Ranking built from on-chain prediction events on Celo.
           <br />
           Coach Pass does not affect your ranking position.
         </div>

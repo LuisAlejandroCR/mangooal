@@ -110,7 +110,7 @@ export function RewardClaim() {
               marginBottom: 20,
             }}
           >
-            {displayAmount ?? "Reward"} sent to your wallet on Celo Mainnet.
+            {displayAmount ?? "Reward"} sent to your wallet on Celo.
           </p>
           <div className="card" style={{ marginBottom: 16, textAlign: "left" }}>
             <div className="wallet-bar" style={{ marginBottom: 0 }}>
@@ -118,7 +118,7 @@ export function RewardClaim() {
                 <circle cx="7" cy="7" r="7" fill="#35D07F" />
                 <circle cx="7" cy="7" r="3.5" fill="white" />
               </svg>
-              Confirmed on Celo Mainnet
+              Confirmed on Celo
             </div>
             <div
               style={{

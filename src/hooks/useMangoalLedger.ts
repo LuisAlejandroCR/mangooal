@@ -316,7 +316,7 @@ export function usePurchaseCoachPass() {
       await publicClient.waitForTransactionReceipt({ hash: purchaseTx });
 
       setTxHash(purchaseTx);
-      const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+      const expiresAt = Date.now() + (PASS_DURATION_SECONDS[passType] ?? PASS_DURATION_SECONDS[PASS_TYPE.DAILY]) * 1000;
       localStorage.setItem(coachPassLocalKey(address), String(expiresAt));
       const history = getLocalCoachPassHistory(address);
       localStorage.setItem(

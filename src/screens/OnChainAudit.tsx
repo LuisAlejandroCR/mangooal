@@ -134,7 +134,7 @@ export function OnChainAudit() {
           <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 6 }}>
             {auditStatus === "none"
               ? "No prediction recorded yet"
-              : "Prediction recorded on Celo Mainnet"}
+              : "Prediction recorded on Celo"}
           </div>
           <div
             style={{
@@ -187,7 +187,7 @@ export function OnChainAudit() {
 
           {addr && (
             <div className="audit-row">
-              <span className="audit-label">Wallet</span>
+              <span className="audit-label">Account</span>
               <span
                 className="audit-value"
                 style={{ fontFamily: "monospace", fontSize: 12 }}

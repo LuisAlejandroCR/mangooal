@@ -22,6 +22,9 @@ export function CoachInsight() {
   const navigate = useNavigate();
   const { address } = useAccount();
   const { language } = useLanguage();
+  const c = language === "es"
+    ? { notFound: "Partido no encontrado", publicContext: "Contexto con datos publicos de futbol", disclaimer: "Solo contexto del partido. Sin cuotas. Sin resultado garantizado.", context: "Contexto del partido", locked: "Insight de Coach Pass bloqueado", lockedBody: "Desbloquea contexto adicional: duelos directos, notas de alineacion, descanso y forma de jugadores clave.", unlock: "Desbloquear Coach" }
+    : { notFound: "Match not found", publicContext: "Public football data context", disclaimer: "Match context only. No odds. No guaranteed result.", context: "Match context", locked: "Coach Pass insight locked", lockedBody: "Unlock deeper context: head-to-head, lineup notes, rest-day impact, and key player form.", unlock: "Unlock Coach" };
   const { hasPass } = useHasActiveCoachPass(address);
   const match = getMatchById(id ?? "");
 
@@ -50,7 +53,7 @@ export function CoachInsight() {
           <LanguageToggle />
         </div>
         <div className="screen-body" style={{ paddingTop: 40, textAlign: "center", color: "var(--text-muted)" }}>
-          Match not found
+          {c.notFound}
         </div>
       </div>
     );
@@ -97,14 +100,14 @@ export function CoachInsight() {
           <div className="coach-label">Mangooal Coach</div>
           <div className="coach-score">{coach.suggestedScore}</div>
           <div style={{ fontSize: 13, opacity: 0.85, fontWeight: 600 }}>
-            Public football data context
+            {c.publicContext}
           </div>
           <div className="coach-disclaimer">
-            Match context only. No odds. No guaranteed result.
+            {c.disclaimer}
           </div>
         </div>
 
-        <div className="section-title">Match context</div>
+        <div className="section-title">{c.context}</div>
         <div className="card" style={{ marginBottom: 12 }}>
           <p style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6 }}>
             {coach.summary}
@@ -113,12 +116,12 @@ export function CoachInsight() {
 
         {!hasPass && (
           <div className="card" style={{ border: "2px solid var(--yellow)", background: "#FFFDF0", marginBottom: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 6 }}>Coach Pass insight locked</div>
+            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 6 }}>{c.locked}</div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", lineHeight: 1.6, marginBottom: 14 }}>
-              Unlock deeper context: head-to-head, lineup notes, rest-day impact, and key player form.
+              {c.lockedBody}
             </div>
             <button className="btn btn-primary btn-sm" onClick={() => navigate("/coach-pass")} style={{ width: "100%" }}>
-              Unlock Coach
+              {c.unlock}
             </button>
           </div>
         )}

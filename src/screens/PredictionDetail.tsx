@@ -202,7 +202,7 @@ export function PredictionDetail() {
                 </div>
 
                 <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-muted)", marginTop: 12, lineHeight: 1.6 }}>
-                  Your prediction will be recorded on Celo Mainnet for audit transparency.
+                  Your prediction will be recorded on Celo for audit transparency.
                   <br />It is not a bet. No entry fee. No prize pool.
                 </div>
               </>
@@ -237,7 +237,7 @@ function SubmittedView({
             <circle cx="7" cy="7" r="7" fill="#35D07F" />
             <circle cx="7" cy="7" r="3.5" fill="white" />
           </svg>
-          Recorded on Celo Mainnet
+          Recorded on Celo
         </div>
         {txHash && (
           <div style={{ marginTop: 10, fontSize: 11, fontFamily: "monospace", color: "var(--text-muted)", wordBreak: "break-all" }}>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LanguageToggle } from "../components/LanguageToggle";
+import { useLanguage } from "../i18n";
 import { FEATURED_TOKENS, type StablecoinInfo } from "../config/stablecoins";
 import { PASS_AMOUNTS, usePurchaseCoachPass } from "../hooks/useMangoalLedger";
 import { useMiniPay } from "../hooks/useMiniPay";
@@ -42,8 +43,32 @@ function getPurchaseErrorMessage(error: Error) {
 
 export function CoachPass() {
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const [selectedPass, setSelectedPass] = useState("weekly");
   const [selectedToken, setSelectedToken] = useState<StablecoinInfo>(DEFAULT_MINIPAY_TOKEN);
+  const c = language === "es" ? {
+    deeper: "Contexto de partidos",
+    intro: "Forma reciente, duelos directos y recordatorios. Los picks siguen gratis.",
+    perks: ["Forma", "Duelos directos", "Recordatorios"],
+    choose: "Elige pase",
+    payWith: "Paga con",
+    addFunds: "Agregar fondos",
+    noFunds: "Saldo insuficiente",
+    unlock: "Desbloquear",
+    approving: "Aprobando...",
+    processing: "Procesando...",
+  } : {
+    deeper: "Deeper match context",
+    intro: "Recent form, head-to-head notes, and reminders. Picks stay free.",
+    perks: ["Form", "Head-to-head", "Reminders"],
+    choose: "Choose pass",
+    payWith: "Pay with",
+    addFunds: "Add funds",
+    noFunds: "Not enough",
+    unlock: "Unlock",
+    approving: "Approving...",
+    processing: "Processing...",
+  };
   const { isMiniPay, isConnected, address } = useMiniPay();
   const { purchase, step, txHash, isPending, error, reset } = usePurchaseCoachPass();
   const { rawBalances } = useTokenBalances(address as `0x${string}` | undefined);
@@ -111,15 +136,15 @@ export function CoachPass() {
         <div className="coach-card compact-card">
           <div className="coach-label">Mangooal Coach</div>
           <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1.05 }}>
-            Deeper match context
+            {c.deeper}
           </div>
           <p style={{ fontSize: 14, lineHeight: 1.55, marginTop: 10 }}>
-            Recent form, head-to-head notes, and reminders. Picks stay free.
+            {c.intro}
           </p>
         </div>
 
         <div className="mini-perks" style={{ marginBottom: 14 }}>
-          {["Form", "Head-to-head", "Reminders"].map((perk) => (
+          {c.perks.map((perk) => (
             <div key={perk}>
               <span className="status-dot dot-green" />
               <span>{perk}</span>
@@ -127,7 +152,7 @@ export function CoachPass() {
           ))}
         </div>
 
-        <div className="section-title">Choose pass</div>
+        <div className="section-title">{c.choose}</div>
         {PASS_OPTIONS.map((pass) => {
           const active = selectedPass === pass.id;
           return (
@@ -152,7 +177,7 @@ export function CoachPass() {
           );
         })}
 
-        <div className="section-title">Pay with</div>
+        <div className="section-title">{c.payWith}</div>
         <div className="token-pills">
           {paymentTokens.map((token) => (
             <button
@@ -172,9 +197,9 @@ export function CoachPass() {
 
         {isLowBalance && (
           <div className="hint-card error">
-            Not enough {selectedToken.symbol}.{" "}
+            {c.noFunds} {selectedToken.symbol}.{" "}
             <a href={ADD_CASH_URL} target="_blank" rel="noreferrer">
-              Add funds
+              {c.addFunds}
             </a>
           </div>
         )}
@@ -189,10 +214,10 @@ export function CoachPass() {
           style={{ opacity: isPending || isLowBalance ? 0.6 : 1 }}
         >
           {step === "approving"
-            ? "Approving..."
+            ? c.approving
             : step === "purchasing"
-              ? "Processing..."
-              : `Unlock - ${currentPass.price[selectedToken.symbol]}`}
+              ? c.processing
+              : `${c.unlock} - ${currentPass.price[selectedToken.symbol]}`}
         </button>
       </div>
     </div>
@@ -200,6 +225,10 @@ export function CoachPass() {
 }
 
 function PassSuccessView({ txHash, onClose }: { txHash: `0x${string}`; onClose: () => void }) {
+  const { language } = useLanguage();
+  const c = language === "es"
+    ? { active: "Coach Pass activo", body: "Contexto de partidos desbloqueado.", receipt: "Ver recibo", done: "Listo" }
+    : { active: "Coach Pass active", body: "Deeper match insights are unlocked.", receipt: "View receipt", done: "Done" };
   return (
     <div className="screen">
       <div className="topbar">
@@ -212,15 +241,15 @@ function PassSuccessView({ txHash, onClose }: { txHash: `0x${string}`; onClose: 
       <div className="screen-body" style={{ paddingTop: 16 }}>
         <div className="card" style={{ textAlign: "center" }}>
           <div className="success-mark">✓</div>
-          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 8 }}>Coach Pass active</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 8 }}>{c.active}</h1>
           <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: 1.55, marginBottom: 16 }}>
-            Deeper match insights are unlocked.
+            {c.body}
           </p>
           <a className="btn btn-secondary" href={`https://celoscan.io/tx/${txHash}`} target="_blank" rel="noreferrer">
-            View receipt
+            {c.receipt}
           </a>
           <button type="button" className="btn btn-primary" onClick={onClose} style={{ marginTop: 10 }}>
-            Done
+            {c.done}
           </button>
         </div>
       </div>

@@ -1,17 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { LanguageToggle } from "../components/LanguageToggle";
+import { useLanguage } from "../i18n";
 import { useCoachPassHistory } from "../hooks/useMangoalLedger";
 import { useMiniPay } from "../hooks/useMiniPay";
 
-const PASS_LABELS: Record<number, string> = {
-  1: "Daily",
-  2: "Weekly",
-  3: "Campaign",
-  4: "Season",
-};
+const PASS_LABELS = {
+  en: { 1: "Daily", 2: "Weekly", 3: "Campaign", 4: "Season" },
+  es: { 1: "Diario", 2: "Semanal", 3: "Campana", 4: "Temporada" },
+} as const;
 
 export function CoachPassHistory() {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const labels = PASS_LABELS[language];
   const { address } = useMiniPay();
   const { items: history, isLoading } = useCoachPassHistory(address as `0x${string}` | undefined);
 
@@ -31,8 +32,8 @@ export function CoachPassHistory() {
       </div>
 
       <div className="screen-body" style={{ paddingTop: 16 }}>
-        <div className="section-title">History</div>
-        {isLoading && <div className="card" style={{ marginBottom: 12 }}>Loading...</div>}
+        <div className="section-title">{language === "es" ? "Historial" : "History"}</div>
+        {isLoading && <div className="card" style={{ marginBottom: 12 }}>{language === "es" ? "Cargando..." : "Loading..."}</div>}
         {history.length > 0 ? (
           history.map((item) => (
             <a
@@ -43,7 +44,7 @@ export function CoachPassHistory() {
               target="_blank"
             >
               <span>
-                <strong>{PASS_LABELS[item.passType] ?? "Coach"} Pass</strong>
+                <strong>{labels[item.passType as keyof typeof labels] ?? "Coach"} Pass</strong>
                 <small>{new Date(item.purchasedAt).toLocaleString()}</small>
               </span>
               <span>{item.tokenSymbol}</span>
@@ -51,7 +52,7 @@ export function CoachPassHistory() {
           ))
         ) : (
           <div className="card" style={{ textAlign: "center" }}>
-            <strong>No Coach Pass purchases on this device yet.</strong>
+            <strong>{language === "es" ? "Aun no hay compras de Coach Pass para esta cuenta." : "No Coach Pass purchases for this account yet."}</strong>
           </div>
         )}
       </div>

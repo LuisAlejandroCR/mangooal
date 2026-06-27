@@ -79,7 +79,7 @@ export function Stats() {
               lineHeight: 1.6,
             }}
           >
-            <strong>Launching soon.</strong> On-chain stats will appear here after the contract is deployed to Celo Mainnet.
+            <strong>Launching soon.</strong> On-chain stats will appear here after the contract is deployed to Celo.
           </div>
         )}
 
@@ -101,7 +101,7 @@ export function Stats() {
             {stats.isLoading ? "…" : stats.uniquePlayers.toLocaleString()}
           </div>
           <div style={{ fontSize: 12, opacity: 0.6, marginTop: 8 }}>
-            Celo Mainnet · lifetime
+            Celo � lifetime
           </div>
         </div>
 
@@ -177,7 +177,7 @@ export function Stats() {
         >
           <strong style={{ color: "var(--text)" }}>About these stats</strong>
           <br />
-          On-chain metrics above are read directly from Celo Mainnet and refresh every 2 minutes.
+          On-chain metrics above are read directly from Celo and refresh every 2 minutes.
           Session metrics (DAU, MAU, D1/D7/D30 retention) are tracked via PostHog and available in the operator dashboard.
         </div>
 
@@ -187,7 +187,7 @@ export function Stats() {
             <circle cx="7" cy="7" r="7" fill="#35D07F" />
             <circle cx="7" cy="7" r="3.5" fill="white" />
           </svg>
-          On-chain data · Celo Mainnet · Chain ID 42220
+          On-chain data � Celo
         </div>
 
       </div>

@@ -19,7 +19,7 @@ function RevealButton({ match }: { match: MatchConfig }) {
   if (txHash) {
     return (
       <div style={{ fontSize: 11, color: "var(--success)", marginTop: 8, fontWeight: 700 }}>
-        ✓ Revealed on Celo Mainnet
+        ✓ Revealed on Celo
       </div>
     );
   }

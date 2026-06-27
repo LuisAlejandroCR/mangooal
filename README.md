@@ -131,10 +131,9 @@ log reads can be scoped to the contract's lifetime.
 | `/match/:id` | Score prediction screen for one match |
 | `/coach/:id` | Coach insight and Coach Pass upsell |
 | `/coach-pass` | Coach Pass purchase flow |
-| `/coach-pass/history` | Coach Pass purchase history saved on this device |
+| `/coach-pass/history` | Coach Pass purchase history from Celo events plus this device fallback |
 | `/ranking` | On-chain leaderboard |
 | `/my-picks` | User prediction history |
-| `/wallet` | Wallet status and balances |
 | `/audit/:id` | On-chain prediction audit screen |
 | `/claim` | Operator-signed promotional reward claim |
 | `/stats` | On-chain campaign stats |
@@ -145,7 +144,7 @@ log reads can be scoped to the contract's lifetime.
 src/
   components/
     BottomNav.tsx          shared mobile navigation
-    CeloBadge.tsx          Celo/MiniPay status badge
+    CeloBadge.tsx          hidden compatibility wrapper for old imports
     MatchCard.tsx          match list card
   config/
     competitions.ts        enabled cups and API league mapping
@@ -173,7 +172,7 @@ src/
     OnChainAudit.tsx       commitment and transaction proof
     Ranking.tsx            leaderboard
     RewardClaim.tsx        promotional reward claim flow
-    WalletStatus.tsx       wallet and token status
+    StablecoinBalances.tsx  compact stablecoin balance UI for Picks
   App.tsx                  route shell and providers
 contracts/
   MangooalLedger.sol       Celo Mainnet ledger contract
@@ -232,7 +231,7 @@ current token support.
 
 ## Compliance and privacy
 
-Mangooal is a free-to-play prediction game, not gambling or betting. Predictions are free for
+Mangooal is free to play, not gambling or betting. Predictions are free for
 everyone, Coach Pass does not affect points or ranking, and promotional rewards are distributed
 only from operator-funded pools.
 
