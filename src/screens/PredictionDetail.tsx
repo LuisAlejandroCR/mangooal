@@ -6,6 +6,8 @@ import type { MatchData } from "../components/MatchCard";
 import { useCommitPrediction } from "../hooks/useMangoalLedger";
 import { getMatchById, matchStatus } from "../config/matches";
 import { findMatch, useEspnScores } from "../hooks/useEspnScores";
+import { useLanguage } from "../i18n";
+import { saveLocalPick } from "../utils/localPicks";
 
 function toEspnDateUTC(date: Date) {
   const year = date.getUTCFullYear();
@@ -31,15 +33,95 @@ function TeamMark({ value }: { value?: string | null }) {
   return null;
 }
 
+const DETAIL_COPY = {
+  en: {
+    notFound: "Match not found",
+    closed: "Predictions are closed",
+    live: "Match in progress",
+    finished: "Match finished",
+    locked: "Window locked",
+    coachLabel: "Mangooal Coach insight",
+    coachTitle: "Data-based pick - Recent-form analysis",
+    coachHelp: "Tap for suggested score and match context",
+    finishedTitle: "Final result",
+    finishedNoPick: "This match is finished. You did not record a pick for it.",
+    yourForecast: "Your forecast",
+    submit: "Submit prediction - Free",
+    connect: "Connect wallet to submit",
+    waiting: "Waiting for confirmation...",
+    openMiniPay: "Open in MiniPay or connect a Celo wallet",
+    auditNote1: "Your prediction will be recorded on Celo for audit transparency.",
+    auditNote2: "It is not a bet. No entry fee. No prize pool.",
+    savedTitle: "Prediction saved!",
+    recordedTitle: "Prediction recorded!",
+    savedStatus: "Saved for My Picks",
+    recordedStatus: "Recorded on Celo",
+    savedBody: "Your pick is saved on this device and appears in My Picks.",
+    recordedBody: "Your pick is committed on-chain. It cannot be edited after the prediction window closes.",
+    kickoff: "Match time",
+    deadline: "Pick deadline",
+    timezone: "Timezone",
+    viewAudit: "View on-chain audit",
+    viewPicks: "View My Picks",
+  },
+  es: {
+    notFound: "Partido no encontrado",
+    closed: "Predicciones cerradas",
+    live: "Partido en vivo",
+    finished: "Partido finalizado",
+    locked: "Ventana cerrada",
+    coachLabel: "Insight de Mangooal Coach",
+    coachTitle: "Pick con datos - Analisis de forma reciente",
+    coachHelp: "Toca para ver marcador sugerido y contexto",
+    finishedTitle: "Resultado final",
+    finishedNoPick: "Este partido ya termino. No registraste un pick para este partido.",
+    yourForecast: "Tu pronostico",
+    submit: "Enviar prediccion - Gratis",
+    connect: "Conecta wallet para enviar",
+    waiting: "Esperando confirmacion...",
+    openMiniPay: "Abre en MiniPay o conecta una wallet de Celo",
+    auditNote1: "Tu prediccion se registra en Celo para transparencia.",
+    auditNote2: "No es apuesta. Sin pago de entrada. Sin pozo de premios.",
+    savedTitle: "Prediccion guardada!",
+    recordedTitle: "Prediccion registrada!",
+    savedStatus: "Guardada en Mis Picks",
+    recordedStatus: "Registrada en Celo",
+    savedBody: "Tu pick queda guardado en este dispositivo y aparece en Mis Picks.",
+    recordedBody: "Tu pick queda registrado on-chain. No se puede editar al cerrar la ventana.",
+    kickoff: "Hora del partido",
+    deadline: "Cierre de picks",
+    timezone: "Zona horaria",
+    viewAudit: "Ver auditoria on-chain",
+    viewPicks: "Ver Mis Picks",
+  },
+};
+
+function formatDateTime(value: number, locale: string) {
+  return new Date(value).toLocaleString(locale, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+}
+
 export function PredictionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const { isConnected } = useAccount();
+  const { language } = useLanguage();
+  const copy = DETAIL_COPY[language];
+  const locale = language === "es" ? "es" : "en";
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [home, setHome] = useState("");
   const [away, setAway] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const { commit, txHash, isPending, error } = useCommitPrediction();
+  const [submittedTxHash, setSubmittedTxHash] = useState<`0x${string}` | undefined>();
+  const [submittedPreview, setSubmittedPreview] = useState(false);
+  const { commit, isPending, error } = useCommitPrediction();
 
   const registeredMatch = getMatchById(id ?? "");
   const stateMatch = (location.state as { match?: MatchData } | null)?.match;
@@ -47,7 +129,7 @@ export function PredictionDetail() {
   const activeKickoffAt = registeredMatch?.kickoffAt ?? stateMatch?.kickoff.getTime() ?? 0;
   const activeLockedAt = registeredMatch?.lockedAt ?? stateMatch?.lockedAt.getTime() ?? 0;
   const matchDate = activeMatch ? toEspnDateUTC(new Date(activeKickoffAt)) : undefined;
-  const { matches: espnMatches } = useEspnScores("fifa.world", matchDate);
+  const { matches: espnMatches } = useEspnScores("fifa.world", matchDate, language);
   const liveMatch = activeMatch ? findMatch(espnMatches, activeMatch.home, activeMatch.away) : null;
   const status = registeredMatch ? matchStatus(registeredMatch) : stateMatch?.status ?? null;
   const isOpen = activeMatch ? Date.now() < activeLockedAt : false;
@@ -55,6 +137,13 @@ export function PredictionDetail() {
   const awayName = liveMatch?.away ?? activeMatch?.away ?? "";
   const homeMark = liveMatch?.homeLogo ?? activeMatch?.homeFlag;
   const awayMark = liveMatch?.awayLogo ?? activeMatch?.awayFlag;
+  const hasResult = liveMatch?.homeScore !== null && liveMatch?.homeScore !== undefined && liveMatch?.awayScore !== null && liveMatch?.awayScore !== undefined;
+
+  function goMyPicks() {
+    window.localStorage.setItem("mangooal:root-tab", "my-picks");
+    window.dispatchEvent(new Event("mangooal:tab"));
+    navigate("/");
+  }
 
   if (!activeMatch) {
     return (
@@ -68,7 +157,7 @@ export function PredictionDetail() {
           <CeloBadge variant="network" />
         </div>
         <div className="screen-body" style={{ paddingTop: 40, textAlign: "center", color: "var(--text-muted)" }}>
-          Match not found
+          {copy.notFound}
         </div>
       </div>
     );
@@ -77,22 +166,42 @@ export function PredictionDetail() {
   async function handleSubmit() {
     if (!home || !away || !activeMatch) return;
 
+    const localEntry = {
+      id: activeMatch.id,
+      competition: activeMatch.competition,
+      home: homeName,
+      away: awayName,
+      homeMark,
+      awayMark,
+      homeScore: Number(home),
+      awayScore: Number(away),
+      kickoffAt: activeKickoffAt,
+      lockedAt: activeLockedAt,
+      savedAt: Date.now(),
+      source: registeredMatch ? "celo" as const : "preview" as const,
+    };
+
     if (!registeredMatch) {
       localStorage.setItem(
         `mangooal:preview-pick:${activeMatch.id}`,
         JSON.stringify({ homeScore: Number(home), awayScore: Number(away), savedAt: Date.now() })
       );
+      saveLocalPick(localEntry);
+      setSubmittedPreview(true);
       setSubmitted(true);
       return;
     }
 
     try {
-      await commit({
+      const result = await commit({
         campaignId: registeredMatch.campaignId,
         matchId: registeredMatch.matchId,
         homeScore: Number(home),
         awayScore: Number(away),
       });
+      saveLocalPick({ ...localEntry, txHash: result.hash });
+      setSubmittedTxHash(result.hash);
+      setSubmittedPreview(false);
       setSubmitted(true);
     } catch {
       // error surfaces through the hook state
@@ -112,7 +221,7 @@ export function PredictionDetail() {
           </svg>
         </button>
         <span className="topbar-logo" style={{ fontSize: 17 }}>{activeMatch.competition}</span>
-        <CeloBadge variant="network" />
+        <span />
       </div>
 
       <div className="screen-body" style={{ paddingTop: 20 }}>
@@ -121,15 +230,23 @@ export function PredictionDetail() {
             match={{ id: activeMatch.id, home: homeName, away: awayName }}
             home={Number(home)}
             away={Number(away)}
-            txHash={txHash}
-            onAudit={() => registeredMatch ? navigate(`/audit/${registeredMatch.id}`) : navigate(-1)}
+            txHash={submittedTxHash}
+            isPreview={submittedPreview}
+            kickoffAt={activeKickoffAt}
+            lockedAt={activeLockedAt}
+            locale={locale}
+            timezone={timezone}
+            copy={copy}
+            onAudit={() => registeredMatch ? navigate(`/audit/${registeredMatch.id}`) : goMyPicks()}
+            onMyPicks={goMyPicks}
           />
         ) : (
           <>
             <div className="forecast-match-card">
               <div className="forecast-date">
-                {activeMatch.competition} � {new Date(activeKickoffAt).toLocaleString("en", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                {activeMatch.competition} - {formatDateTime(activeKickoffAt, locale)}
               </div>
+              <div className="forecast-timezone">{copy.timezone}: {timezone}</div>
               <div className="match-teams">
                 <div className="team-name">
                   <TeamMark value={homeMark} />
@@ -144,32 +261,40 @@ export function PredictionDetail() {
 
               {!isOpen && (
                 <div className="forecast-lock-note">
-                  Predictions are closed � {status === "live" ? "Match in progress" : status === "finished" ? "Match finished" : "Window locked"}
+                  {copy.closed} - {status === "live" ? copy.live : status === "finished" ? copy.finished : copy.locked}
                 </div>
               )}
             </div>
 
-            <div
-              className="coach-card coach-compact-link"
-              onClick={() => registeredMatch && navigate(`/coach/${registeredMatch.id}`)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(event) => {
-                if ((event.key === "Enter" || event.key === " ") && registeredMatch) navigate(`/coach/${registeredMatch.id}`);
-              }}
-            >
-              <div className="coach-label">Mangooal Coach insight</div>
-              <div style={{ fontSize: 16, fontWeight: 800, marginTop: 6 }}>
-                Data-based pick � Recent-form analysis
+            {status === "finished" && (
+              <div className="finished-detail-card">
+                <div>
+                  <span>{copy.finishedTitle}</span>
+                  <strong>{hasResult ? `${liveMatch?.homeScore} - ${liveMatch?.awayScore}` : "FT"}</strong>
+                </div>
+                <p>{copy.finishedNoPick}</p>
               </div>
-              <div style={{ fontSize: 13, opacity: 0.82, marginTop: 4 }}>
-                {registeredMatch ? "Tap for suggested score and match context" : "Coach insight opens when this match is registered"}
-              </div>
-            </div>
+            )}
+
+            {registeredMatch && status !== "finished" && (
+              <button
+                className="coach-card coach-compact-link"
+                onClick={() => navigate(`/coach/${registeredMatch.id}`)}
+                type="button"
+              >
+                <div className="coach-label">{copy.coachLabel}</div>
+                <div style={{ fontSize: 16, fontWeight: 800, marginTop: 6 }}>
+                  {copy.coachTitle}
+                </div>
+                <div style={{ fontSize: 13, opacity: 0.82, marginTop: 4 }}>
+                  {copy.coachHelp}
+                </div>
+              </button>
+            )}
 
             {isOpen && (
               <>
-                <div className="section-title">Your forecast</div>
+                <div className="section-title">{copy.yourForecast}</div>
                 <div className="card forecast-input-card">
                   <div className="forecast-teams-line">
                     <span>{homeName}</span>
@@ -217,22 +342,22 @@ export function PredictionDetail() {
                     disabled={!home || !away || isPending || (!!registeredMatch && !isConnected)}
                   >
                     {registeredMatch && !isConnected
-                      ? "Connect wallet to submit"
+                      ? copy.connect
                       : isPending
-                        ? "Waiting for confirmation..."
-                        : "Submit prediction � Free"}
+                        ? copy.waiting
+                        : copy.submit}
                   </button>
 
                   {registeredMatch && !isConnected && (
                     <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-muted)", marginTop: 8 }}>
-                      Open in MiniPay or connect a Celo wallet
+                      {copy.openMiniPay}
                     </div>
                   )}
                 </div>
 
                 <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-muted)", marginTop: 12, lineHeight: 1.6 }}>
-                  Your prediction will be recorded on Celo for audit transparency.
-                  <br />It is not a bet. No entry fee. No prize pool.
+                  {copy.auditNote1}
+                  <br />{copy.auditNote2}
                 </div>
               </>
             )}
@@ -244,42 +369,60 @@ export function PredictionDetail() {
 }
 
 function SubmittedView({
-  match, home, away, txHash, onAudit,
+  match, home, away, txHash, isPreview, kickoffAt, lockedAt, locale, timezone, copy, onAudit, onMyPicks,
 }: {
   match: { home: string; away: string; id: string };
   home: number;
   away: number;
   txHash?: `0x${string}`;
+  isPreview: boolean;
+  kickoffAt: number;
+  lockedAt: number;
+  locale: string;
+  timezone: string;
+  copy: typeof DETAIL_COPY.en;
   onAudit: () => void;
+  onMyPicks: () => void;
 }) {
   return (
-    <div style={{ textAlign: "center", paddingTop: 32 }}>
-      <div className="success-mark" style={{ marginBottom: 12 }}>OK</div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>Prediction recorded!</h2>
-      <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 20 }}>
+    <div className="prediction-recorded">
+      <div className="record-ball" aria-hidden="true" />
+      <h2>{isPreview ? copy.savedTitle : copy.recordedTitle}</h2>
+      <p className="record-score">
         {match.home} {home} - {away} {match.away}
       </p>
 
-      <div className="card" style={{ marginBottom: 14, textAlign: "left" }}>
-        <div className="wallet-bar" style={{ marginBottom: 0 }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <circle cx="7" cy="7" r="7" fill="#35D07F" />
-            <circle cx="7" cy="7" r="3.5" fill="white" />
-          </svg>
-          Recorded on Celo
+      <div className="card record-card">
+        <div className="wallet-bar record-status">
+          <span className="status-dot dot-green" />
+          {isPreview ? copy.savedStatus : copy.recordedStatus}
         </div>
         {txHash && (
-          <div style={{ marginTop: 10, fontSize: 11, fontFamily: "monospace", color: "var(--text-muted)", wordBreak: "break-all" }}>
+          <div className="record-hash">
             {txHash}
           </div>
         )}
-        <div style={{ marginTop: 10, fontSize: 12, color: "var(--text-muted)" }}>
-          Your pick is committed on-chain. It cannot be edited after the prediction window closes.
+        <div className="record-copy">
+          {isPreview ? copy.savedBody : copy.recordedBody}
+        </div>
+
+        <div className="record-grid">
+          <span>{copy.kickoff}</span>
+          <strong>{formatDateTime(kickoffAt, locale)}</strong>
+          <span>{copy.deadline}</span>
+          <strong>{formatDateTime(lockedAt, locale)}</strong>
+          <span>{copy.timezone}</span>
+          <strong>{timezone}</strong>
         </div>
       </div>
 
-      <button className="btn btn-secondary" onClick={onAudit} style={{ marginBottom: 10 }}>
-        View on-chain audit
+      {!isPreview && (
+        <button className="btn btn-secondary" onClick={onAudit} style={{ marginBottom: 10 }}>
+          {copy.viewAudit}
+        </button>
+      )}
+      <button className="btn btn-primary" onClick={onMyPicks}>
+        {copy.viewPicks}
       </button>
     </div>
   );

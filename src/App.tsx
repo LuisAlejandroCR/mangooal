@@ -81,7 +81,7 @@ function AppShell() {
 }
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => typeof window !== "undefined" && window.location.pathname === "/");
 
   return (
     <WagmiProvider config={wagmiConfig}>

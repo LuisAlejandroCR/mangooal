@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../i18n";
 
@@ -46,16 +47,17 @@ function getMatchBadge(
 function formatKickoff(
   date: Date,
   copy: ReturnType<typeof useLanguage>["copy"],
+  now: number,
 ): string {
-  const now = new Date();
-  const diff = date.getTime() - now.getTime();
+  const diff = date.getTime() - now;
 
   if (diff < 0) return copy.matches.live;
 
-  const totalMinutes = Math.max(0, Math.floor(diff / 60_000));
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours < 24) return copy.matches.timeLeft(hours, minutes);
+  const totalSeconds = Math.max(0, Math.floor(diff / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours < 24) return copy.matches.timeLeft(hours, minutes, seconds);
 
   return date.toLocaleDateString(copy.matches.dateLocale, {
     weekday: "short",
@@ -67,6 +69,7 @@ function formatKickoff(
 function getStatusLabel(
   match: MatchData,
   copy: ReturnType<typeof useLanguage>["copy"],
+  now: number,
 ) {
   if (match.status === "live") {
     return match.clock ? `${copy.matches.live} - ${match.clock}` : copy.matches.live;
@@ -74,7 +77,7 @@ function getStatusLabel(
   if (match.status === "finished") return "FT";
   if (match.status === "locked") return copy.matches.locked;
 
-  return formatKickoff(match.lockedAt, copy);
+  return formatKickoff(match.lockedAt, copy, now);
 }
 
 function TeamMark({ value }: { value: string }) {
@@ -103,6 +106,13 @@ function formatVenue(value: string, locale: string) {
 export function MatchCard({ match }: { match: MatchData }) {
   const navigate = useNavigate();
   const { copy } = useLanguage();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (match.status !== "open") return undefined;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [match.status]);
 
   const canPredict = match.canPredict !== false;
   const isFifaPreview = match.competition.toLowerCase().includes("world cup") && match.source === "espn";
@@ -147,7 +157,7 @@ export function MatchCard({ match }: { match: MatchData }) {
           {getMatchBadge(match, copy)}
         </span>
 
-        <span className="match-time">{getStatusLabel(match, copy)}</span>
+        <span className="match-time">{getStatusLabel(match, copy, now)}</span>
       </div>
 
       <div className="match-teams">

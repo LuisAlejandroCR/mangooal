@@ -7,7 +7,6 @@ import {
   COMPETITIONS,
   MAX_VISIBLE_MATCHES,
   filterMatches,
-  getNextCompetition,
   toApiMatch,
   type CompetitionId,
   type MatchFilter,
@@ -57,7 +56,7 @@ export function Predictions() {
     <div className="screen">
       <div className="topbar">
         <span className="topbar-logo">
-          <span className="brand-ball">⚽</span> <span>Mangoo</span>al
+          <span className="brand-ball-icon" aria-hidden="true" /> <span>Mangoo</span>al
         </span>
 
         <div className="topbar-actions">
@@ -82,30 +81,28 @@ export function Predictions() {
       <div className="screen-body picks-body">
         <StablecoinBalances />
 
-        <button
-          className="campaign-banner campaign-banner-button"
-          onClick={() => selectCup(getNextCompetition(selectedCompetitionId).id)}
-          type="button"
-        >
+        <div className="campaign-banner">
           <div className="campaign-eyebrow">{copy.predictions.currentCup}</div>
           <div className="campaign-title">
             {copy.predictions.now}: {selectedCompetition.name}
           </div>
           <div className="campaign-meta">{selectedCompetition.description[language]}</div>
-</button>
-
-        <div className="cup-selector" aria-label="Cup selector">
-          {COMPETITIONS.map((competition) => (
-            <button
-              className={competition.id === selectedCompetitionId ? "active" : ""}
-              key={competition.id}
-              onClick={() => selectCup(competition.id)}
-              type="button"
-            >
-              {competition.marker}
-            </button>
-          ))}
         </div>
+
+        <label className="cup-select-row">
+          <span>{language === "es" ? "Cambiar copa" : "Cup"}</span>
+          <select
+            value={selectedCompetitionId}
+            onChange={(event) => selectCup(event.target.value as CompetitionId)}
+            aria-label="Cup selector"
+          >
+            {COMPETITIONS.map((competition) => (
+              <option key={competition.id} value={competition.id}>
+                {competition.marker} - {competition.name}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <div className="action-filter" aria-label="Match view">
           {([
@@ -162,12 +159,6 @@ export function Predictions() {
               </div>
             )}
           </div>
-        </div>
-
-        <div className="compliance-note">
-          {copy.predictions.complianceLine1}
-          <br />
-          {copy.predictions.complianceLine2}
         </div>
       </div>
     </div>

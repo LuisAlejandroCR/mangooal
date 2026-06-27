@@ -1,16 +1,28 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
-import { CeloBadge } from "../components/CeloBadge";
 import { useRevealPrediction } from "../hooks/useMangoalLedger";
 import { useMyPicks, type PickEntry, type PickStatus } from "../hooks/useMyPicks";
 import type { MatchConfig } from "../config/matches";
+import { getLocalPicks, type LocalPick } from "../utils/localPicks";
 
 const STATUS_LABELS: Record<PickStatus, { text: string; color: string }> = {
   none:      { text: "Not submitted",          color: "var(--text-muted)" },
   committed: { text: "Waiting for result",     color: "var(--text-muted)" },
-  revealed:  { text: "Revealed · Scoring soon", color: "var(--green)" },
+  revealed:  { text: "Revealed - Scoring soon", color: "var(--green)" },
   scored:    { text: "Scored",                 color: "var(--success)" },
 };
+
+function TeamMark({ value }: { value?: string | null }) {
+  if (!value) return null;
+  if (value.startsWith("http")) {
+    return <img className="team-logo" src={value} alt="" aria-hidden="true" loading="lazy" />;
+  }
+  if (value.length > 4 && !/^[A-Z]{2,4}$/.test(value)) {
+    return <span className="team-emoji" aria-hidden="true">{value}</span>;
+  }
+  return null;
+}
 
 function RevealButton({ match }: { match: MatchConfig }) {
   const { isConnected } = useAccount();
@@ -19,7 +31,7 @@ function RevealButton({ match }: { match: MatchConfig }) {
   if (txHash) {
     return (
       <div style={{ fontSize: 11, color: "var(--success)", marginTop: 8, fontWeight: 700 }}>
-        ✓ Revealed on Celo
+        Revealed on Celo
       </div>
     );
   }
@@ -65,7 +77,7 @@ function PickCard({ entry }: { entry: PickEntry }) {
         </span>
         {points !== null && points > 0 && (
           <span style={{ fontWeight: 800, color: isExact ? "var(--success)" : "var(--text)", fontSize: 15 }}>
-            {isExact ? "🎯 " : ""}{points} pts
+            {points} pts
           </span>
         )}
       </div>
@@ -76,13 +88,13 @@ function PickCard({ entry }: { entry: PickEntry }) {
         onClick={() => navigate(`/audit/${match.id}`)}
       >
         <div className="team-name" style={{ fontSize: 13 }}>
-          <div style={{ fontSize: 22, marginBottom: 2 }}>{match.homeFlag}</div>
+          <TeamMark value={match.homeFlag} />
           {match.home}
         </div>
         <div style={{ textAlign: "center" }}>
           {homeScore !== null ? (
             <div style={{ fontWeight: 800, fontSize: 18, color: "var(--green)" }}>
-              {homeScore} – {awayScore}
+              {homeScore} - {awayScore}
             </div>
           ) : (
             <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text-muted)" }}>
@@ -91,7 +103,7 @@ function PickCard({ entry }: { entry: PickEntry }) {
           )}
         </div>
         <div className="team-name" style={{ fontSize: 13 }}>
-          <div style={{ fontSize: 22, marginBottom: 2 }}>{match.awayFlag}</div>
+          <TeamMark value={match.awayFlag} />
           {match.away}
         </div>
       </div>
@@ -100,11 +112,9 @@ function PickCard({ entry }: { entry: PickEntry }) {
         style={{ marginTop: 8, fontSize: 11, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}
         onClick={() => navigate(`/audit/${match.id}`)}
       >
-        <CeloBadge variant="network" />
         <span>Tap to view on-chain audit</span>
       </div>
 
-      {/* Reveal: only show when past lockedAt and not yet revealed */}
       {canReveal && hasSalt && <RevealButton match={match} />}
       {canReveal && !hasSalt && (
         <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 8 }}>
@@ -115,21 +125,60 @@ function PickCard({ entry }: { entry: PickEntry }) {
   );
 }
 
+function LocalPickCard({ pick }: { pick: LocalPick }) {
+  return (
+    <div className="card local-pick-card">
+      <div className="local-pick-top">
+        <span>{pick.source === "celo" ? "Recorded on Celo" : "Saved in My Picks"}</span>
+        <time>{new Date(pick.savedAt).toLocaleString("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</time>
+      </div>
+      <div className="match-teams">
+        <div className="team-name" style={{ fontSize: 13 }}>
+          <TeamMark value={pick.homeMark} />
+          {pick.home}
+        </div>
+        <div style={{ fontWeight: 900, color: "var(--green-dark)", minWidth: 70, textAlign: "center" }}>
+          {pick.homeScore} - {pick.awayScore}
+        </div>
+        <div className="team-name" style={{ fontSize: 13 }}>
+          <TeamMark value={pick.awayMark} />
+          {pick.away}
+        </div>
+      </div>
+      <div className="local-pick-meta">
+        {pick.competition} - {new Date(pick.kickoffAt).toLocaleString("en", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+      </div>
+      {pick.txHash && <div className="record-hash">{pick.txHash}</div>}
+    </div>
+  );
+}
+
 export function MyPicks() {
   const { picks, isLoading } = useMyPicks();
+  const [localPicks, setLocalPicks] = useState<LocalPick[]>(() => getLocalPicks());
   const activePicks = picks.filter((p) => p.status !== "none");
   const totalPoints = activePicks.reduce((s, p) => s + (p.points ?? 0), 0);
+  const hasAnyPicks = activePicks.length > 0 || localPicks.length > 0;
+
+  useEffect(() => {
+    const refresh = () => setLocalPicks(getLocalPicks());
+    window.addEventListener("storage", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, []);
 
   return (
     <div className="screen">
       <div className="topbar">
-        <span className="topbar-logo">⚽ <span>Mangoo</span>al</span>
-        <CeloBadge variant="network" />
+        <span className="topbar-logo"><span className="brand-ball-icon" aria-hidden="true" /> <span>Mangoo</span>al</span>
+        <span />
       </div>
 
       <div className="screen-body" style={{ paddingTop: 16 }}>
-        {/* Summary card */}
-        {activePicks.length > 0 && (
+        {hasAnyPicks && (
           <div className="card" style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
@@ -138,7 +187,7 @@ export function MyPicks() {
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>Picks</div>
-                <div style={{ fontSize: 24, fontWeight: 800 }}>{activePicks.length}</div>
+                <div style={{ fontSize: 24, fontWeight: 800 }}>{activePicks.length + localPicks.length}</div>
               </div>
             </div>
           </div>
@@ -146,16 +195,18 @@ export function MyPicks() {
 
         <div className="section-title">My predictions</div>
 
+        {localPicks.map((pick) => <LocalPickCard key={pick.id} pick={pick} />)}
+
         {isLoading ? (
           <div className="card" style={{ textAlign: "center", color: "var(--text-muted)", padding: "24px 16px" }}>
-            Loading…
+            Loading...
           </div>
-        ) : activePicks.length === 0 ? (
+        ) : activePicks.length === 0 && localPicks.length === 0 ? (
           <div className="card" style={{ textAlign: "center", padding: "24px 16px" }}>
-            <div style={{ fontSize: 32, marginBottom: 10 }}>⚽</div>
+            <div className="brand-ball-icon large" aria-hidden="true" />
             <div style={{ fontWeight: 700, marginBottom: 6 }}>No picks yet</div>
             <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6 }}>
-              Head to the Predictions tab and submit your first pick — it's free!
+              Head to Picks and submit your first pick. It is free.
             </div>
           </div>
         ) : (

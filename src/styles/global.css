@@ -139,8 +139,8 @@ body { background: #f0ece0; }
   background: linear-gradient(135deg, #176B3A 0%, #2E9E57 100%);
   border-radius: var(--radius);
   color: white;
-  margin-bottom: 12px;
-  padding: 14px 16px;
+  margin-bottom: 8px;
+  padding: 12px 16px;
 }
 
 .campaign-banner-button {
@@ -165,16 +165,16 @@ body { background: #f0ece0; }
 }
 
 .campaign-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 850;
   line-height: 1.2;
 }
 
 .campaign-meta {
-  font-size: 13px;
-  line-height: 1.45;
-  margin-top: 4px;
-  opacity: 0.78;
+  font-size: 12px;
+  line-height: 1.35;
+  margin-top: 3px;
+  opacity: 0.82;
 }
 
 .campaign-next {
@@ -389,6 +389,7 @@ body { background: #f0ece0; }
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding-bottom: 82px;
 }
 
 .matches-panel {
@@ -400,7 +401,7 @@ body { background: #f0ece0; }
 
 .matches-scroll {
   flex: 1;
-  min-height: 0;
+  min-height: 342px;
   overflow-y: auto;
   padding-bottom: 8px;
 }
@@ -409,7 +410,6 @@ body { background: #f0ece0; }
   display: grid;
   gap: 6px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 8px;
 }
 
 .balance-chip {
@@ -417,11 +417,18 @@ body { background: #f0ece0; }
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 999px;
+  color: var(--text);
+  cursor: pointer;
   display: inline-flex;
   gap: 4px;
   justify-content: center;
   min-width: 0;
   padding: 6px 5px;
+}
+
+.balance-chip.selected {
+  border-color: var(--yellow-hover);
+  box-shadow: inset 0 0 0 1px var(--yellow-hover);
 }
 
 .token-dot {
@@ -669,7 +676,7 @@ body { background: #f0ece0; }
   background: var(--card);
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  padding: 12px 14px;
+  padding: 10px 14px;
   margin-bottom: 8px;
   cursor: pointer;
   transition: box-shadow 0.15s, transform 0.1s;
@@ -681,7 +688,7 @@ body { background: #f0ece0; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 8px 0 5px;
+  margin: 6px 0 4px;
 }
 
 .team-name {
@@ -1177,4 +1184,231 @@ body { background: #f0ece0; }
   background: #E8F5E9;
   border-color: var(--green);
   color: var(--green-dark);
+}
+
+.brand-ball-icon {
+  background: radial-gradient(circle at 35% 35%, #ffffff 0 18%, #2775CA 19% 34%, #ffffff 35% 47%, #1F2937 48% 55%, #2775CA 56% 100%);
+  border: 1px solid rgba(31, 41, 55, 0.18);
+  border-radius: 50%;
+  display: inline-block;
+  height: 20px;
+  margin-right: 4px;
+  vertical-align: -4px;
+  width: 20px;
+}
+
+.brand-ball-icon.large {
+  height: 34px;
+  margin: 0 auto 10px;
+  width: 34px;
+}
+
+.stablecoin-panel {
+  background: rgba(255, 255, 255, 0.64);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  padding: 8px;
+}
+
+.stablecoin-panel-head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.stablecoin-panel-head span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.stablecoin-panel-head strong {
+  color: var(--green-dark);
+  font-size: 11px;
+}
+
+.cup-select-row {
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: auto 1fr;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+}
+
+.cup-select-row span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.cup-select-row select {
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+  min-width: 0;
+  outline: none;
+  width: 100%;
+}
+
+.forecast-timezone {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  margin: -5px 0 8px;
+}
+
+.coach-compact-link {
+  border: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.finished-detail-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+  padding: 14px 16px;
+}
+
+.finished-detail-card div {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.finished-detail-card span {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.finished-detail-card strong {
+  color: var(--green-dark);
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.finished-detail-card p {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.prediction-recorded {
+  padding-top: 22px;
+  text-align: center;
+}
+
+.prediction-recorded h2 {
+  font-size: 23px;
+  font-weight: 900;
+  margin: 10px 0 5px;
+}
+
+.record-score {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+
+.record-ball {
+  animation: record-bounce 1.15s ease-in-out infinite;
+  background: radial-gradient(circle at 35% 35%, #ffffff 0 18%, #2775CA 19% 34%, #ffffff 35% 47%, #1F2937 48% 55%, #2775CA 56% 100%);
+  border: 2px solid rgba(31, 41, 55, 0.16);
+  border-radius: 50%;
+  box-shadow: 0 16px 22px rgba(23, 107, 58, 0.18);
+  height: 72px;
+  margin: 0 auto;
+  width: 72px;
+}
+
+@keyframes record-bounce {
+  0%, 100% { transform: translateY(0) rotate(-8deg); }
+  50% { transform: translateY(-12px) rotate(8deg); }
+}
+
+.record-card {
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.record-status {
+  margin-bottom: 10px;
+}
+
+.record-copy {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+
+.record-hash {
+  color: var(--text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  margin-top: 8px;
+  word-break: break-all;
+}
+
+.record-grid {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 8px 12px;
+  grid-template-columns: auto 1fr;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.record-grid span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.record-grid strong {
+  font-size: 12px;
+  text-align: right;
+}
+
+.local-pick-card {
+  margin-bottom: 10px;
+}
+
+.local-pick-top {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.local-pick-top span {
+  color: var(--green-dark);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.local-pick-top time,
+.local-pick-meta {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.local-pick-meta {
+  margin-top: 8px;
+  text-align: center;
 }
