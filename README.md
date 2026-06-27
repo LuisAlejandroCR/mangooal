@@ -2,11 +2,10 @@
 
 Mangooal is a MiniPay-native football prediction app for one narrow Celo Mainnet flow:
 
-`predict the score before kickoff, reveal it after lock, and prove it on-chain`
+`predict or edit the score before lock, read it from Celo anywhere, and score it on-chain`
 
 The app connects to the user's MiniPay or Celo wallet, lists FIFA World Cup 2026 matches,
-lets the user submit a free score prediction, and records the prediction through a
-commit-reveal audit trail on Celo Mainnet. Mangooal does not custody funds or private keys.
+lets the user submit or edit a free score prediction before lock, and records the pick directly on Celo Mainnet so MiniPay and browser show the same wallet state. Mangooal does not custody funds or private keys.
 It is free to play: no entry fees, no odds, no user-funded prize pools, and no staking.
 
 The source of truth for match schedules and live scores is external football data APIs.
@@ -20,7 +19,7 @@ stablecoins, and registered campaign IDs.
 | Network | Celo Mainnet (chainId 42220) |
 | Campaign | FIFA World Cup 2026 |
 | Game action | Free score predictions before each match lock |
-| On-chain proof | Commit-reveal prediction ledger |
+| On-chain proof | Editable public picks, wallet pick history, ranking stats, and Coach Pass history |
 | Paid feature | Coach Pass for analytics and UX only |
 | Rewards | Optional operator-funded promotional claims |
 | Core MiniPay payment assets | USDC, USDT, USDm |
@@ -31,14 +30,11 @@ stablecoins, and registered campaign IDs.
 1. User opens Mangooal in MiniPay or a Celo wallet browser.
 2. Mangooal loads active and upcoming matches from the server-side scores API.
 3. User chooses a match, enters an exact score, and confirms with their wallet.
-4. `useCommitPrediction` creates a random local salt and computes:
-   `keccak256(wallet, campaignId, matchId, homeScore, awayScore, salt)`.
-5. `commitPrediction` writes only that hash to `MangooalLedger` before the match lock time.
-6. The salt and score stay on the user's device until the reveal phase.
-7. After the match locks, `revealPrediction` sends the score and salt so the contract can verify
-   the committed hash.
-8. An oracle submits official results and records points after the match result is known.
-9. Rankings, stats, audits, Coach Pass state, and reward claims are re-read from the chain.
+4. `submitOrUpdatePick` stores the public score pick on `MangooalLedger` before the match lock time.
+5. The same wallet can edit the pick until lock, normally 30 minutes before kickoff.
+6. Browser and MiniPay read the same `getPick` / `getUserPicks` state from Celo.
+7. An oracle submits official results and records idempotent points after the match result is known.
+8. Rankings, stats, audits, Coach Pass state, and reward claims are re-read from the chain.
 
 The Coach Pass unlocks deeper match context, not better odds or better points. Promotional
 rewards are operator-signed and operator-funded; they are not funded by player entry fees.
@@ -65,18 +61,15 @@ status text can be localized by the API instead of by a hardcoded translation ta
 
 ## Blockchain contract
 
-Mangooal uses one Celo Mainnet contract as the source of truth for campaigns, matches,
-prediction commits, reveals, points, Coach Pass purchases, and promotional reward claims.
+Mangooal uses one Celo Mainnet contract as the source of truth for campaigns, matches, editable picks, My Picks history, ranking stats, Coach Pass purchases, and promotional reward claims.
 
 | Contract | Current address | Role |
 |---|---|---|
-| MangooalLedger | `0xCF00CaE3610cA8C410948C240b930c9cE3C03d66` | Campaign registry, match registry, commit-reveal predictions, points, Coach Passes, stablecoin allowlist, and reward claims |
+| MangooalLedger v1 | `0xCF00CaE3610cA8C410948C240b930c9cE3C03d66` | Current deployed ledger. Replace with the v2 deployment before using cross-platform picks as the canonical source. |
 
 ### Contract responsibilities
 
-`MangooalLedger` registers campaigns and matches, stores prediction commitments, verifies
-reveals, tracks points, handles Coach Pass purchases, and validates operator-signed promotional
-reward claims. It is intentionally not a betting contract:
+`MangooalLedger` registers campaigns and matches, stores editable public picks before lock, exposes wallet pick history for My Picks, tracks ranking stats, handles Coach Pass purchases with on-chain purchase history, and validates operator-signed promotional reward claims. It is intentionally not a betting contract:
 
 - No user-funded prize pools
 - No winner-takes-all mechanics
@@ -89,18 +82,18 @@ reward claims. It is intentionally not a betting contract:
 
 Before redeploying `MangooalLedger`, use [`docs/contract-v2-scenarios.md`](docs/contract-v2-scenarios.md) as the product and contract checklist. The v2 direction is to store editable public picks on Celo so Picks, My Picks, Ranking, and Coach Pass all read the same wallet state in MiniPay and browser without Supabase as the canonical source.
 
-### Prediction proof
+### Pick source of truth
 
 ```text
 User wallet
-  -> picks a match score before lock
-  -> frontend creates a private salt
-  -> frontend commits only a prediction hash on Celo
-  -> score and salt stay local until reveal
-  -> reveal verifies the original committed hash
-  -> oracle records official result and points
-  -> leaderboard and audit screens read chain state
+  -> picks or edits a match score before lock
+  -> submitOrUpdatePick stores the score on Celo
+  -> browser and MiniPay read the same getPick / getUserPicks state
+  -> oracle records official result and idempotent points
+  -> ranking, My Picks, and audit screens read chain state
 ```
+
+The legacy `commitPrediction` / `revealPrediction` functions remain in the ABI for compatibility, but v2 product flows should use `submitOrUpdatePick` so pending picks are portable across devices.
 
 ## Distribution model
 
@@ -109,7 +102,7 @@ FIFA World Cup 2026 campaign. The public repo and Vercel deployment are the deve
 auditor entry points, while MiniPay is the user entry point.
 
 Mangooal should keep the prediction flow simple before expanding campaigns: wallet connection,
-match list, prediction commit, local reveal data, on-chain audit, official results, points,
+match list, editable pick, on-chain audit, official results, points,
 ranking, Coach Pass, and optional promotional claims.
 
 Required production env vars:
