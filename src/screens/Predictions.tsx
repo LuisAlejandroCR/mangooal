@@ -47,8 +47,8 @@ export function Predictions() {
   const scheduleCount = filterMatches(selectedMatches, "schedule").length;
   const finishedCount = filterMatches(selectedMatches, "finished").length;
 
-  function switchCup() {
-    const nextCompetition = getNextCompetition(selectedCompetitionId);
+  function selectCup(id: CompetitionId) {
+    const nextCompetition = COMPETITIONS.find((competition) => competition.id === id) ?? COMPETITIONS[0];
     setSelectedCompetitionId(nextCompetition.id);
     setFilter(nextCompetition.current ? "schedule" : "all");
   }
@@ -62,14 +62,14 @@ export function Predictions() {
 
         <div className="topbar-actions">
           <LanguageToggle />
-          <a className="icon-button" href="https://mangooal.xyz/terms" target="_blank" rel="noreferrer" aria-label="Legal and support">
+          <a className="icon-button" href="/support" aria-label="Legal and support">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <path d="M9.1 9a3 3 0 1 1 5.8 1c-.4.9-1.2 1.4-2 2-.6.4-.9.8-.9 1.6" />
               <path d="M12 17h.01" />
             </svg>
           </a>
-          <button className="icon-button" type="button" aria-label="Notifications">
+          <button className="icon-button" type="button" aria-label="Notifications" onClick={() => navigate("/support")}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
@@ -84,7 +84,7 @@ export function Predictions() {
 
         <button
           className="campaign-banner campaign-banner-button"
-          onClick={switchCup}
+          onClick={() => selectCup(getNextCompetition(selectedCompetitionId).id)}
           type="button"
         >
           <div className="campaign-eyebrow">{copy.predictions.currentCup}</div>
@@ -93,6 +93,19 @@ export function Predictions() {
           </div>
           <div className="campaign-meta">{selectedCompetition.description[language]}</div>
 </button>
+
+        <div className="cup-selector" aria-label="Cup selector">
+          {COMPETITIONS.map((competition) => (
+            <button
+              className={competition.id === selectedCompetitionId ? "active" : ""}
+              key={competition.id}
+              onClick={() => selectCup(competition.id)}
+              type="button"
+            >
+              {competition.marker}
+            </button>
+          ))}
+        </div>
 
         <div className="action-filter" aria-label="Match view">
           {([

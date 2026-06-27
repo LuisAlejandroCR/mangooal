@@ -42,8 +42,10 @@ type Copy = {
   };
   matches: {
     live: string;
+    timeLeft: (hours: number, minutes: number) => string;
     hoursLeft: (hours: number) => string;
     locked: string;
+    missedPick: string;
     dateLocale: string;
     confirmedSchedule: string;
     notRegistered: string;
@@ -92,8 +94,10 @@ const COPY: Record<Language, Copy> = {
     },
     matches: {
       live: "Live",
+      timeLeft: (hours, minutes) => `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} left`,
       hoursLeft: (hours) => `${hours}h left`,
       locked: "Locked",
+      missedPick: "You did not pick this match.",
       dateLocale: "en",
       confirmedSchedule: "Confirmed schedule",
       notRegistered: "Preview only. Predictions open when this cup is ready.",
@@ -140,8 +144,10 @@ const COPY: Record<Language, Copy> = {
     },
     matches: {
       live: "En vivo",
+      timeLeft: (hours, minutes) => `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} restantes`,
       hoursLeft: (hours) => `${hours}h restantes`,
       locked: "Cerrado",
+      missedPick: "No hiciste pick en este partido.",
       dateLocale: "es",
       confirmedSchedule: "Calendario confirmado",
       notRegistered: "Vista previa. Las predicciones abren cuando esta copa este lista.",

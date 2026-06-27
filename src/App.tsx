@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { BrowserRouter, Routes, Route, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { wagmiConfig } from "./config/wagmi";
@@ -15,16 +15,39 @@ import { MyPicks } from "./screens/MyPicks";
 import { OnChainAudit } from "./screens/OnChainAudit";
 import { RewardClaim } from "./screens/RewardClaim";
 import { Stats } from "./screens/Stats";
+import { Support } from "./screens/Support";
 import { SplashScreen } from "./screens/SplashScreen";
 import { LanguageProvider } from "./i18n";
 
 const queryClient = new QueryClient();
-
 type RootTab = "picks" | "ranking" | "my-picks" | "coach-pass";
+const ROOT_TABS = new Set(["picks", "ranking", "my-picks", "coach-pass"]);
+
+function getStoredTab(): RootTab {
+  if (typeof window === "undefined") return "picks";
+  const stored = window.localStorage.getItem("mangooal:root-tab");
+  return ROOT_TABS.has(stored ?? "") ? (stored as RootTab) : "picks";
+}
 
 function RootTabs() {
   const [searchParams] = useSearchParams();
-  const tab = (searchParams.get("tab") ?? "picks") as RootTab;
+  const navigate = useNavigate();
+  const [tab, setTab] = useState<RootTab>(getStoredTab);
+
+  useEffect(() => {
+    const queryTab = searchParams.get("tab");
+    if (ROOT_TABS.has(queryTab ?? "")) {
+      window.localStorage.setItem("mangooal:root-tab", queryTab as RootTab);
+      setTab(queryTab as RootTab);
+      navigate("/", { replace: true });
+    }
+  }, [navigate, searchParams]);
+
+  useEffect(() => {
+    const onTab = () => setTab(getStoredTab());
+    window.addEventListener("mangooal:tab", onTab);
+    return () => window.removeEventListener("mangooal:tab", onTab);
+  }, []);
 
   if (tab === "ranking") return <Ranking />;
   if (tab === "my-picks") return <MyPicks />;
@@ -33,6 +56,9 @@ function RootTabs() {
 }
 
 function AppShell() {
+  const location = useLocation();
+  const showBottomNav = !location.pathname.startsWith("/support") && !location.pathname.startsWith("/terms");
+
   return (
     <>
       <Routes>
@@ -47,8 +73,9 @@ function AppShell() {
         <Route path="/audit/:id" element={<OnChainAudit />} />
         <Route path="/claim" element={<RewardClaim />} />
         <Route path="/stats" element={<Stats />} />
+        <Route path="/support" element={<Support />} />
       </Routes>
-      <BottomNav />
+      {showBottomNav && <BottomNav />}
     </>
   );
 }

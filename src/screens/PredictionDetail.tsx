@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { CeloBadge } from "../components/CeloBadge";
+import type { MatchData } from "../components/MatchCard";
 import { useCommitPrediction } from "../hooks/useMangoalLedger";
 import { getMatchById, matchStatus } from "../config/matches";
 import { findMatch, useEspnScores } from "../hooks/useEspnScores";
@@ -33,24 +34,29 @@ function TeamMark({ value }: { value?: string | null }) {
 export function PredictionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isConnected } = useAccount();
   const [home, setHome] = useState("");
   const [away, setAway] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const { commit, txHash, isPending, error } = useCommitPrediction();
 
-  const match = getMatchById(id ?? "");
-  const matchDate = match ? toEspnDateUTC(new Date(match.kickoffAt)) : undefined;
+  const registeredMatch = getMatchById(id ?? "");
+  const stateMatch = (location.state as { match?: MatchData } | null)?.match;
+  const activeMatch = registeredMatch ?? stateMatch;
+  const activeKickoffAt = registeredMatch?.kickoffAt ?? stateMatch?.kickoff.getTime() ?? 0;
+  const activeLockedAt = registeredMatch?.lockedAt ?? stateMatch?.lockedAt.getTime() ?? 0;
+  const matchDate = activeMatch ? toEspnDateUTC(new Date(activeKickoffAt)) : undefined;
   const { matches: espnMatches } = useEspnScores("fifa.world", matchDate);
-  const liveMatch = match ? findMatch(espnMatches, match.home, match.away) : null;
-  const status = match ? matchStatus(match) : null;
-  const isOpen = status === "open";
-  const homeName = liveMatch?.home ?? match?.home ?? "";
-  const awayName = liveMatch?.away ?? match?.away ?? "";
-  const homeMark = liveMatch?.homeLogo ?? match?.homeFlag;
-  const awayMark = liveMatch?.awayLogo ?? match?.awayFlag;
+  const liveMatch = activeMatch ? findMatch(espnMatches, activeMatch.home, activeMatch.away) : null;
+  const status = registeredMatch ? matchStatus(registeredMatch) : stateMatch?.status ?? null;
+  const isOpen = activeMatch ? Date.now() < activeLockedAt : false;
+  const homeName = liveMatch?.home ?? activeMatch?.home ?? "";
+  const awayName = liveMatch?.away ?? activeMatch?.away ?? "";
+  const homeMark = liveMatch?.homeLogo ?? activeMatch?.homeFlag;
+  const awayMark = liveMatch?.awayLogo ?? activeMatch?.awayFlag;
 
-  if (!match) {
+  if (!activeMatch) {
     return (
       <div className="screen">
         <div className="topbar">
@@ -69,11 +75,21 @@ export function PredictionDetail() {
   }
 
   async function handleSubmit() {
-    if (!home || !away || !match) return;
+    if (!home || !away || !activeMatch) return;
+
+    if (!registeredMatch) {
+      localStorage.setItem(
+        `mangooal:preview-pick:${activeMatch.id}`,
+        JSON.stringify({ homeScore: Number(home), awayScore: Number(away), savedAt: Date.now() })
+      );
+      setSubmitted(true);
+      return;
+    }
+
     try {
       await commit({
-        campaignId: match.campaignId,
-        matchId: match.matchId,
+        campaignId: registeredMatch.campaignId,
+        matchId: registeredMatch.matchId,
         homeScore: Number(home),
         awayScore: Number(away),
       });
@@ -95,24 +111,24 @@ export function PredictionDetail() {
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
-        <span className="topbar-logo" style={{ fontSize: 17 }}>{match.competition}</span>
+        <span className="topbar-logo" style={{ fontSize: 17 }}>{activeMatch.competition}</span>
         <CeloBadge variant="network" />
       </div>
 
       <div className="screen-body" style={{ paddingTop: 20 }}>
         {submitted ? (
           <SubmittedView
-            match={{ ...match, home: homeName, away: awayName }}
+            match={{ id: activeMatch.id, home: homeName, away: awayName }}
             home={Number(home)}
             away={Number(away)}
             txHash={txHash}
-            onAudit={() => navigate(`/audit/${match.id}`)}
+            onAudit={() => registeredMatch ? navigate(`/audit/${registeredMatch.id}`) : navigate(-1)}
           />
         ) : (
           <>
             <div className="forecast-match-card">
               <div className="forecast-date">
-                {match.competition} · {new Date(match.kickoffAt).toLocaleString("en", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                {activeMatch.competition} · {new Date(activeKickoffAt).toLocaleString("en", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
               </div>
               <div className="match-teams">
                 <div className="team-name">
@@ -135,11 +151,11 @@ export function PredictionDetail() {
 
             <div
               className="coach-card coach-compact-link"
-              onClick={() => navigate(`/coach/${match.id}`)}
+              onClick={() => registeredMatch && navigate(`/coach/${registeredMatch.id}`)}
               role="button"
               tabIndex={0}
               onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") navigate(`/coach/${match.id}`);
+                if ((event.key === "Enter" || event.key === " ") && registeredMatch) navigate(`/coach/${registeredMatch.id}`);
               }}
             >
               <div className="coach-label">Mangooal Coach insight</div>
@@ -147,7 +163,7 @@ export function PredictionDetail() {
                 Data-based pick · Recent-form analysis
               </div>
               <div style={{ fontSize: 13, opacity: 0.82, marginTop: 4 }}>
-                Tap for suggested score and match context
+                {registeredMatch ? "Tap for suggested score and match context" : "Coach insight opens when this match is registered"}
               </div>
             </div>
 
@@ -198,16 +214,16 @@ export function PredictionDetail() {
                   <button
                     className="btn btn-primary"
                     onClick={handleSubmit}
-                    disabled={!home || !away || isPending || !isConnected}
+                    disabled={!home || !away || isPending || (!!registeredMatch && !isConnected)}
                   >
-                    {!isConnected
+                    {registeredMatch && !isConnected
                       ? "Connect wallet to submit"
                       : isPending
                         ? "Waiting for confirmation..."
                         : "Submit prediction · Free"}
                   </button>
 
-                  {!isConnected && (
+                  {registeredMatch && !isConnected && (
                     <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-muted)", marginTop: 8 }}>
                       Open in MiniPay or connect a Celo wallet
                     </div>

@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useLanguage } from "../i18n";
 
 const TABS = [
@@ -15,7 +15,7 @@ const TABS = [
   },
   {
     tab: "ranking",
-    path: "/?tab=ranking",
+    path: "/",
     labelKey: "ranking",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -26,7 +26,7 @@ const TABS = [
   },
   {
     tab: "my-picks",
-    path: "/?tab=my-picks",
+    path: "/",
     labelKey: "myPicks",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -37,7 +37,7 @@ const TABS = [
   },
   {
     tab: "coach-pass",
-    path: "/?tab=coach-pass",
+    path: "/",
     labelKey: "coachPass",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -49,22 +49,25 @@ const TABS = [
 
 export function BottomNav() {
   const { pathname } = useLocation();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { copy } = useLanguage();
-  const activeTab = pathname === "/" ? searchParams.get("tab") ?? "picks" : "";
+  const activeTab = pathname === "/" ? window.localStorage.getItem("mangooal:root-tab") ?? "picks" : "";
 
   return (
     <nav className="bottom-nav">
       {TABS.map((tab) => {
         const label = copy.nav[tab.labelKey as keyof typeof copy.nav];
-        const active = pathname === tab.path || activeTab === tab.tab;
+        const active = pathname === "/" && activeTab === tab.tab;
 
         return (
           <button
-            key={tab.path}
+            key={tab.tab}
             className={`nav-item${active ? " active" : ""}`}
-            onClick={() => navigate(tab.path)}
+            onClick={() => {
+              window.localStorage.setItem("mangooal:root-tab", tab.tab);
+              window.dispatchEvent(new Event("mangooal:tab"));
+              navigate("/");
+            }}
             aria-label={label}
           >
             {tab.icon}

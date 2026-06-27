@@ -669,8 +669,8 @@ body { background: #f0ece0; }
   background: var(--card);
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  padding: 14px 16px;
-  margin-bottom: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
   cursor: pointer;
   transition: box-shadow 0.15s, transform 0.1s;
 }
@@ -681,7 +681,7 @@ body { background: #f0ece0; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 10px 0 6px;
+  margin: 8px 0 5px;
 }
 
 .team-name {
@@ -866,8 +866,8 @@ body { background: #f0ece0; }
 .pass-card {
   border: 2px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 16px;
-  margin-bottom: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
@@ -1153,4 +1153,28 @@ body { background: #f0ece0; }
   border-radius: var(--radius-sm);
   height: 74px;
   width: 74px;
+}
+.cup-selector {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0 0 10px;
+}
+
+.cup-selector button {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 900;
+  min-height: 30px;
+  padding: 6px 4px;
+}
+
+.cup-selector button.active {
+  background: #E8F5E9;
+  border-color: var(--green);
+  color: var(--green-dark);
 }

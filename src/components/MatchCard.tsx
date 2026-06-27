@@ -52,8 +52,10 @@ function formatKickoff(
 
   if (diff < 0) return copy.matches.live;
 
-  const hours = Math.floor(diff / 3_600_000);
-  if (hours < 24) return copy.matches.hoursLeft(hours);
+  const totalMinutes = Math.max(0, Math.floor(diff / 60_000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours < 24) return copy.matches.timeLeft(hours, minutes);
 
   return date.toLocaleDateString(copy.matches.dateLocale, {
     weekday: "short",
@@ -72,7 +74,7 @@ function getStatusLabel(
   if (match.status === "finished") return "FT";
   if (match.status === "locked") return copy.matches.locked;
 
-  return formatKickoff(match.kickoff, copy);
+  return formatKickoff(match.lockedAt, copy);
 }
 
 function TeamMark({ value }: { value: string }) {
@@ -89,11 +91,21 @@ function TeamMark({ value }: { value: string }) {
   return <span className="team-logo-placeholder" aria-hidden="true" />;
 }
 
+function formatVenue(value: string, locale: string) {
+  if (locale !== "es") return value;
+
+  return value
+    .replace(/\bStadium\b/g, "Estadio")
+    .replace(/\bField\b/g, "Campo")
+    .replace(/\bPark\b/g, "Parque");
+}
+
 export function MatchCard({ match }: { match: MatchData }) {
   const navigate = useNavigate();
   const { copy } = useLanguage();
 
   const canPredict = match.canPredict !== false;
+  const isFifaPreview = match.competition.toLowerCase().includes("world cup") && match.source === "espn";
   const hasLiveScore =
     match.homeScore !== undefined &&
     match.homeScore !== null &&
@@ -101,12 +113,12 @@ export function MatchCard({ match }: { match: MatchData }) {
     match.awayScore !== null;
 
   function handleOpen() {
-    if (!canPredict) {
+    if (!canPredict && !isFifaPreview) {
       alert(copy.matches.notRegistered);
       return;
     }
 
-    navigate(`/match/${match.id}`);
+    navigate(`/match/${match.id}`, { state: { match } });
   }
 
   return (
@@ -120,7 +132,7 @@ export function MatchCard({ match }: { match: MatchData }) {
           handleOpen();
         }
       }}
-      style={{ opacity: canPredict ? 1 : 0.78 }}
+      style={{ opacity: canPredict || isFifaPreview ? 1 : 0.78 }}
     >
       <div className="match-card-top">
         <span
@@ -173,13 +185,19 @@ export function MatchCard({ match }: { match: MatchData }) {
 
       {match.venue && (
         <div className="match-venue">
-          {match.venue}
+          {formatVenue(match.venue, copy.matches.dateLocale)}
         </div>
       )}
 
-      {!canPredict && (
+      {!canPredict && !isFifaPreview && (
         <div className="match-preview-note">
           {copy.matches.notRegistered}
+        </div>
+      )}
+
+      {match.status === "finished" && !match.userPick && (
+        <div className="match-preview-note">
+          {copy.matches.missedPick}
         </div>
       )}
 
