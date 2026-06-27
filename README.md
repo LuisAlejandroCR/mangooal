@@ -85,6 +85,10 @@ reward claims. It is intentionally not a betting contract:
 - Coach Pass is analytics/UX only
 - Promotional rewards are operator-distributed, not user-funded
 
+### Contract v2 planning
+
+Before redeploying `MangooalLedger`, use [`docs/contract-v2-scenarios.md`](docs/contract-v2-scenarios.md) as the product and contract checklist. The v2 direction is to store editable public picks on Celo so Picks, My Picks, Ranking, and Coach Pass all read the same wallet state in MiniPay and browser without Supabase as the canonical source.
+
 ### Prediction proof
 
 ```text
