@@ -7,23 +7,74 @@ import { getMatchById } from "../config/matches";
 import { useEspnScores, findMatch } from "../hooks/useEspnScores";
 import { useLanguage } from "../i18n";
 
+function parseRecordPoints(record?: string | null) {
+  if (!record) return null;
+  const parts = record.match(/(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/);
+  if (!parts) return null;
+
+  const wins = Number(parts[1] ?? 0);
+  const losses = Number(parts[2] ?? 0);
+  const draws = Number(parts[3] ?? 0);
+  const games = Math.max(1, wins + losses + draws);
+  return {
+    wins,
+    losses,
+    draws,
+    games,
+    pointsPerGame: (wins * 3 + draws) / games,
+  };
+}
+
 function getCoachContext(
   home: string,
   away: string,
   language: "en" | "es",
   homeRecord?: string | null,
-  awayRecord?: string | null
+  awayRecord?: string | null,
+  liveStatus?: string,
+  homeScore?: number | null,
+  awayScore?: number | null,
 ) {
-  const pending = language === "es" ? "forma pendiente" : "form pending";
+  const homeForm = parseRecordPoints(homeRecord);
+  const awayForm = parseRecordPoints(awayRecord);
+  const formDelta = (homeForm?.pointsPerGame ?? 1.35) - (awayForm?.pointsPerGame ?? 1.35);
+  const liveBias = liveStatus === "in_progress" && homeScore !== null && awayScore !== null
+    ? Math.max(-1, Math.min(1, (homeScore ?? 0) - (awayScore ?? 0)))
+    : 0;
+  const advantage = formDelta + liveBias * 0.45 + 0.18;
+
+  let homeGoals = 1;
+  let awayGoals = 1;
+  if (advantage > 0.85) {
+    homeGoals = 2;
+    awayGoals = 0;
+  } else if (advantage > 0.35) {
+    homeGoals = 2;
+    awayGoals = 1;
+  } else if (advantage < -0.85) {
+    homeGoals = 0;
+    awayGoals = 2;
+  } else if (advantage < -0.35) {
+    homeGoals = 1;
+    awayGoals = 2;
+  }
+
+  const confidenceValue = Math.min(78, Math.max(54, Math.round(58 + Math.abs(advantage) * 16)));
+  const pending = language === "es" ? "sin forma publica reciente" : "no recent public form";
   const homeText = homeRecord ? `${home}: ${homeRecord}` : `${home}: ${pending}`;
   const awayText = awayRecord ? `${away}: ${awayRecord}` : `${away}: ${pending}`;
+  const leader = advantage > 0.2 ? home : advantage < -0.2 ? away : language === "es" ? "partido equilibrado" : "balanced match";
   const summary = language === "es"
-    ? `${homeText}. ${awayText}. Espera un partido equilibrado hasta que haya mas datos publicos de forma reciente.`
-    : `${homeText}. ${awayText}. Expect a balanced match until fresher public form data is available.`;
+    ? `${homeText}. ${awayText}. El modelo favorece a ${leader} por forma publica, localia y estado del partido.`
+    : `${homeText}. ${awayText}. The model leans ${leader} using public form, venue context, and current match state.`;
 
   return {
-    suggestedScore: "1 - 1",
+    suggestedScore: `${homeGoals} - ${awayGoals}`,
+    confidence: `${confidenceValue}%`,
     summary,
+    drivers: language === "es"
+      ? ["Forma ESPN", "Localia", "Estado en vivo", "Volatilidad baja"]
+      : ["ESPN form", "Venue edge", "Live state", "Low volatility"],
   };
 }
 
@@ -45,7 +96,16 @@ export function CoachInsight() {
   const live = match ? findMatch(espnMatches, match.home, match.away) : null;
 
   const coach = useMemo(
-    () => getCoachContext(live?.home ?? match?.home ?? "", live?.away ?? match?.away ?? "", language, live?.homeRecord, live?.awayRecord),
+    () => getCoachContext(
+      live?.home ?? match?.home ?? "",
+      live?.away ?? match?.away ?? "",
+      language,
+      live?.homeRecord,
+      live?.awayRecord,
+      live?.status,
+      live?.homeScore,
+      live?.awayScore,
+    ),
     [language, live, match]
   );
 
@@ -110,7 +170,10 @@ export function CoachInsight() {
           <div className="coach-label">Mangooal Coach</div>
           <div className="coach-score">{coach.suggestedScore}</div>
           <div style={{ fontSize: 13, opacity: 0.85, fontWeight: 600 }}>
-            {c.publicContext}
+            {c.publicContext} - Confidence {coach.confidence}
+          </div>
+          <div className="coach-driver-list">
+            {coach.drivers.map((driver) => <span key={driver}>{driver}</span>)}
           </div>
           <div className="coach-disclaimer">
             {c.disclaimer}

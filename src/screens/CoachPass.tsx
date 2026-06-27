@@ -125,7 +125,6 @@ export function CoachPass() {
   const requiredAmount = PASS_AMOUNTS[currentPass.type]?.[selectedToken.symbol] ?? 0n;
   const userBalance = rawBalances[selectedToken.symbol] ?? 0n;
   const isLowBalance = isConnected && requiredAmount > 0n && userBalance < requiredAmount;
-  const latestTx = history[0]?.txHash ?? txHash;
 
   async function handleUnlock() {
     if (!isConnected) {
@@ -148,7 +147,7 @@ export function CoachPass() {
   }
 
   if (step === "done" && txHash) {
-    return <PassSuccessView txHash={txHash} />;
+    return <PassSuccessView />;
   }
 
   return (
@@ -178,13 +177,6 @@ export function CoachPass() {
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
           </button>
-          <button className="icon-button" onClick={() => navigate("/coach-pass/history")} type="button" aria-label={c.history}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 3v5h5" />
-              <path d="M3.05 13A9 9 0 1 0 5 5.3L3 8" />
-              <path d="M12 7v5l3 2" />
-            </svg>
-          </button>
           <LanguageToggle />
         </div>
       </div>
@@ -200,14 +192,6 @@ export function CoachPass() {
                 <div key={perk}><span className="status-dot dot-green" />{perk}</div>
               ))}
             </div>
-            {latestTx && (
-              <a className="btn btn-secondary" href={`https://celoscan.io/tx/${latestTx}`} target="_blank" rel="noreferrer">
-                {c.receipt}
-              </a>
-            )}
-            <button className="btn btn-primary" onClick={() => navigate("/coach-pass/history")} type="button">
-              {c.history}
-            </button>
           </div>
         ) : view === "overview" ? (
           <>
@@ -307,11 +291,11 @@ export function CoachPass() {
   );
 }
 
-function PassSuccessView({ txHash }: { txHash: `0x${string}` }) {
+function PassSuccessView() {
   const { language } = useLanguage();
   const c = language === "es"
-    ? { active: "Coach Pass activo", body: "Contexto de partidos desbloqueado.", receipt: "Ver recibo", history: "Historial" }
-    : { active: "Coach Pass active", body: "Deeper match insights are unlocked.", receipt: "View receipt", history: "History" };
+    ? { active: "Coach Pass activo", body: "Contexto de partidos desbloqueado." }
+    : { active: "Coach Pass active", body: "Deeper match insights are unlocked." };
   const navigate = useNavigate();
 
   return (
@@ -326,11 +310,8 @@ function PassSuccessView({ txHash }: { txHash: `0x${string}` }) {
           <div className="success-mark">OK</div>
           <h1>{c.active}</h1>
           <p>{c.body}</p>
-          <a className="btn btn-secondary" href={`https://celoscan.io/tx/${txHash}`} target="_blank" rel="noreferrer">
-            {c.receipt}
-          </a>
-          <button type="button" className="btn btn-primary" onClick={() => navigate("/coach-pass/history")}>
-            {c.history}
+          <button type="button" className="btn btn-primary" onClick={() => navigate("/")}>
+            Done
           </button>
         </div>
       </div>

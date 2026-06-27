@@ -1,4 +1,3 @@
-import { CeloBadge } from "../components/CeloBadge";
 import { useOnChainRanking, type RankEntry } from "../hooks/useOnChainRanking";
 import { CAMPAIGN_ID, CAMPAIGN_DISPLAY_NAME } from "../config/matches";
 
@@ -111,9 +110,9 @@ export function Ranking() {
     <div className="screen">
       <div className="topbar">
         <span className="topbar-logo">
-          ⚽ <span>Mangoo</span>al
+          <span className="brand-ball-icon" aria-hidden="true" /> <span>Mangoo</span>al
         </span>
-        <CeloBadge variant="network" />
+        <span />
       </div>
 
       <div className="screen-body" style={{ paddingTop: 16 }}>
