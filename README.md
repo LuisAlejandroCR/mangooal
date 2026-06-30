@@ -116,9 +116,29 @@ SPORTMONKS_API_KEY=
 `VITE_DEPLOY_BLOCK` should be set to the MangooalLedger deployment block in production so
 log reads can be scoped to the contract's lifetime.
 
-## MiniPay and public web model
+## Mangooal solution
 
-Mangooal now includes a wallet-free `/demo` tour for first-time users and reviewers. Use [`docs/minipay-and-web-model.md`](docs/minipay-and-web-model.md) as the product model for keeping the MiniPay flow auto-connected and lightweight while the public web flow supports discovery, support, stats, and connected-wallet play.
+Mangooal should stay small enough to pass the mom test:
+
+`Pick scores. Compete. Track your picks.`
+
+The product should not lead with chain, token, or payment language. Lead with play, competition, reminders, and optional rewards; use stablecoin names only in balance and payment contexts. Coach Pass is the paid layer, but it only unlocks better match context from public football data. It must never change points, ranking, eligibility, or the free pick loop.
+
+### MiniPay mode
+
+MiniPay is the primary distribution surface. Inside MiniPay, Mangooal should auto-connect, hide wallet setup, use only MiniPay-supported payment assets for transactions, keep screens short, and make the app name, support, terms, and privacy reachable from the visible UI. The Mini App should feel like a football game first and a Celo app second.
+
+### Public web mode
+
+The public web app should support discovery without forcing a wallet. `/demo` is the wallet-free tour for first-time users, reviewers, and social traffic. After the demo, users can connect a Celo wallet to play from the browser, while `/support`, `/stats`, `/matches`, and audit links stay available as public support and proof surfaces.
+
+### Growth model
+
+Start with the smallest loop and one strongest market. For Mangooal, that means free score picks around the active cup, Spanish-first LATAM distribution when that market is growing, and English as the second language. Add more competitions, languages, Coach features, or rewards only when they improve retention, direct user transactions, or daily active users.
+
+The contract architecture should keep user actions direct whenever possible. Picks, edits, Coach Pass purchases, reward claims, and ranking updates should be attributable to the user's wallet on Celo so MiniPay and browser stay aligned and Proof of Ship metrics reflect real users instead of only backend or paymaster activity.
+
+Distribution needs budget. Promotional rewards and creator campaigns should be treated as runway, not as a feature checklist. If a loop does not grow retention or repeat picks, cut it early before the app becomes hard to explain.
 
 ## Public routes
 

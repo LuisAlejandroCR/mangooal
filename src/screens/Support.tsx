@@ -10,6 +10,11 @@ export function Support() {
     legal: "Terminos principales",
     body: "Mangooal es un juego gratis de predicciones deportivas. No es apuesta, no usa cuotas y no tiene pozos financiados por usuarios.",
     coach: "Coach Pass agrega contexto de partidos. No afecta puntos, ranking ni recompensas promocionales.",
+    demo: "Tour demo",
+    demoBody: "Mira el flujo de picks sin conectar wallet. Ideal para probar Mangooal desde navegador antes de abrir MiniPay.",
+    demoAction: "Abrir demo",
+    model: "Modelo Mangooal",
+    modelBody: "Una sola accion principal: predice marcadores, compite y revisa tus picks. MiniPay conecta automaticamente; fuera de MiniPay, el usuario puede explorar primero y conectar despues.",
     notifications: "Notificaciones",
     note: "Las alertas se usan para recordatorios de partidos, estado de picks y recibos de Coach Pass.",
   } : {
@@ -17,6 +22,11 @@ export function Support() {
     legal: "Core terms",
     body: "Mangooal is a free sports prediction game. It is not betting, has no odds, and has no user-funded prize pools.",
     coach: "Coach Pass adds match context. It does not affect points, ranking, or promotional rewards.",
+    demo: "Demo tour",
+    demoBody: "Preview the pick flow without connecting a wallet. Useful from the public web before opening MiniPay.",
+    demoAction: "Open demo",
+    model: "Mangooal model",
+    modelBody: "One core action: pick scores, compete, and track your picks. MiniPay connects automatically; outside MiniPay, people can explore first and connect later.",
     notifications: "Notifications",
     note: "Alerts are used for match reminders, pick status, and Coach Pass receipts.",
   };
@@ -34,6 +44,17 @@ export function Support() {
         <LanguageToggle />
       </div>
       <div className="screen-body" style={{ paddingTop: 16 }}>
+        <div className="card" style={{ marginBottom: 12 }}>
+          <div className="section-title" style={{ marginTop: 0 }}>{c.demo}</div>
+          <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6 }}>{c.demoBody}</p>
+          <button className="btn btn-primary" type="button" onClick={() => navigate("/demo")} style={{ marginTop: 12 }}>
+            {c.demoAction}
+          </button>
+        </div>
+        <div className="card" style={{ marginBottom: 12 }}>
+          <div className="section-title" style={{ marginTop: 0 }}>{c.model}</div>
+          <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6 }}>{c.modelBody}</p>
+        </div>
         <div className="card" style={{ marginBottom: 12 }}>
           <div className="section-title" style={{ marginTop: 0 }}>{c.legal}</div>
           <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6 }}>{c.body}</p>
