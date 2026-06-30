@@ -122,23 +122,45 @@ Mangooal should stay small enough to pass the mom test:
 
 `Pick scores. Compete. Track your picks.`
 
-The product should not lead with chain, token, or payment language. Lead with play, competition, reminders, and optional rewards; use stablecoin names only in balance and payment contexts. Coach Pass is the paid layer, but it only unlocks better match context from public football data. It must never change points, ranking, eligibility, or the free pick loop.
+That is the whole first version. The app should not become a giant sports portal, casino, wallet dashboard, or analytics terminal. The winning shape is one simple loop that a football fan understands in seconds: choose a match, predict the score, come back for the result, and see the ranking.
+
+### Product rule
+
+Keep every feature under this test: does it make people submit more free picks, return for results, invite friends, or understand the next match faster? If not, cut it or move it to support/stats. UX matters more than Celo terminology. The user-facing copy should lead with play, compete, picks, reminders, ranking, and optional rewards. Use stablecoin names only in balance and payment contexts, and keep Celo/on-chain language as proof, not the headline.
+
+Coach Pass is the paid layer, but it only unlocks better match context from public football data. It must never change points, ranking, eligibility, match outcomes, or the free pick loop. Treat it as a coach beside the user, not as an advantage engine.
 
 ### MiniPay mode
 
-MiniPay is the primary distribution surface. Inside MiniPay, Mangooal should auto-connect, hide wallet setup, use only MiniPay-supported payment assets for transactions, keep screens short, and make the app name, support, terms, and privacy reachable from the visible UI. The Mini App should feel like a football game first and a Celo app second.
+MiniPay is the primary distribution surface. Inside MiniPay, Mangooal should auto-connect, hide wallet setup, avoid seed phrase or network explanations, use only MiniPay-supported payment assets for transactions, keep screens short, and make the app name, support, terms, and privacy reachable from the visible UI. The Mini App should feel like a football game first and a Celo app second.
+
+The main MiniPay path should stay short:
+
+`Open app -> pick match -> submit score -> check My Picks -> return for result`
+
+Do not show a connect-wallet education flow in MiniPay. MiniPay users should feel they are playing, not learning infrastructure.
 
 ### Public web mode
 
-The public web app should support discovery without forcing a wallet. `/demo` is the wallet-free tour for first-time users, reviewers, and social traffic. After the demo, users can connect a Celo wallet to play from the browser, while `/support`, `/stats`, `/matches`, and audit links stay available as public support and proof surfaces.
+The public web app is discovery, demo, trust, and support. It should not block new visitors with wallet requirements. `/demo` is the wallet-free tour for first-time users, reviewers, and social traffic from X, Telegram, WhatsApp, TikTok, Instagram, and friends. After the demo, users can connect a Celo wallet to play from the browser, while `/support`, `/stats`, `/matches`, and audit links stay available as public support and proof surfaces.
+
+For users outside MiniPay, Mangooal can support a normal Celo wallet connection. If the public audience grows beyond Celo-native users, evaluate embedded wallet providers for onboarding, but keep MiniPay auto-connect as the cleanest path inside MiniPay.
+
+### Contract and metrics model
+
+The contract architecture should keep user actions direct whenever possible. Picks, edits, Coach Pass purchases, reward claims, and ranking-relevant actions should be attributable to the user's wallet on Celo so MiniPay and browser stay aligned and Proof of Ship metrics reflect real users instead of only backend or paymaster activity.
+
+Avoid a setup where a backend, relayer, or paymaster becomes the only visible actor for user activity. If gas sponsorship is added later, preserve direct user attribution in events and analytics. The product scorecard should watch daily active users, direct user transactions, repeat picks, network fees paid, failed transaction rate, and retention by campaign.
 
 ### Growth model
 
 Start with the smallest loop and one strongest market. For Mangooal, that means free score picks around the active cup, Spanish-first LATAM distribution when that market is growing, and English as the second language. Add more competitions, languages, Coach features, or rewards only when they improve retention, direct user transactions, or daily active users.
 
-The contract architecture should keep user actions direct whenever possible. Picks, edits, Coach Pass purchases, reward claims, and ranking updates should be attributable to the user's wallet on Celo so MiniPay and browser stay aligned and Proof of Ship metrics reflect real users instead of only backend or paymaster activity.
+Do not add languages or modes just because they are easy to build. Each one has an operating cost: copy, support, moderation, rewards, QA, and marketing. If Spanish users in Colombia/LATAM are growing fastest, deepen that loop before expanding. Retaining current users is cheaper than acquiring cold users.
 
-Distribution needs budget. Promotional rewards and creator campaigns should be treated as runway, not as a feature checklist. If a loop does not grow retention or repeat picks, cut it early before the app becomes hard to explain.
+Distribution needs budget. Promotional rewards and creator campaigns should be treated as runway, not as a feature checklist. Early growth comes from friends, X, Telegram, WhatsApp, family, community, and your own audience. When that ceiling appears, use creator campaigns with explicit caps and metrics, for example approved short videos with a fixed cost per view and maximum payout per creator.
+
+Kill slow loops early. It is easier to remove a small feature than to maintain a monster that took months to build. Mangooal should earn expansion by proving that one cup, one pick loop, and one market can generate repeat play.
 
 ## Public routes
 
