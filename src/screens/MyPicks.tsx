@@ -197,8 +197,10 @@ export function MyPicks() {
   const { picks, isLoading } = useMyPicks();
   const [localPicks, setLocalPicks] = useState<LocalPick[]>(() => getLocalPicks(address));
   const activePicks = picks.filter((p) => p.status !== "none");
+  const activePickIds = new Set(activePicks.map((pick) => pick.match.id));
+  const visibleLocalPicks = localPicks.filter((pick) => !activePickIds.has(pick.id));
   const totalPoints = activePicks.reduce((s, p) => s + (p.points ?? 0), 0);
-  const hasAnyPicks = activePicks.length > 0 || localPicks.length > 0;
+  const hasAnyPicks = activePicks.length > 0 || visibleLocalPicks.length > 0;
 
   useEffect(() => {
     const refresh = () => setLocalPicks(getLocalPicks(address));
@@ -247,7 +249,7 @@ export function MyPicks() {
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>Picks</div>
-                <div style={{ fontSize: 24, fontWeight: 800 }}>{activePicks.length + localPicks.length}</div>
+                <div style={{ fontSize: 24, fontWeight: 800 }}>{activePicks.length + visibleLocalPicks.length}</div>
               </div>
             </div>
           </div>
@@ -255,13 +257,13 @@ export function MyPicks() {
 
         <div className="section-title">My predictions</div>
 
-        {localPicks.map((pick) => <LocalPickCard key={pick.id} pick={pick} isConnected={isConnected} />)}
+        {visibleLocalPicks.map((pick) => <LocalPickCard key={pick.id} pick={pick} isConnected={isConnected} />)}
 
         {isLoading ? (
           <div className="card" style={{ textAlign: "center", color: "var(--text-muted)", padding: "24px 16px" }}>
             Loading...
           </div>
-        ) : activePicks.length === 0 && localPicks.length === 0 ? (
+        ) : activePicks.length === 0 && visibleLocalPicks.length === 0 ? (
           <div className="card" style={{ textAlign: "center", padding: "24px 16px" }}>
             <div className="brand-ball-icon large" aria-hidden="true" />
             <div style={{ fontWeight: 700, marginBottom: 6 }}>No picks yet</div>
