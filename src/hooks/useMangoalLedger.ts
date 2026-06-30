@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useWriteContract, useReadContract, useAccount, usePublicClient } from "wagmi";
-import { keccak256, encodePacked, toHex, parseUnits } from "viem";
+import { parseUnits } from "viem";
 import { celo } from "viem/chains";
 import { MANGOAL_LEDGER_ABI } from "../contracts/mangoalLedger.abi";
 import { ERC20_ABI } from "../contracts/erc20.abi";
@@ -72,8 +72,8 @@ export function getSaltForReveal(matchId: string, address: string) {
   return { salt, scores };
 }
 
-// ── commitPrediction ────────────────────────────────────────────────────────
-// Computes predictionHash off-chain, stores salt locally, sends commitPrediction tx.
+// submitOrUpdatePick keeps the legacy hook name for existing screens, but writes
+// the v2 public pick so My Picks stays portable between MiniPay and browser.
 export function useCommitPrediction() {
   const { address } = useAccount();
   const { writeContractAsync, isPending, error } = useWriteContract();
@@ -92,43 +92,26 @@ export function useCommitPrediction() {
   }) {
     if (!address) throw new Error("Wallet not connected");
 
-    const saltBytes = new Uint8Array(32);
-    crypto.getRandomValues(saltBytes);
-    const salt = toHex(saltBytes) as `0x${string}`;
-
-    // Mirrors: keccak256(abi.encodePacked(msg.sender, campaignId, matchId, homeScore, awayScore, salt))
-    const predictionHash = keccak256(
-      encodePacked(
-        ["address", "bytes32", "bytes32", "uint8", "uint8", "bytes32"],
-        [address, campaignId, matchId, homeScore, awayScore, salt]
-      )
-    );
-
     const hash = await writeContractAsync({
       chainId: celo.id,
       address: MANGOAL_LEDGER_ADDRESS,
       abi: MANGOAL_LEDGER_ABI,
-      functionName: "commitPrediction",
-      args: [campaignId, matchId, predictionHash],
+      functionName: "submitOrUpdatePick",
+      args: [campaignId, matchId, homeScore, awayScore],
       type: "legacy",
     });
 
-    // Persist salt + scores locally so the reveal phase can reconstruct the hash
-    localStorage.setItem(saltKey(matchId, address), salt);
-    localStorage.setItem(scoresKey(matchId, address), JSON.stringify({ homeScore, awayScore }));
-
-    // Persist tx hash locally so OnChainAudit can link to Celoscan from this device
     localStorage.setItem(txHashKey(matchId, address), hash);
 
     setTxHash(hash);
     analytics.predictionCommitted(campaignId, matchId);
-    return { hash, predictionHash };
+    return { hash, predictionHash: null };
   }
 
   return { commit, txHash, isPending, error };
 }
 
-// ── hasActiveCoachPass ──────────────────────────────────────────────────────
+// hasActiveCoachPass
 export function useHasActiveCoachPass(walletAddress?: `0x${string}`) {
   // Fallback to zero address when undefined — query is disabled anyway,
   // but we need a valid args type to satisfy wagmi's strict generics.

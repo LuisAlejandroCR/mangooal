@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const readmePath = join(root, "README.md");
 const guardrailPath = join(root, "src", "config", "productGuardrails.ts");
+const ledgerHookPath = join(root, "src", "hooks", "useMangoalLedger.ts");
 const removedModelDoc = join(root, "docs", "minipay-and-web-model.md");
 
 const expectedIds = [
@@ -19,6 +20,7 @@ const expectedIds = [
 
 const readme = readFileSync(readmePath, "utf8");
 const guardrails = readFileSync(guardrailPath, "utf8");
+const ledgerHook = readFileSync(ledgerHookPath, "utf8");
 const failures = [];
 
 function expect(condition, message) {
@@ -35,6 +37,8 @@ expect(readme.includes("### Traceable product blocks"), "README.md is missing tr
 expect(readme.includes("MiniPay users auto-connect"), "README.md must keep the MiniPay auto-connect rule explicit");
 expect(readme.includes("Direct user attribution"), "README.md must keep the user-attribution contract rule explicit");
 expect(!existsSync(removedModelDoc), "docs/minipay-and-web-model.md should stay removed from the repo");
+expect(ledgerHook.includes(`functionName: "submitOrUpdatePick"`), "Primary pick submission must use submitOrUpdatePick");
+expect(!ledgerHook.includes(`functionName: "commitPrediction"`), "Primary pick submission must not use legacy commitPrediction");
 
 const duplicateIds = expectedIds.filter((id, index) => expectedIds.indexOf(id) !== index);
 expect(duplicateIds.length === 0, `Duplicate expected guardrail ids: ${duplicateIds.join(", ")}`);
