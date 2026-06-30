@@ -1,9 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import { useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { useMiniPay } from "../hooks/useMiniPay";
 import { useLanguage } from "../i18n";
 
 export function WalletRequired() {
+  const navigate = useNavigate();
   const { language } = useLanguage();
   const { isMiniPay } = useMiniPay();
   const { connect, isPending } = useConnect();
@@ -14,6 +16,7 @@ export function WalletRequired() {
         miniPay: "Abre Mangooal desde MiniPay para conectar automaticamente.",
         action: "Conectar wallet",
         pending: "Conectando...",
+        tour: "Ver tour demo",
       }
     : {
         title: "Connect wallet",
@@ -21,6 +24,7 @@ export function WalletRequired() {
         miniPay: "Open Mangooal inside MiniPay to connect automatically.",
         action: "Connect wallet",
         pending: "Connecting...",
+        tour: "View demo tour",
       };
 
   return (
@@ -39,6 +43,9 @@ export function WalletRequired() {
             {isPending ? copy.pending : copy.action}
           </button>
         )}
+        <button className="btn btn-secondary" type="button" onClick={() => navigate("/demo")}>
+          {copy.tour}
+        </button>
       </div>
     </div>
   );

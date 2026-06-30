@@ -16,6 +16,7 @@ import { OnChainAudit } from "./screens/OnChainAudit";
 import { RewardClaim } from "./screens/RewardClaim";
 import { Stats } from "./screens/Stats";
 import { Support } from "./screens/Support";
+import { DemoTour } from "./screens/DemoTour";
 import { SplashScreen } from "./screens/SplashScreen";
 import { LanguageProvider } from "./i18n";
 
@@ -57,7 +58,7 @@ function RootTabs() {
 
 function AppShell() {
   const location = useLocation();
-  const showBottomNav = !location.pathname.startsWith("/support") && !location.pathname.startsWith("/terms");
+  const showBottomNav = !location.pathname.startsWith("/support") && !location.pathname.startsWith("/terms") && !location.pathname.startsWith("/demo");
 
   return (
     <>
@@ -74,6 +75,7 @@ function AppShell() {
         <Route path="/claim" element={<RewardClaim />} />
         <Route path="/stats" element={<Stats />} />
         <Route path="/support" element={<Support />} />
+        <Route path="/demo" element={<DemoTour />} />
       </Routes>
       {showBottomNav && <BottomNav />}
     </>

@@ -116,11 +116,16 @@ SPORTMONKS_API_KEY=
 `VITE_DEPLOY_BLOCK` should be set to the MangooalLedger deployment block in production so
 log reads can be scoped to the contract's lifetime.
 
+## MiniPay and public web model
+
+Mangooal now includes a wallet-free `/demo` tour for first-time users and reviewers. Use [`docs/minipay-and-web-model.md`](docs/minipay-and-web-model.md) as the product model for keeping the MiniPay flow auto-connected and lightweight while the public web flow supports discovery, support, stats, and connected-wallet play.
+
 ## Public routes
 
 | Route | Purpose |
 |---|---|
 | `/` | MiniPay app entry point. Main tabs keep the visible URL at `/` and store tab state locally. Legacy `?tab=` links are accepted and replaced back to `/`. |
+| `/demo` | Wallet-free demo tour for first-time users, reviewers, and public web visitors |
 | `/matches` | Full match list for the selected cup and filter |
 | `/match/:id` | Score prediction screen for one match |
 | `/coach/:id` | Coach insight and Coach Pass upsell |
