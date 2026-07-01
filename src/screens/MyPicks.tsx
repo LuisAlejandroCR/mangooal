@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { useRevealPrediction } from "../hooks/useMangoalLedger";
 import { useMyPicks, type PickEntry, type PickStatus } from "../hooks/useMyPicks";
-import type { MatchConfig } from "../config/matches";
+import { COPA_MATCHES, type MatchConfig } from "../config/matches";
 import { getLocalPicks, type LocalPick } from "../utils/localPicks";
+import { parseContractError } from "../utils/parseContractError";
 import { WalletRequired } from "../components/WalletRequired";
 
 const STATUS_LABELS: Record<PickStatus, { text: string; color: string }> = {
@@ -53,8 +54,8 @@ function RevealButton({ match }: { match: MatchConfig }) {
         {isPending ? "Revealing..." : "Reveal prediction"}
       </button>
       {error && (
-        <div style={{ fontSize: 11, color: "#B91C1C", marginTop: 4 }}>
-          {error.message}
+        <div style={{ fontSize: 12, color: "#B91C1C", marginTop: 6, lineHeight: 1.5 }}>
+          {parseContractError(error, "Reveal failed. Please try again.")}
         </div>
       )}
     </div>
@@ -65,10 +66,32 @@ function PickCard({ entry }: { entry: PickEntry }) {
   const navigate = useNavigate();
   const { match, status, homeScore, awayScore, points, canReveal, hasSalt } = entry;
   const statusMeta = STATUS_LABELS[status];
-  const isExact =
-    status === "scored" &&
-    homeScore !== null &&
-    awayScore !== null;
+  const isScored = status === "scored";
+  const isExact = isScored && points === 5;
+  const isRightOutcome = isScored && points === 2;
+  const [copied, setCopied] = useState(false);
+
+  async function handleShare() {
+    const scoreText = homeScore !== null ? `${homeScore}–${awayScore}` : "?–?";
+    const headline = isExact
+      ? "I called the exact score!"
+      : isRightOutcome
+        ? "I got the right winner!"
+        : "My pick";
+    const text = `⚽ ${headline}\n${match.home} ${scoreText} ${match.away}\n${match.competition}`;
+    const url = `${window.location.origin}/audit/${match.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Mangooal", text, url });
+      } else {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2_000);
+      }
+    } catch {
+      // user dismissed
+    }
+  }
 
   return (
     <div className="card" style={{ marginBottom: 10 }}>
@@ -82,6 +105,23 @@ function PickCard({ entry }: { entry: PickEntry }) {
           </span>
         )}
       </div>
+
+      {isExact && (
+        <div style={{
+          background: "var(--success)", color: "#fff", borderRadius: 6,
+          padding: "4px 10px", fontSize: 12, fontWeight: 700, marginBottom: 8, textAlign: "center",
+        }}>
+          Exact score! You called it
+        </div>
+      )}
+      {isRightOutcome && (
+        <div style={{
+          background: "#3B82F6", color: "#fff", borderRadius: 6,
+          padding: "4px 10px", fontSize: 12, fontWeight: 700, marginBottom: 8, textAlign: "center",
+        }}>
+          Right outcome!
+        </div>
+      )}
 
       <div
         className="match-teams"
@@ -121,6 +161,25 @@ function PickCard({ entry }: { entry: PickEntry }) {
         <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 8 }}>
           Reveal data not found on this device. Open on the device where you submitted the prediction.
         </div>
+      )}
+
+      {isScored && (
+        <button
+          onClick={handleShare}
+          style={{
+            marginTop: 10, width: "100%", padding: "8px 0",
+            border: "1px solid var(--border)", borderRadius: 8,
+            background: "transparent", cursor: "pointer",
+            fontSize: 13, fontWeight: 600, color: "var(--text)",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+          </svg>
+          {copied ? "Copied!" : "Share result"}
+        </button>
       )}
     </div>
   );
@@ -202,6 +261,25 @@ export function MyPicks() {
   const totalPoints = activePicks.reduce((s, p) => s + (p.points ?? 0), 0);
   const hasAnyPicks = activePicks.length > 0 || visibleLocalPicks.length > 0;
 
+  const submittedIds = useMemo(() => {
+    const ids = new Set(activePicks.map((p) => p.match.id));
+    visibleLocalPicks.forEach((p) => ids.add(p.id));
+    return ids;
+  }, [activePicks, visibleLocalPicks]);
+
+  const streak = useMemo(() => {
+    const now = Date.now();
+    const locked = [...COPA_MATCHES]
+      .filter((m) => m.lockedAt <= now)
+      .sort((a, b) => a.kickoffAt - b.kickoffAt);
+    let count = 0;
+    for (let i = locked.length - 1; i >= 0; i--) {
+      if (submittedIds.has(locked[i].id)) count++;
+      else break;
+    }
+    return count;
+  }, [submittedIds]);
+
   useEffect(() => {
     const refresh = () => setLocalPicks(getLocalPicks(address));
     refresh();
@@ -247,6 +325,12 @@ export function MyPicks() {
                 <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>Total points</div>
                 <div style={{ fontSize: 32, fontWeight: 900, color: "var(--green)" }}>{totalPoints}</div>
               </div>
+              {streak >= 2 && (
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>Streak</div>
+                  <div style={{ fontSize: 24, fontWeight: 800, color: "#F59E0B" }}>🔥 {streak}</div>
+                </div>
+              )}
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>Picks</div>
                 <div style={{ fontSize: 24, fontWeight: 800 }}>{activePicks.length + visibleLocalPicks.length}</div>

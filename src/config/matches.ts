@@ -52,9 +52,9 @@ export const COPA_MATCHES: MatchConfig[] = [
     matchId: keccak256(toHex("wc26-r32-02")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
     home: "Germany",
-    away: "TBD",             // Best 3rd (Groups A/B/C/D/F) — fill in June 28
+    away: "Paraguay",
     homeFlag: "🇩🇪",
-    awayFlag: "🏴",
+    awayFlag: "🇵🇾",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_782_765_000_000,  // 2026-06-29 20:30 UTC — Gillette Stadium, Foxborough MA
     lockedAt:  1_782_763_200_000,  // 2026-06-29 20:00 UTC
@@ -77,9 +77,9 @@ export const COPA_MATCHES: MatchConfig[] = [
     matchId: keccak256(toHex("wc26-r32-04")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
     home: "Ivory Coast",
-    away: "TBD",             // Group I Runner-up — fill in June 28
+    away: "Norway",
     homeFlag: "🇨🇮",
-    awayFlag: "🏴",
+    awayFlag: "🇳🇴",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_782_838_800_000,  // 2026-06-30 17:00 UTC — AT&T Stadium, Arlington TX
     lockedAt:  1_782_837_000_000,  // 2026-06-30 16:30 UTC
@@ -88,10 +88,10 @@ export const COPA_MATCHES: MatchConfig[] = [
     id: "wc26-r32-05",
     matchId: keccak256(toHex("wc26-r32-05")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
-    home: "TBD",             // Best 3rd (Groups C/D/F/G/H) — fill in June 28
-    away: "TBD",             // Group I Winner — fill in June 28
-    homeFlag: "🏴",
-    awayFlag: "🏴",
+    home: "France",
+    away: "Sweden",
+    homeFlag: "🇫🇷",
+    awayFlag: "🇸🇪",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_782_853_200_000,  // 2026-06-30 21:00 UTC — MetLife Stadium, East Rutherford NJ
     lockedAt:  1_782_851_400_000,  // 2026-06-30 20:30 UTC
@@ -100,9 +100,9 @@ export const COPA_MATCHES: MatchConfig[] = [
     id: "wc26-r32-06",
     matchId: keccak256(toHex("wc26-r32-06")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
-    home: "TBD",             // Best 3rd (Groups C/E/F/H/I) — fill in June 28
+    home: "Ecuador",
     away: "Mexico",
-    homeFlag: "🏴",
+    homeFlag: "🇪🇨",
     awayFlag: "🇲🇽",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_782_867_600_000,  // 2026-07-01 01:00 UTC — Estadio BBVA, Guadalupe MX
@@ -113,10 +113,10 @@ export const COPA_MATCHES: MatchConfig[] = [
     id: "wc26-r32-07",
     matchId: keccak256(toHex("wc26-r32-07")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
-    home: "TBD",             // Group L Winner — fill in June 28
-    away: "TBD",             // Best 3rd (Groups E/H/I/J/K) — fill in June 28
-    homeFlag: "🏴",
-    awayFlag: "🏴",
+    home: "England",
+    away: "Congo DR",
+    homeFlag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    awayFlag: "🇨🇩",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_782_921_600_000,  // 2026-07-01 16:00 UTC — Mercedes-Benz Stadium, Atlanta GA
     lockedAt:  1_782_919_800_000,  // 2026-07-01 15:30 UTC
@@ -125,10 +125,10 @@ export const COPA_MATCHES: MatchConfig[] = [
     id: "wc26-r32-08",
     matchId: keccak256(toHex("wc26-r32-08")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
-    home: "TBD",             // Group G Winner — fill in June 28
-    away: "TBD",             // Best 3rd (Groups A/E/H/I/J) — fill in June 28
-    homeFlag: "🏴",
-    awayFlag: "🏴",
+    home: "Belgium",
+    away: "Senegal",
+    homeFlag: "🇧🇪",
+    awayFlag: "🇸🇳",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_782_936_000_000,  // 2026-07-01 20:00 UTC — Lumen Field, Seattle WA
     lockedAt:  1_782_934_200_000,  // 2026-07-01 19:30 UTC
@@ -138,10 +138,10 @@ export const COPA_MATCHES: MatchConfig[] = [
     id: "wc26-r32-09",
     matchId: keccak256(toHex("wc26-r32-09")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
-    home: "TBD",             // Group H Winner — fill in June 28
-    away: "TBD",             // Group J Runner-up — fill in June 28
-    homeFlag: "🏴",
-    awayFlag: "🏴",
+    home: "Spain",
+    away: "Austria",
+    homeFlag: "🇪🇸",
+    awayFlag: "🇦🇹",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_783_018_800_000,  // 2026-07-02 19:00 UTC — SoFi Stadium, Inglewood CA
     lockedAt:  1_783_017_000_000,  // 2026-07-02 18:30 UTC
@@ -150,10 +150,10 @@ export const COPA_MATCHES: MatchConfig[] = [
     id: "wc26-r32-10",
     matchId: keccak256(toHex("wc26-r32-10")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
-    home: "TBD",             // Group K Runner-up — fill in June 28
-    away: "TBD",             // Group L Runner-up — fill in June 28
-    homeFlag: "🏴",
-    awayFlag: "🏴",
+    home: "Portugal",
+    away: "Croatia",
+    homeFlag: "🇵🇹",
+    awayFlag: "🇭🇷",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_783_033_200_000,  // 2026-07-02 23:00 UTC — BMO Field, Toronto CA
     lockedAt:  1_783_031_400_000,  // 2026-07-02 22:30 UTC
@@ -164,9 +164,9 @@ export const COPA_MATCHES: MatchConfig[] = [
     matchId: keccak256(toHex("wc26-r32-11")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
     home: "Switzerland",
-    away: "TBD",             // Best 3rd (Groups E/F/G/I/J) — fill in June 28
+    away: "Algeria",
     homeFlag: "🇨🇭",
-    awayFlag: "🏴",
+    awayFlag: "🇩🇿",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_783_047_600_000,  // 2026-07-03 03:00 UTC — BC Place, Vancouver CA
     lockedAt:  1_783_045_800_000,  // 2026-07-03 02:30 UTC
@@ -190,9 +190,9 @@ export const COPA_MATCHES: MatchConfig[] = [
     matchId: keccak256(toHex("wc26-r32-13")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
     home: "Australia",
-    away: "TBD",             // Group G Runner-up — fill in June 28
+    away: "Egypt",
     homeFlag: "🇦🇺",
-    awayFlag: "🏴",
+    awayFlag: "🇪🇬",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_783_101_600_000,  // 2026-07-03 18:00 UTC — Lincoln Financial Field, Philadelphia PA
     lockedAt:  1_783_099_800_000,  // 2026-07-03 17:30 UTC
@@ -202,9 +202,9 @@ export const COPA_MATCHES: MatchConfig[] = [
     matchId: keccak256(toHex("wc26-r32-14")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
     home: "Argentina",
-    away: "TBD",             // Group H Runner-up — fill in June 28
+    away: "Cape Verde",
     homeFlag: "🇦🇷",
-    awayFlag: "🏴",
+    awayFlag: "🇨🇻",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_783_116_000_000,  // 2026-07-03 22:00 UTC — Levi's Stadium, Santa Clara CA
     lockedAt:  1_783_114_200_000,  // 2026-07-03 21:30 UTC
@@ -214,15 +214,27 @@ export const COPA_MATCHES: MatchConfig[] = [
     id: "wc26-r32-15",
     matchId: keccak256(toHex("wc26-r32-15")) as `0x${string}`,
     campaignId: CAMPAIGN_ID,
-    home: "TBD",             // Group K Winner — fill in June 28
-    away: "TBD",             // Best 3rd (Groups D/E/I/J/L) — fill in June 28
-    homeFlag: "🏴",
-    awayFlag: "🏴",
+    home: "Colombia",
+    away: "Ghana",
+    homeFlag: "🇨🇴",
+    awayFlag: "🇬🇭",
     competition: "FIFA World Cup 2026",
     kickoffAt: 1_783_128_600_000,  // 2026-07-04 01:30 UTC — Estadio Akron, Guadalajara MX
     lockedAt:  1_783_126_800_000,  // 2026-07-04 01:00 UTC
   },
-  // TODO: wc26-r32-16 — 16th R32 match not yet in ESPN (pending group stage completion June 28)
+  // ── Round of 32 — July 4, 2026 ──────────────────────────────────────────
+  {
+    id: "wc26-r32-16",
+    matchId: keccak256(toHex("wc26-r32-16")) as `0x${string}`,
+    campaignId: CAMPAIGN_ID,
+    home: "Canada",
+    away: "Morocco",
+    homeFlag: "🇨🇦",
+    awayFlag: "🇲🇦",
+    competition: "FIFA World Cup 2026",
+    kickoffAt: 1_783_184_400_000,  // 2026-07-04 17:00 UTC
+    lockedAt:  1_783_182_600_000,  // 2026-07-04 16:30 UTC
+  },
 ];
 
 export function getMatchById(id: string): MatchConfig | undefined {

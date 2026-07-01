@@ -86,6 +86,10 @@ function findEspnMatchForRegisteredMatch(
 function mapLiveStatus(liveMatch: EspnMatch): MatchData["status"] {
   if (liveMatch.status === "in_progress") return "live";
   if (liveMatch.status === "final") return "finished";
+  // For "scheduled" preview matches, use local time so the lock window shows correctly
+  const now = Date.now();
+  if (now >= liveMatch.kickoffAt) return "live";
+  if (now >= liveMatch.kickoffAt - 30 * 60 * 1000) return "locked";
   return "open";
 }
 
@@ -93,7 +97,9 @@ function mapRegisteredStatus(
   registeredMatch: MatchConfig,
   liveMatch: EspnMatch | null
 ): MatchData["status"] {
-  if (liveMatch) return mapLiveStatus(liveMatch);
+  // Only trust ESPN for active/final states; for "scheduled" fall through to local clock
+  if (liveMatch?.status === "in_progress") return "live";
+  if (liveMatch?.status === "final") return "finished";
   return matchStatus(registeredMatch);
 }
 

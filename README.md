@@ -210,6 +210,145 @@ These blocks convert the product direction into testable guardrails. Keep each I
 | MG-GROWTH-001 | Earn expansion | New markets, languages, competitions including UEFA, CAF, and Copa America / CONMEBOL, and rewards must improve retention or repeat picks. |
 | MG-COACH-001 | Coach context only | Coach Pass unlocks public-data match context without changing points, ranking, eligibility, or outcomes. |
 
+## Competitive landscape
+
+The reference set is the top-ranked Celo MiniPay projects on Talent.app (all-time window, July 2026).
+
+| App | Core loop | Engagement hook | Gap vs Mangooal |
+|---|---|---|---|
+| **AkibaMiles** | Earn loyalty points by using MiniPay and Mini Apps | Instant points on every action | Mangooal has delayed gratification — points only after match result |
+| **Tradcast** | Simulated trading game, 4-minute sessions, $1 000 starter balance | Fast feedback loop, leaderboard | Mangooal sessions are short but results take hours; no mid-session hook |
+| **Focus Pet** | Productivity pet that grows when you stay focused | Daily care ritual, visual progress | Mangooal has no between-match daily habit |
+| **CeloClicker** | Idle clicker with global leaderboard | Instant feedback, streak-like climb | Mangooal ranking only updates after oracle scores each match |
+| **onchaingm** | One daily check-in as a web3 ritual | Daily return trigger, identity layer | Mangooal has no equivalent "come back today" pull outside match days |
+| **Chainstreak** | Activity streak across 100+ EVM chains | Streak loss anxiety, daily habit | No streak mechanic in Mangooal yet |
+| **Predinex** | Decentralised prediction market | Capital at risk, market odds | Mangooal is free — no risk also means less skin-in-the-game tension |
+| **Trickle** | Per-second payroll streaming | Real financial utility | Different category; Mangooal is entertainment-first |
+
+### Where Mangooal leads
+
+**Real-world event gravity.** No other top Celo app rides an external event with billions of existing fans. FIFA World Cup 2026 brings pre-built intent; Mangooal does not need to create interest, only capture it. Every match is a natural re-engagement trigger that no loyalty points or streak mechanic can manufacture.
+
+**Free and compliance-safe.** Predinex requires capital at risk. Mangooal is free to play, so adoption in MiniPay's 16M-wallet base has no entry barrier and no gambling liability.
+
+**On-chain proof as social proof.** A submitted pick is a timestamped public record on Celo. No other entertainment app in this set lets users say "I called Brazil 2-1 Japan before kickoff, here is the Celoscan link." That permanence is the moat.
+
+**LATAM depth.** Spanish-first copy, COPm rewards framing, and MiniPay's Colombia/LATAM user base give Mangooal a regional identity that generic gaming apps on Base or Stacks cannot replicate cheaply.
+
+**Coach Pass monetisation without pay-to-win.** Most Celo gaming apps have no monetisation or use NFT drops. Coach Pass is recurring, compliance-safe, and keeps the free loop intact.
+
+### Where Mangooal needs to close the gap
+
+**Delayed gratification.** Top apps give instant feedback — points, clicks, streaks. Mangooal makes users wait 90+ minutes for a result. This gap should be bridged by creating moments of engagement before and after the wait, not by shortening the wait.
+
+**No viral moment.** After submitting a pick, there is nothing to share or show. Every correct prediction is a missed social ad. The share mechanic is the single highest-leverage feature not yet shipped.
+
+**No return trigger between matches.** onchaingm and Focus Pet pull users back daily. Mangooal only pulls users back when a match is close to lock or when results arrive. The gap is a notification or daily moment that keeps the app sticky between campaigns.
+
+**Discovery outside MiniPay.** The app is invisible to anyone not already in MiniPay. Public web mode and social sharing are the only off-MiniPay surfaces. Both need sharpening before the WC knockout rounds peak.
+
+## Differential features to ship
+
+These are ordered by leverage — the ratio of engagement gain to build cost. Ship the first three before expanding competitions.
+
+### 1. Pick share card (highest leverage, ~1 day)
+
+After a user submits a pick, generate a shareable image or link card:
+
+```
+🟢 My Mangooal pick
+Brazil 2 – 1 Japan
+FIFA World Cup 2026 · Round of 32
+Submitted on Celo before kickoff
+mangooal.app/audit/wc26-r32-01
+```
+
+Add a share button (Web Share API on mobile, copy-link fallback on desktop) to `PredictionDetail` after submission and to the success card in `SubmittedView`. One tap produces a card the user can paste into WhatsApp, X, or Instagram Stories. This converts every pick into organic distribution. The Celoscan audit link makes it verifiable, which is Mangooal's differentiator vs every other sports app.
+
+Implementation: generate the card as a styled `<div>` captured with `html2canvas` or produce a server-side OG image from `/api/og?match=wc26-r32-01&home=2&away=1&wallet=0x...`. The wallet is optional — the match and score are enough.
+
+### 2. Result flex card (social proof loop, ~1 day)
+
+When the oracle records an official result, users who predicted the exact score or correct outcome see a "you called it" screen the next time they open My Picks:
+
+```
+You called it.
+Brazil 2 – 1 Japan ✓ Exact score
++5 pts · Ranked #14
+[Share your prediction]
+```
+
+This is the payoff moment the user waited 90 minutes for. Make it feel earned. Add confetti (same pattern as the existing `TransactionSuccessScreen`), a large score display, their rank movement, and a share button. This is when users want to show off, and that share is free acquisition.
+
+### 3. Match countdown notification (re-engagement, ~2 days)
+
+Send a push notification 30 minutes before each match lock:
+
+```
+⚽ Lock in 30 min
+Brazil vs Japan · Today 12:00 PM
+Your pick: not submitted yet
+[Pick now]
+```
+
+Options in order of effort:
+- **Telegram bot** — user types `/start`, bot sends a message before each match. Easiest, no OS permission needed, huge LATAM reach.
+- **MiniPay push** — use MiniPay's push notification API when available.
+- **PWA push** — service worker + VAPID. Works on Android, limited on iOS.
+
+The Telegram bot is the fastest path: one Cloudflare Worker, one `/api/notify` cron, zero OS permission friction. LATAM users are already on Telegram.
+
+### 4. Prediction streak (daily habit, ~1 day)
+
+Track how many consecutive matches a user has submitted a pick for. Display it on My Picks:
+
+```
+🔥 Pick streak: 7 matches in a row
+```
+
+Store the streak in local storage first (no contract change needed), then optionally record it on-chain as part of the ranking event for leaderboard tie-breaking. A broken streak creates return anxiety — the same psychological mechanism that makes Duolingo and Chainstreak sticky.
+
+### 5. Head-to-head challenge (~3 days)
+
+Let a user challenge a friend on a specific match:
+
+```
+mangooal.app/challenge/wc26-r32-01?challenger=0x...
+```
+
+Opening the link shows the challenger's pick hidden behind a "Submit your pick to reveal" gate. After both submit, both see each other's prediction. This creates a bilateral commitment that neither party wants to lose — and it drives installs from the challenged friend who may not have the app.
+
+### 6. Community pick distribution (transparency hook, free)
+
+After match lock, show a bar on the match card:
+
+```
+Community picks  Brazil ██████ 62%  Draw ██ 22%  Japan ███ 16%
+```
+
+Read this from on-chain `PredictionCommitted` events — no new data needed, just an aggregation view. This gives users context for how contrarian or aligned their pick is, creates conversation, and increases the perceived value of the existing data layer.
+
+### Priority order for WC 2026 knockout rounds
+
+The Round of 16 begins approximately July 7. The window to maximise WC engagement is the next 10 days.
+
+| Feature | Effort | WC impact | Ship by |
+|---|---|---|---|
+| Pick share card | 1 day | Viral acquisition | Today |
+| Result flex card | 1 day | Retention, sharing | Today |
+| Match countdown (Telegram) | 2 days | Re-engagement | Jul 3 |
+| Prediction streak | 1 day | Daily habit | Jul 4 |
+| Community pick bar | 1 day | Engagement, trust | Jul 5 |
+| Head-to-head challenge | 3 days | Viral growth | Jul 7 |
+
+Features that should wait until after WC:
+- Additional languages beyond EN/ES
+- New competition activation (UEFA, CAF, Copa América)
+- Embedded wallet for non-MiniPay users
+- Coach Pass expansion
+
+Those belong to the next campaign cycle, after this WC proves retention numbers.
+
 ## Public routes
 
 | Route | Purpose |

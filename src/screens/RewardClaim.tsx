@@ -3,6 +3,7 @@ import { formatUnits } from "viem";
 import { CeloBadge } from "../components/CeloBadge";
 import { useClaimReward } from "../hooks/useMangoalLedger";
 import { STABLECOINS } from "../config/stablecoins";
+import { parseContractError } from "../utils/parseContractError";
 
 /**
  * Reward deep-link format (operator sends via notification):
@@ -251,7 +252,7 @@ export function RewardClaim() {
               lineHeight: 1.5,
             }}
           >
-            {error.message || "Transaction failed. Please try again."}
+            {parseContractError(error, "Claim failed. Please try again.")}
           </div>
         )}
 

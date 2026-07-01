@@ -179,11 +179,13 @@ contract RegisterMatches is Script {
             1783126800  // lockedAt:  2026-07-04 01:00 UTC
         );
 
-        // ── TODO: wc26-r32-16 ───────────────────────────────────────────────
-        // 16th R32 match not yet confirmed in ESPN API (June 26, 2026).
-        // Add on June 28 once all groups resolve. If deployer DEFAULT_ADMIN_ROLE
-        // has already been revoked by Safe, use Safe UI to call registerMatch directly
-        // (Safe holds OPERATOR_ROLE).
+        // wc26-r32-16: Canada vs Morocco
+        _register(ledger, campaignId,
+            keccak256(abi.encodePacked("wc26-r32-16")),
+            keccak256(abi.encodePacked("wc26-r32-16")),
+            1783184400, // kickoffAt: 2026-07-04 17:00 UTC
+            1783182600  // lockedAt:  2026-07-04 16:30 UTC
+        );
 
         // ── Cleanup ──────────────────────────────────────────────────────────
         // renounceRole = role holder gives up own role. No admin rights needed.
@@ -192,10 +194,9 @@ contract RegisterMatches is Script {
 
         vm.stopBroadcast();
 
-        console.log("Matches registered (wc26-r32-01 through wc26-r32-15).");
+        console.log("Matches registered (wc26-r32-01 through wc26-r32-16). R32 complete.");
         console.log("Next: Safe revokes DEFAULT_ADMIN_ROLE from deployer.");
         console.log("  revokeRole(0x00...0, 0x8cCb6982f9786C1AC3fF6E4BA18541917A82e0F1)");
-        console.log("Then: verify on Celoscan that getMatch() returns correct data.");
         console.log("Then: set VITE_DEPLOY_BLOCK in Vercel + LEDGER_ADDRESS in GitHub.");
     }
 

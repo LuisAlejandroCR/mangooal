@@ -8,6 +8,8 @@ import { getMatchById, matchStatus } from "../config/matches";
 import { findMatch, useEspnScores } from "../hooks/useEspnScores";
 import { useLanguage } from "../i18n";
 import { getLocalPicks, saveLocalPick } from "../utils/localPicks";
+import { parseContractError } from "../utils/parseContractError";
+import { useCommunityPicks, type CommunityDistribution } from "../hooks/useCommunityPicks";
 
 function toEspnDateUTC(date: Date) {
   const year = date.getUTCFullYear();
@@ -119,6 +121,48 @@ function formatDateTime(value: number, locale: string) {
   });
 }
 
+function CommunityPickBar({
+  dist,
+  home,
+  away,
+}: {
+  dist: CommunityDistribution;
+  home: string;
+  away: string;
+}) {
+  return (
+    <div className="card" style={{ marginTop: 12, padding: "14px 16px" }}>
+      <div style={{
+        fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
+        letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10,
+      }}>
+        Community picks · {dist.total.toLocaleString()} pickers
+      </div>
+
+      <div style={{ display: "flex", borderRadius: 4, overflow: "hidden", height: 8, marginBottom: 10, gap: 2 }}>
+        <div style={{ flex: dist.home, background: "#22C55E", borderRadius: "4px 0 0 4px", transition: "flex 0.4s" }} />
+        <div style={{ flex: dist.draw, background: "#94A3B8", transition: "flex 0.4s" }} />
+        <div style={{ flex: dist.away, background: "#3B82F6", borderRadius: "0 4px 4px 0", transition: "flex 0.4s" }} />
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+        <div>
+          <span style={{ fontWeight: 800, color: "#22C55E" }}>{dist.home}%</span>
+          <span style={{ color: "var(--text-muted)", marginLeft: 5 }}>{home}</span>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <span style={{ fontWeight: 800, color: "var(--text-muted)" }}>{dist.draw}%</span>
+          <span style={{ color: "var(--text-muted)", marginLeft: 5 }}>Draw</span>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <span style={{ fontWeight: 800, color: "#3B82F6" }}>{dist.away}%</span>
+          <span style={{ color: "var(--text-muted)", marginLeft: 5 }}>{away}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PredictionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -142,9 +186,18 @@ export function PredictionDetail() {
   const activeKickoffAt = registeredMatch?.kickoffAt ?? stateMatch?.kickoff.getTime() ?? 0;
   const activeLockedAt = registeredMatch?.lockedAt ?? stateMatch?.lockedAt.getTime() ?? 0;
   const matchDate = activeMatch ? toEspnDateUTC(new Date(activeKickoffAt)) : undefined;
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
   const { matches: espnMatches } = useEspnScores("fifa.world", matchDate, language);
   const liveMatch = activeMatch ? findMatch(espnMatches, activeMatch.home, activeMatch.away) : null;
-  const status = registeredMatch ? matchStatus(registeredMatch) : stateMatch?.status ?? null;
+  const espnStatus = liveMatch?.status === "in_progress" ? "live" as const
+    : liveMatch?.status === "final" ? "finished" as const
+    : null;
+  const status = espnStatus ?? (registeredMatch ? matchStatus(registeredMatch) : stateMatch?.status ?? null);
   const isOpen = activeMatch ? Date.now() < activeLockedAt : false;
   const homeName = liveMatch?.home ?? activeMatch?.home ?? "";
   const awayName = liveMatch?.away ?? activeMatch?.away ?? "";
@@ -156,6 +209,13 @@ export function PredictionDetail() {
     [activeMatch, address],
   );
   const isEditing = Boolean(savedPick && Date.now() < activeLockedAt);
+
+  const ZERO_BYTES32 = "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
+  const { distribution: communityDist } = useCommunityPicks(
+    registeredMatch?.campaignId ?? ZERO_BYTES32,
+    registeredMatch?.matchId ?? ZERO_BYTES32,
+    !isOpen && Boolean(registeredMatch)
+  );
 
   useEffect(() => {
     if (!savedPick || submitted) return;
@@ -252,7 +312,7 @@ export function PredictionDetail() {
       <div className="screen-body" style={{ paddingTop: 20 }}>
         {submitted ? (
           <SubmittedView
-            match={{ id: activeMatch.id, home: homeName, away: awayName }}
+            match={{ id: activeMatch.id, home: homeName, away: awayName, competition: activeMatch.competition }}
             home={Number(home)}
             away={Number(away)}
             txHash={submittedTxHash}
@@ -299,6 +359,10 @@ export function PredictionDetail() {
                 </div>
                 <p>{copy.finishedNoPick}</p>
               </div>
+            )}
+
+            {communityDist && (
+              <CommunityPickBar dist={communityDist} home={homeName} away={awayName} />
             )}
 
             {registeredMatch && status !== "finished" && (
@@ -359,7 +423,7 @@ export function PredictionDetail() {
 
                   {error && (
                     <div className="hint-card error">
-                      {error.message || "Transaction failed. Please try again."}
+                      {parseContractError(error)}
                       {isInsufficientFunds(error) && (
                         <div style={{ marginTop: 6 }}>
                           <a href="https://link.minipay.xyz/add_cash?tokens=USDm,USDC,USDT" target="_blank" rel="noopener noreferrer">
@@ -405,7 +469,7 @@ export function PredictionDetail() {
 function SubmittedView({
   match, home, away, txHash, isPreview, kickoffAt, lockedAt, locale, timezone, copy, onAudit, onMyPicks,
 }: {
-  match: { home: string; away: string; id: string };
+  match: { home: string; away: string; id: string; competition: string };
   home: number;
   away: number;
   txHash?: `0x${string}`;
@@ -418,6 +482,24 @@ function SubmittedView({
   onAudit: () => void;
   onMyPicks: () => void;
 }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleShare() {
+    const text = `⚽ ${match.home} ${home}–${away} ${match.away}\n${match.competition}\nPicked before kickoff on Celo`;
+    const url = `${window.location.origin}/audit/${match.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "My Mangooal pick", text, url });
+      } else {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2_000);
+      }
+    } catch {
+      // user dismissed the share sheet
+    }
+  }
+
   return (
     <div className="prediction-recorded">
       <div className="record-ball" aria-hidden="true" />
@@ -455,8 +537,20 @@ function SubmittedView({
           {copy.viewAudit}
         </button>
       )}
-      <button className="btn btn-primary" onClick={onMyPicks}>
+      <button className="btn btn-primary" onClick={onMyPicks} style={{ marginBottom: 10 }}>
         {copy.viewPicks}
+      </button>
+
+      <button
+        className="btn btn-secondary"
+        onClick={handleShare}
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+        </svg>
+        {copied ? "Link copied!" : "Share my pick"}
       </button>
     </div>
   );

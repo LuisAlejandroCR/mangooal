@@ -1,0 +1,64 @@
+name: Match countdown reminder
+
+# Fires ~30 min before each R32 pick deadline and sends a Telegram notification.
+# Requires two GitHub Secrets:
+#   TELEGRAM_BOT_TOKEN  — from @BotFather
+#   TELEGRAM_CHAT_ID    — channel/group ID (prefix -100 for channels, e.g. -1001234567890)
+# Optional GitHub Variable:
+#   APP_URL             — defaults to https://mangooal.app
+
+on:
+  schedule:
+    # ── June 29, 2026 ─────────────────────────────────────────────────────────
+    - cron: "0 16 29 6 *"    # wc26-r32-01  Brazil vs Japan          lock 16:30 UTC
+    - cron: "30 19 29 6 *"   # wc26-r32-02  Germany vs Paraguay      lock 20:00 UTC
+    # ── June 30, 2026 ─────────────────────────────────────────────────────────
+    - cron: "0 0 30 6 *"     # wc26-r32-03  Netherlands vs Morocco   lock 00:30 UTC
+    - cron: "0 16 30 6 *"    # wc26-r32-04  Ivory Coast vs Norway    lock 16:30 UTC
+    - cron: "0 20 30 6 *"    # wc26-r32-05  France vs Sweden         lock 20:30 UTC
+    # ── July 1, 2026 ──────────────────────────────────────────────────────────
+    - cron: "0 0 1 7 *"      # wc26-r32-06  Ecuador vs Mexico        lock 01:00 UTC
+    - cron: "0 15 1 7 *"     # wc26-r32-07  England vs Congo DR      lock 15:30 UTC
+    - cron: "0 19 1 7 *"     # wc26-r32-08  Belgium vs Senegal       lock 19:30 UTC
+    - cron: "0 23 1 7 *"     # wc26-r32-12  USA vs Bosnia-Herz       lock 23:30 UTC
+    # ── July 2, 2026 ──────────────────────────────────────────────────────────
+    - cron: "0 18 2 7 *"     # wc26-r32-09  Spain vs Austria         lock 18:30 UTC
+    - cron: "0 22 2 7 *"     # wc26-r32-10  Portugal vs Croatia      lock 22:30 UTC
+    # ── July 3, 2026 ──────────────────────────────────────────────────────────
+    - cron: "0 2 3 7 *"      # wc26-r32-11  Switzerland vs Algeria   lock 02:30 UTC
+    - cron: "0 17 3 7 *"     # wc26-r32-13  Australia vs Egypt       lock 17:30 UTC
+    - cron: "0 21 3 7 *"     # wc26-r32-14  Argentina vs Cape Verde  lock 21:30 UTC
+    # ── July 4, 2026 ──────────────────────────────────────────────────────────
+    - cron: "30 0 4 7 *"     # wc26-r32-15  Colombia vs Ghana        lock 01:00 UTC
+    - cron: "0 16 4 7 *"     # wc26-r32-16  Canada vs Morocco        lock 16:30 UTC
+
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: "Send a test message regardless of match timing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  APP_URL: ${{ vars.APP_URL || 'https://mangooal.app' }}
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Send countdown notification
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          APP_URL: ${{ env.APP_URL }}
+          TEST_MODE: ${{ inputs.test_mode }}
+        run: node scripts/send-match-reminder.mjs
