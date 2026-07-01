@@ -25,6 +25,12 @@ export const PRODUCT_GUARDRAILS = [
     testFocus: "MiniPay flows hide connect-wallet setup and keep transaction assets inside MiniPay-supported options.",
   },
   {
+    id: "MG-LAUNCH-001",
+    title: "MiniPay launch readiness",
+    promise: "Do not submit until the MiniPay loop, support/legal links, 360x640 UI, and no-crypto copy are review-ready.",
+    testFocus: "Launch changes keep support, terms, privacy, mobile viewport fit, and MiniPay-safe copy visible before submission.",
+  },
+  {
     id: "MG-WEB-001",
     title: "Public web discovery",
     promise: "Public web visitors can learn through demo, support, matches, stats, and proof links before connecting.",

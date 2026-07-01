@@ -159,6 +159,19 @@ The main MiniPay path should stay short:
 
 Do not show a connect-wallet education flow in MiniPay. MiniPay users should feel they are playing, not learning infrastructure.
 
+### MiniPay launch readiness
+
+Do not submit a half-built Mini App. Stage 1 should be a clean intake-ready product:
+the core pick loop works, MiniPay auto-connect is tested on device, support/terms/privacy
+are reachable from visible icons, and the UI fits a 360x640 review viewport without hidden
+primary actions. Stage 2 should add the full readiness polish: production URL, 24h support
+path, PageSpeed review, legal links, screenshots, and copy that avoids crypto education.
+
+User-facing MiniPay copy should say `network fee`, `deposit`, `withdraw`, `stablecoin`, or
+`digital dollar` when those concepts are needed. Do not lead with gas, onramp, offramp,
+crypto, seed phrases, raw addresses, or chain jargon. The app can prove activity on Celo,
+but the player should understand the flow as football first.
+
 ### Public web mode
 
 The public web app is discovery, demo, trust, and support. It should not block new visitors with wallet requirements. `/demo` is the wallet-free tour for first-time users, reviewers, and social traffic from X, Telegram, WhatsApp, TikTok, Instagram, and friends. After the demo, users can connect a Celo wallet to play from the browser, while `/support`, `/stats`, `/matches`, and audit links stay available as public support and proof surfaces.
@@ -190,6 +203,7 @@ These blocks convert the product direction into testable guardrails. Keep each I
 | MG-CORE-001 | One simple loop | Pick scores, compete, and track picks before adding secondary product surfaces. |
 | MG-UX-001 | Mom-test UX | Copy leads with play, compete, picks, reminders, ranking, and optional rewards. |
 | MG-MINIPAY-001 | MiniPay first | MiniPay users auto-connect and complete the pick loop without wallet setup education. |
+| MG-LAUNCH-001 | MiniPay launch readiness | Do not submit until the MiniPay loop, support/legal links, 360x640 UI, and no-crypto copy are review-ready. |
 | MG-WEB-001 | Public web discovery | Demo, support, matches, stats, and proof links stay reachable before wallet connection. |
 | MG-CAMPAIGN-001 | Rotating cup discipline | Only one current campaign accepts picks; future cups stay preview/schedule until API, support, and growth signals are ready. |
 | MG-CONTRACT-001 | Direct user attribution | User actions stay attributable to the user's wallet on Celo for MiniPay, browser, and Proof of Ship metrics. |

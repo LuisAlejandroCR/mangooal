@@ -13,6 +13,7 @@ const expectedIds = [
   "MG-CORE-001",
   "MG-UX-001",
   "MG-MINIPAY-001",
+  "MG-LAUNCH-001",
   "MG-WEB-001",
   "MG-CAMPAIGN-001",
   "MG-CONTRACT-001",
@@ -38,6 +39,12 @@ for (const id of expectedIds) {
 expect(readme.includes("## Mangooal solution"), "README.md is missing the Mangooal solution section");
 expect(readme.includes("## Campaign model"), "README.md must describe the campaign model");
 expect(readme.includes("### Campaign activation guidelines"), "README.md must include campaign activation guidelines");
+expect(readme.includes("### MiniPay launch readiness"), "README.md must include MiniPay launch readiness");
+expect(readme.includes("Do not submit a half-built Mini App"), "README.md must warn against half-built MiniPay submissions");
+expect(readme.includes("360x640"), "README.md must keep the MiniPay review viewport explicit");
+expect(readme.includes("support/terms/privacy"), "README.md must keep visible support, terms, and privacy explicit");
+expect(readme.includes("network fee"), "README.md must use MiniPay-safe network fee copy");
+expect(readme.includes("deposit") && readme.includes("withdraw"), "README.md must use MiniPay-safe deposit/withdraw copy");
 expect(readme.includes("Current campaign"), "README.md must label FIFA as the current campaign, not the only campaign");
 expect(readme.includes("UEFA"), "README.md must include UEFA as a campaign family");
 expect(readme.includes("CAF"), "README.md must include CAF as a campaign family");
