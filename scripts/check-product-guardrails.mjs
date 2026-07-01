@@ -14,6 +14,7 @@ const expectedIds = [
   "MG-UX-001",
   "MG-MINIPAY-001",
   "MG-WEB-001",
+  "MG-CAMPAIGN-001",
   "MG-CONTRACT-001",
   "MG-GROWTH-001",
   "MG-COACH-001",
@@ -36,10 +37,13 @@ for (const id of expectedIds) {
 
 expect(readme.includes("## Mangooal solution"), "README.md is missing the Mangooal solution section");
 expect(readme.includes("## Campaign model"), "README.md must describe the campaign model");
+expect(readme.includes("### Campaign activation guidelines"), "README.md must include campaign activation guidelines");
 expect(readme.includes("Current campaign"), "README.md must label FIFA as the current campaign, not the only campaign");
 expect(readme.includes("UEFA"), "README.md must include UEFA as a campaign family");
 expect(readme.includes("CAF"), "README.md must include CAF as a campaign family");
 expect(readme.includes("Copa America") || readme.includes("CONMEBOL"), "README.md must include Copa America / CONMEBOL as a campaign family");
+expect(readme.includes("Only one current campaign accepts picks"), "README.md must keep one-active-campaign discipline explicit");
+expect(readme.includes("Do not hardcode future match data"), "README.md must reject hardcoded future fixtures");
 expect(readme.includes("### Traceable product blocks"), "README.md is missing traceable product blocks");
 expect(readme.includes("MiniPay users auto-connect"), "README.md must keep the MiniPay auto-connect rule explicit");
 expect(readme.includes("Direct user attribution"), "README.md must keep the user-attribution contract rule explicit");

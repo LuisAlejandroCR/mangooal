@@ -27,6 +27,18 @@ stablecoins, and registered campaign IDs.
 | Core MiniPay payment assets | USDC, USDT, USDm |
 | Display/reward focus | COPm plus other Mento regional stablecoins |
 
+### Campaign activation guidelines
+
+Use one current campaign for picks and keep future cups as preview/schedule surfaces until
+they are ready. FIFA World Cup 2026 is the active proof campaign. UEFA, CAF, and Copa
+America / CONMEBOL should move from preview to active only when the app has reliable API
+coverage, registered campaign IDs, match locks, Spanish/English copy, support coverage,
+and a clear growth metric such as repeat picks, returning users, or regional retention.
+
+Do not hardcode future match data to make a cup look ready. Fixtures, scores, flags, venues,
+and status should come from the provider layer; local config should only describe which
+competitions are enabled and how they map to the provider.
+
 ## How the flow works
 
 1. User opens Mangooal in MiniPay or a Celo wallet browser.
@@ -179,6 +191,7 @@ These blocks convert the product direction into testable guardrails. Keep each I
 | MG-UX-001 | Mom-test UX | Copy leads with play, compete, picks, reminders, ranking, and optional rewards. |
 | MG-MINIPAY-001 | MiniPay first | MiniPay users auto-connect and complete the pick loop without wallet setup education. |
 | MG-WEB-001 | Public web discovery | Demo, support, matches, stats, and proof links stay reachable before wallet connection. |
+| MG-CAMPAIGN-001 | Rotating cup discipline | Only one current campaign accepts picks; future cups stay preview/schedule until API, support, and growth signals are ready. |
 | MG-CONTRACT-001 | Direct user attribution | User actions stay attributable to the user's wallet on Celo for MiniPay, browser, and Proof of Ship metrics. |
 | MG-GROWTH-001 | Earn expansion | New markets, languages, competitions including UEFA, CAF, and Copa America / CONMEBOL, and rewards must improve retention or repeat picks. |
 | MG-COACH-001 | Coach context only | Coach Pass unlocks public-data match context without changing points, ranking, eligibility, or outcomes. |

@@ -31,6 +31,12 @@ export const PRODUCT_GUARDRAILS = [
     testFocus: "Discovery and support routes stay reachable without forcing a wallet connection.",
   },
   {
+    id: "MG-CAMPAIGN-001",
+    title: "Rotating cup discipline",
+    promise: "Only one current campaign accepts picks; future cups stay preview/schedule until API, support, and growth signals are ready.",
+    testFocus: "Campaign changes do not hardcode future fixtures or enable picks before data, locks, copy, and operations are ready.",
+  },
+  {
     id: "MG-CONTRACT-001",
     title: "Direct user attribution",
     promise: "Picks, edits, Coach Pass purchases, claims, and ranking actions remain attributable to the user wallet on Celo.",
