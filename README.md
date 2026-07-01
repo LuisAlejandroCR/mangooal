@@ -1,10 +1,10 @@
 # Mangooal
 
-Mangooal is a MiniPay-native football prediction app for one narrow Celo Mainnet flow:
+Mangooal is a MiniPay-native football prediction app for one narrow Celo Mainnet flow across rotating cup campaigns:
 
 `predict or edit the score before lock, read it from Celo anywhere, and score it on-chain`
 
-The app connects to the user's MiniPay or Celo wallet, lists FIFA World Cup 2026 matches,
+The app connects to the user's MiniPay or Celo wallet, lists matches for the current cup,
 lets the user submit or edit a free score prediction before lock, and records the pick directly on Celo Mainnet so MiniPay and browser show the same wallet state. Mangooal does not custody funds or private keys.
 It is free to play: no entry fees, no odds, no user-funded prize pools, and no staking.
 
@@ -12,12 +12,14 @@ The source of truth for match schedules and live scores is external football dat
 Local files keep only app configuration such as enabled competitions, contract addresses,
 stablecoins, and registered campaign IDs.
 
-## Campaign
+## Campaign model
 
 | Field | Value |
 |---|---|
 | Network | Celo Mainnet (chainId 42220) |
-| Campaign | FIFA World Cup 2026 |
+| Current campaign | FIFA World Cup 2026 |
+| Campaign families | FIFA World Cup, UEFA competitions, CAF competitions, Copa America / CONMEBOL |
+| Campaign rule | One active cup at a time; future cups can preview schedules until enabled for picks |
 | Game action | Free score predictions before each match lock |
 | On-chain proof | Editable public picks, wallet pick history, ranking stats, and Coach Pass history |
 | Paid feature | Coach Pass for analytics and UX only |
@@ -42,6 +44,9 @@ rewards are operator-signed and operator-funded; they are not funded by player e
 ## Match and coach data
 
 Mangooal keeps competition metadata locally, but fixtures and scores should come from APIs.
+FIFA World Cup 2026 is the current campaign, not the product boundary. UEFA, CAF, and
+Copa America / CONMEBOL are supported campaign families for the same pick loop when
+their schedules are available and the growth signal justifies activating them.
 
 | Layer | Source |
 |---|---|
@@ -98,8 +103,10 @@ The legacy `commitPrediction` / `revealPrediction` functions remain in the ABI f
 ## Distribution model
 
 The initial distribution surface is a MiniPay Mini App for football fans following the
-FIFA World Cup 2026 campaign. The public repo and Vercel deployment are the developer and
-auditor entry points, while MiniPay is the user entry point.
+current FIFA World Cup 2026 campaign. The public repo and Vercel deployment are the developer and
+auditor entry points, while MiniPay is the user entry point. The same campaign model should
+serve LATAM, Africa, and Europe through Copa America / CONMEBOL, CAF, and UEFA competitions
+after the current cup proves repeat picks and retention.
 
 Mangooal should keep the prediction flow simple before expanding campaigns: wallet connection,
 match list, editable pick, on-chain audit, official results, points,
@@ -154,7 +161,7 @@ Avoid a setup where a backend, relayer, or paymaster becomes the only visible ac
 
 ### Growth model
 
-Start with the smallest loop and one strongest market. For Mangooal, that means free score picks around the active cup, Spanish-first LATAM distribution when that market is growing, and English as the second language. Add more competitions, languages, Coach features, or rewards only when they improve retention, direct user transactions, or daily active users.
+Start with the smallest loop and one strongest market. For Mangooal, that means free score picks around the active cup, Spanish-first LATAM distribution when that market is growing, and English as the second language. FIFA World Cup 2026 is the current proof campaign; UEFA, CAF, and Copa America / CONMEBOL are expansion candidates for the same loop, not separate products. Add more competitions, languages, Coach features, or rewards only when they improve retention, direct user transactions, or daily active users.
 
 Do not add languages or modes just because they are easy to build. Each one has an operating cost: copy, support, moderation, rewards, QA, and marketing. If Spanish users in Colombia/LATAM are growing fastest, deepen that loop before expanding. Retaining current users is cheaper than acquiring cold users.
 
@@ -173,7 +180,7 @@ These blocks convert the product direction into testable guardrails. Keep each I
 | MG-MINIPAY-001 | MiniPay first | MiniPay users auto-connect and complete the pick loop without wallet setup education. |
 | MG-WEB-001 | Public web discovery | Demo, support, matches, stats, and proof links stay reachable before wallet connection. |
 | MG-CONTRACT-001 | Direct user attribution | User actions stay attributable to the user's wallet on Celo for MiniPay, browser, and Proof of Ship metrics. |
-| MG-GROWTH-001 | Earn expansion | New markets, languages, competitions, and rewards must improve retention or repeat picks. |
+| MG-GROWTH-001 | Earn expansion | New markets, languages, competitions including UEFA, CAF, and Copa America / CONMEBOL, and rewards must improve retention or repeat picks. |
 | MG-COACH-001 | Coach context only | Coach Pass unlocks public-data match context without changing points, ranking, eligibility, or outcomes. |
 
 ## Public routes

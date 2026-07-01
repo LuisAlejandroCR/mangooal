@@ -6,6 +6,7 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const readmePath = join(root, "README.md");
 const guardrailPath = join(root, "src", "config", "productGuardrails.ts");
 const ledgerHookPath = join(root, "src", "hooks", "useMangoalLedger.ts");
+const competitionsPath = join(root, "src", "config", "competitions.ts");
 const removedModelDoc = join(root, "docs", "minipay-and-web-model.md");
 
 const expectedIds = [
@@ -21,6 +22,7 @@ const expectedIds = [
 const readme = readFileSync(readmePath, "utf8");
 const guardrails = readFileSync(guardrailPath, "utf8");
 const ledgerHook = readFileSync(ledgerHookPath, "utf8");
+const competitions = readFileSync(competitionsPath, "utf8");
 const failures = [];
 
 function expect(condition, message) {
@@ -33,12 +35,21 @@ for (const id of expectedIds) {
 }
 
 expect(readme.includes("## Mangooal solution"), "README.md is missing the Mangooal solution section");
+expect(readme.includes("## Campaign model"), "README.md must describe the campaign model");
+expect(readme.includes("Current campaign"), "README.md must label FIFA as the current campaign, not the only campaign");
+expect(readme.includes("UEFA"), "README.md must include UEFA as a campaign family");
+expect(readme.includes("CAF"), "README.md must include CAF as a campaign family");
+expect(readme.includes("Copa America") || readme.includes("CONMEBOL"), "README.md must include Copa America / CONMEBOL as a campaign family");
 expect(readme.includes("### Traceable product blocks"), "README.md is missing traceable product blocks");
 expect(readme.includes("MiniPay users auto-connect"), "README.md must keep the MiniPay auto-connect rule explicit");
 expect(readme.includes("Direct user attribution"), "README.md must keep the user-attribution contract rule explicit");
 expect(!existsSync(removedModelDoc), "docs/minipay-and-web-model.md should stay removed from the repo");
 expect(ledgerHook.includes(`functionName: "submitOrUpdatePick"`), "Primary pick submission must use submitOrUpdatePick");
 expect(!ledgerHook.includes(`functionName: "commitPrediction"`), "Primary pick submission must not use legacy commitPrediction");
+expect(competitions.includes(`marker: "FIFA"`), "competitions.ts must keep FIFA configured");
+expect(competitions.includes(`marker: "UEFA"`), "competitions.ts must keep UEFA configured");
+expect(competitions.includes(`marker: "CONMEBOL"`), "competitions.ts must keep Copa America / CONMEBOL configured");
+expect(competitions.includes(`marker: "CAF"`), "competitions.ts must keep CAF configured");
 
 const duplicateIds = expectedIds.filter((id, index) => expectedIds.indexOf(id) !== index);
 expect(duplicateIds.length === 0, `Duplicate expected guardrail ids: ${duplicateIds.join(", ")}`);

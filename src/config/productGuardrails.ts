@@ -39,8 +39,8 @@ export const PRODUCT_GUARDRAILS = [
   {
     id: "MG-GROWTH-001",
     title: "Earn expansion",
-    promise: "New markets, languages, competitions, and reward loops ship only when they improve retention or repeat picks.",
-    testFocus: "Product changes state the growth metric they improve before adding operating cost.",
+    promise: "FIFA is the current proof campaign; UEFA, CAF, Copa America / CONMEBOL, new markets, languages, and reward loops ship only when they improve retention or repeat picks.",
+    testFocus: "Product changes state the growth metric they improve before adding a campaign family or other operating cost.",
   },
   {
     id: "MG-COACH-001",
