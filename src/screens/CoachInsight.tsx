@@ -44,12 +44,16 @@ function ppgToStrength(ppg: number): number {
 
 // Converts live API intel into the same 0.55–0.95 scale as TEAM_STRENGTH.
 // Composite: 50% weighted form, 25% attack (goals/game), 25% defense.
-function intelToStrength(intel: TeamIntel): number {
+// Sample-size blending: 1 game = 20% intel + 80% FIFA table to avoid
+// compressing all teams into a tiny strength band with few games.
+function intelToStrength(intel: TeamIntel, teamName: string): number {
   const g = Math.max(1, intel.games);
   const attack  = Math.min(1.0, (intel.goalsFor     / g) / 2.5);
   const defense = Math.max(0.0, 1 - (intel.goalsAgainst / g) / 3.0);
   const composite = intel.formScore * 0.50 + attack * 0.25 + defense * 0.25;
-  return 0.55 + composite * 0.40;
+  const pureIntelStr = 0.55 + composite * 0.40;
+  const w = Math.min(1.0, intel.games / 5); // 1 game→0.20, 3→0.60, 5+→1.0
+  return w * pureIntelStr + (1 - w) * teamStrength(teamName);
 }
 
 function fmt1(n: number, g: number) {
@@ -72,9 +76,9 @@ function getCoachContext(
   const awayForm = parseRecordPoints(awayRecord);
 
   // Priority: live API intel → ESPN W/D/L → FIFA ranking table
-  const homeStr = homeIntel ? intelToStrength(homeIntel)
+  const homeStr = homeIntel ? intelToStrength(homeIntel, home)
     : homeForm ? ppgToStrength(homeForm.pointsPerGame) : teamStrength(home);
-  const awayStr = awayIntel ? intelToStrength(awayIntel)
+  const awayStr = awayIntel ? intelToStrength(awayIntel, away)
     : awayForm ? ppgToStrength(awayForm.pointsPerGame) : teamStrength(away);
 
   const formDelta = homeStr - awayStr; // ≈ −0.40 to +0.40
@@ -85,12 +89,12 @@ function getCoachContext(
 
   const advantage = formDelta + liveBias + 0.06; // +0.06 small KO-stage seeding edge
 
-  // Score prediction
+  // Score prediction — thresholds calibrated for WC-style closely-ranked teams
   let homeGoals = 1, awayGoals = 1;
-  if (advantage > 0.35)       { homeGoals = 2; awayGoals = 0; }
-  else if (advantage > 0.15)  { homeGoals = 2; awayGoals = 1; }
-  else if (advantage < -0.35) { homeGoals = 0; awayGoals = 2; }
-  else if (advantage < -0.15) { homeGoals = 1; awayGoals = 2; }
+  if (advantage > 0.30)       { homeGoals = 2; awayGoals = 0; }
+  else if (advantage > 0.10)  { homeGoals = 2; awayGoals = 1; }
+  else if (advantage < -0.30) { homeGoals = 0; awayGoals = 2; }
+  else if (advantage < -0.10) { homeGoals = 1; awayGoals = 2; }
 
   const confidenceValue = Math.min(79, Math.max(52, Math.round(55 + Math.abs(formDelta) * 62)));
 
