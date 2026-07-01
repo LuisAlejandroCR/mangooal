@@ -17,6 +17,7 @@ import { RewardClaim } from "./screens/RewardClaim";
 import { Stats } from "./screens/Stats";
 import { Support } from "./screens/Support";
 import { DemoTour } from "./screens/DemoTour";
+import { Challenge } from "./screens/Challenge";
 import { SplashScreen } from "./screens/SplashScreen";
 import { LanguageProvider } from "./i18n";
 
@@ -72,6 +73,7 @@ function AppShell() {
         <Route path="/ranking" element={<Ranking />} />
         <Route path="/my-picks" element={<MyPicks />} />
         <Route path="/audit/:id" element={<OnChainAudit />} />
+        <Route path="/challenge/:id" element={<Challenge />} />
         <Route path="/claim" element={<RewardClaim />} />
         <Route path="/stats" element={<Stats />} />
         <Route path="/support" element={<Support />} />

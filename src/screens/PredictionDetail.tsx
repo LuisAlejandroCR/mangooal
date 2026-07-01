@@ -482,7 +482,9 @@ function SubmittedView({
   onAudit: () => void;
   onMyPicks: () => void;
 }) {
+  const { address } = useAccount();
   const [copied, setCopied] = useState(false);
+  const [challengeCopied, setChallengeCopied] = useState(false);
 
   async function handleShare() {
     const text = `⚽ ${match.home} ${home}–${away} ${match.away}\n${match.competition}\nPicked before kickoff on Celo`;
@@ -498,6 +500,21 @@ function SubmittedView({
     } catch {
       // user dismissed the share sheet
     }
+  }
+
+  async function handleChallenge() {
+    if (!address) return;
+    const url = `${window.location.origin}/challenge/${match.id}?challenger=${address}`;
+    const text = `⚽ Can you beat my ${match.home} vs ${match.away} pick?\n${match.competition}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Mangooal challenge", text, url });
+      } else {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        setChallengeCopied(true);
+        setTimeout(() => setChallengeCopied(false), 2_000);
+      }
+    } catch { }
   }
 
   return (
@@ -544,7 +561,7 @@ function SubmittedView({
       <button
         className="btn btn-secondary"
         onClick={handleShare}
-        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 8 }}
       >
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
@@ -552,6 +569,16 @@ function SubmittedView({
         </svg>
         {copied ? "Link copied!" : "Share my pick"}
       </button>
+
+      {address && !isPreview && (
+        <button
+          className="btn btn-secondary"
+          onClick={handleChallenge}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+        >
+          ⚔️ {challengeCopied ? "Challenge link copied!" : "Challenge a friend"}
+        </button>
+      )}
     </div>
   );
 }
