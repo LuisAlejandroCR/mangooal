@@ -71,6 +71,12 @@ const DETAIL_COPY = {
     timezone: "Timezone",
     viewAudit: "View on-chain audit",
     viewPicks: "View My Picks",
+    yourPick: "Your pick",
+    liveNote: "Match in progress — results after the final whistle",
+    lockedNote: "Results available after kickoff",
+    noPick: "You didn't submit a pick for this match.",
+    liveNoPick: "The pick window is closed — match in progress",
+    lockedNoPick: "The pick window has closed for this match",
   },
   es: {
     notFound: "Partido no encontrado",
@@ -107,6 +113,12 @@ const DETAIL_COPY = {
     timezone: "Zona horaria",
     viewAudit: "Ver auditoria on-chain",
     viewPicks: "Ver Mis Picks",
+    yourPick: "Tu pick",
+    liveNote: "Partido en curso — resultados al final del partido",
+    lockedNote: "Resultados disponibles tras el inicio",
+    noPick: "No enviaste un pick para este partido.",
+    liveNoPick: "La ventana cerró — partido en curso",
+    lockedNoPick: "La ventana de picks ha cerrado para este partido",
   },
 };
 
@@ -379,6 +391,38 @@ export function PredictionDetail() {
                   {copy.coachHelp}
                 </div>
               </button>
+            )}
+
+            {/* ── Locked / live state ─────────────────────────────────────── */}
+            {!isOpen && status !== "finished" && (
+              <div className="card" style={{ marginTop: 16 }}>
+                {savedPick ? (
+                  <>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>
+                      {copy.yourPick}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 14, marginBottom: 12 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, flex: 1, textAlign: "right" }}>{homeName}</span>
+                      <span style={{ fontSize: 34, fontWeight: 900, letterSpacing: -1, color: "var(--green)" }}>
+                        {savedPick.homeScore}–{savedPick.awayScore}
+                      </span>
+                      <span style={{ fontSize: 13, fontWeight: 700, flex: 1, textAlign: "left" }}>{awayName}</span>
+                    </div>
+                    <div style={{ textAlign: "center", fontSize: 12, color: "var(--text-muted)", lineHeight: 1.5 }}>
+                      {status === "live" ? copy.liveNote : copy.lockedNote}
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ textAlign: "center", padding: "8px 0", color: "var(--text-muted)", fontSize: 13, lineHeight: 1.7 }}>
+                    <div style={{ fontSize: 22, marginBottom: 8 }}>
+                      {status === "live" ? "⚽" : "🔒"}
+                    </div>
+                    {status === "live" ? copy.liveNoPick : copy.lockedNoPick}
+                    <br />
+                    {copy.noPick}
+                  </div>
+                )}
+              </div>
             )}
 
             {isOpen && (
