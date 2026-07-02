@@ -11,31 +11,18 @@ import { useLanguage } from "../i18n";
 function PrivyLoginSection({ copy }: { copy: ReturnType<typeof useCopy> }) {
   const { login, ready } = usePrivy();
   return (
-    <>
-      <button
-        className="btn btn-primary"
-        type="button"
-        disabled={!ready}
-        onClick={() => login()}
-        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-      >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="4" width="20" height="16" rx="2" /><path d="M2 9h20" />
-        </svg>
-        {!ready ? copy.pending : copy.email}
-      </button>
-      <div style={{ fontSize: 12, color: "var(--text-muted)", margin: "2px 0" }}>
-        {copy.or}
-      </div>
-      <button
-        className="btn btn-secondary"
-        type="button"
-        disabled={!ready}
-        onClick={() => login()}
-      >
-        {copy.wallet}
-      </button>
-    </>
+    <button
+      className="btn btn-primary"
+      type="button"
+      disabled={!ready}
+      onClick={() => login()}
+      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+    >
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2" /><path d="M2 9h20" />
+      </svg>
+      {!ready ? copy.pending : copy.email}
+    </button>
   );
 }
 
