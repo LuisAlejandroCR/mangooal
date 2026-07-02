@@ -207,6 +207,14 @@ function AppStandalone() {
   );
 }
 
+// Detect MiniPay once at startup (sync — window.ethereum is set before React renders)
+const IS_MINIPAY =
+  typeof window !== "undefined" &&
+  window.ethereum !== undefined &&
+  (window.ethereum as { isMiniPay?: boolean }).isMiniPay === true;
+
 export default function App() {
-  return PRIVY_APP_ID ? <AppWithPrivy /> : <AppStandalone />;
+  // MiniPay always uses the standalone injected-wallet path — no Privy involvement
+  if (IS_MINIPAY || !PRIVY_APP_ID) return <AppStandalone />;
+  return <AppWithPrivy />;
 }
